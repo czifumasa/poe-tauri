@@ -21,6 +21,15 @@
 	-webkit-text-size-adjust: 100%;
 }
 
+:root[data-view='overlay'] {
+	background-color: transparent;
+	color: #f6f6f6;
+}
+
+:root[data-view='overlay'] body {
+	background-color: transparent;
+}
+
 .container {
 	margin: 0;
 	padding-top: 10vh;
@@ -28,6 +37,51 @@
 	flex-direction: column;
 	justify-content: center;
 	text-align: center;
+}
+
+.overlayControls {
+	margin-top: 16px;
+}
+
+.overlayContainer {
+	position: fixed;
+	inset: 0;
+	margin: 0;
+	padding: 0;
+	background: transparent;
+	pointer-events: none;
+}
+
+.overlayPanel {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 360px;
+	border-radius: 12px;
+	background: rgba(0, 0, 0, 0.65);
+	backdrop-filter: blur(6px);
+	padding: 12px;
+	pointer-events: auto;
+}
+
+.overlayPanelBorder {
+	border: 2px solid red;
+	box-sizing: border-box;
+}
+
+.overlayTitle {
+	font-weight: 700;
+	margin-bottom: 8px;
+}
+
+.overlayRow {
+	margin-top: 6px;
+}
+
+.overlayButtons {
+	display: flex;
+	gap: 8px;
+	margin-top: 10px;
 }
 
 .logo {
