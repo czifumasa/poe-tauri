@@ -1,0 +1,7 @@
+.tmp
+dist/
+coverage/
+openapi/
+postman/
+node_modules/
+src-tauri/target/
