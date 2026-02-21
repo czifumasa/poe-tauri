@@ -2,43 +2,19 @@ use std::sync::mpsc;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 use crate::error::{command_error, CommandError};
 
-#[cfg(any(
-    target_os = "linux",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(linux_bsd_target_os)]
 use gtk_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
 
-#[cfg(any(
-    target_os = "linux",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(linux_bsd_target_os)]
 use gtk::prelude::WidgetExt;
 
-#[cfg(any(
-    target_os = "linux",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(linux_bsd_target_os)]
 use gtk::cairo::Region;
 
 fn configure_overlay_layer_shell(
     window: &tauri::WebviewWindow,
 ) -> Result<bool, CommandError> {
-    #[cfg(any(
-        target_os = "linux",
-        target_os = "dragonfly",
-        target_os = "freebsd",
-        target_os = "netbsd",
-        target_os = "openbsd"
-    ))]
+    #[cfg(linux_bsd_target_os)]
     {
         let (sender, receiver) = mpsc::channel::<Result<bool, CommandError>>();
         let window = window.clone();
@@ -86,13 +62,7 @@ fn configure_overlay_layer_shell(
             .map_err(|e| command_error("overlay_window_main_thread_channel_failed", e.to_string()))?;
     }
 
-    #[cfg(not(any(
-        target_os = "linux",
-        target_os = "dragonfly",
-        target_os = "freebsd",
-        target_os = "netbsd",
-        target_os = "openbsd"
-    )))]
+    #[cfg(not(linux_bsd_target_os))]
     {
         let _ = window;
         Ok(false)
@@ -129,13 +99,7 @@ pub fn ensure_overlay_window(app: &tauri::AppHandle) -> Result<tauri::WebviewWin
 fn configure_overlay_panel_layer_shell(
     window: &tauri::WebviewWindow,
 ) -> Result<bool, CommandError> {
-    #[cfg(any(
-        target_os = "linux",
-        target_os = "dragonfly",
-        target_os = "freebsd",
-        target_os = "netbsd",
-        target_os = "openbsd"
-    ))]
+    #[cfg(linux_bsd_target_os)]
     {
         let (sender, receiver) = mpsc::channel::<Result<bool, CommandError>>();
         let window = window.clone();
@@ -182,13 +146,7 @@ fn configure_overlay_panel_layer_shell(
         })?;
     }
 
-    #[cfg(not(any(
-        target_os = "linux",
-        target_os = "dragonfly",
-        target_os = "freebsd",
-        target_os = "netbsd",
-        target_os = "openbsd"
-    )))]
+    #[cfg(not(linux_bsd_target_os))]
     {
         let _ = window;
         Ok(false)

@@ -2,40 +2,16 @@ use tauri::Manager;
 use crate::error::{command_error, CommandError};
 use crate::window::overlay_windows::{ensure_overlay_panel_window, ensure_overlay_window};
 
-#[cfg(any(
-    target_os = "linux",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(linux_bsd_target_os)]
 use gtk_layer_shell::{KeyboardMode, LayerShell};
 
-#[cfg(any(
-    target_os = "linux",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(linux_bsd_target_os)]
 use gtk::prelude::WidgetExt;
 
-#[cfg(any(
-    target_os = "linux",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(linux_bsd_target_os)]
 use gtk::cairo::{RectangleInt, Region};
 
-#[cfg(any(
-    target_os = "linux",
-    target_os = "dragonfly",
-    target_os = "freebsd",
-    target_os = "netbsd",
-    target_os = "openbsd"
-))]
+#[cfg(linux_bsd_target_os)]
 use std::sync::mpsc;
 
 #[tauri::command]
@@ -83,13 +59,7 @@ pub fn set_overlay_input_region(
 ) -> Result<(), CommandError> {
     let window = ensure_overlay_window(&app)?;
 
-    #[cfg(any(
-        target_os = "linux",
-        target_os = "dragonfly",
-        target_os = "freebsd",
-        target_os = "netbsd",
-        target_os = "openbsd"
-    ))]
+    #[cfg(linux_bsd_target_os)]
     {
         let (sender, receiver) = mpsc::channel::<Result<(), CommandError>>();
         let window_for_closure = window.clone();
@@ -139,13 +109,7 @@ pub fn set_overlay_click_through(app: tauri::AppHandle, enabled: bool) -> Result
 pub fn set_overlay_interactive(app: tauri::AppHandle, interactive: bool) -> Result<(), CommandError> {
     let window = ensure_overlay_panel_window(&app)?;
 
-    #[cfg(any(
-        target_os = "linux",
-        target_os = "dragonfly",
-        target_os = "freebsd",
-        target_os = "netbsd",
-        target_os = "openbsd"
-    ))]
+    #[cfg(linux_bsd_target_os)]
     {
         let (sender, receiver) = mpsc::channel::<Result<(), CommandError>>();
         let window_for_closure = window.clone();
@@ -183,26 +147,14 @@ pub fn set_overlay_interactive(app: tauri::AppHandle, interactive: bool) -> Resu
         .set_focusable(interactive)
         .map_err(|e| command_error("overlay_window_set_focusable_failed", e.to_string()))?;
 
-    #[cfg(any(
-        target_os = "linux",
-        target_os = "dragonfly",
-        target_os = "freebsd",
-        target_os = "netbsd",
-        target_os = "openbsd"
-    ))]
+    #[cfg(linux_bsd_target_os)]
     {
         window
             .set_ignore_cursor_events(false)
             .map_err(|e| command_error("overlay_window_set_click_through_failed", e.to_string()))?;
     }
 
-    #[cfg(not(any(
-        target_os = "linux",
-        target_os = "dragonfly",
-        target_os = "freebsd",
-        target_os = "netbsd",
-        target_os = "openbsd"
-    )))]
+    #[cfg(not(linux_bsd_target_os))]
     {
         window
             .set_ignore_cursor_events(!interactive)
