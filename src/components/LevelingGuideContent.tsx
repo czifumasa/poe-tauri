@@ -1,5 +1,5 @@
-import { JSX } from 'react';
-import type { LevelingGuidePageDto } from '../types/guide';
+import { Fragment, JSX } from 'react';
+import type { LevelingGuidePageDto, LevelingGuideSpanDto } from '../types/guide';
 import { requestOverlayFocus } from './OverlayPanel';
 
 type OverlayLevelingGuideContentProps = {
@@ -20,6 +20,13 @@ type DashboardLevelingGuideContentProps = {
 };
 
 type LevelingGuideContentProps = OverlayLevelingGuideContentProps | DashboardLevelingGuideContentProps;
+
+function renderSpan(span: LevelingGuideSpanDto, key: string): JSX.Element {
+	if (span.type === 'image') {
+		return <img key={key} className="guideInlineImage" src={span.dataUri} alt={span.key} />;
+	}
+	return <Fragment key={key}>{span.text}</Fragment>;
+}
 
 export function LevelingGuideContent({
 	page,
@@ -81,9 +88,11 @@ export function LevelingGuideContent({
 			<div className="guideHeader">{header}</div>
 			{rest.variant === 'overlay' && (
 				<div className="guideSteps">
-					{page.lines.map((line, index) => (
-						<div key={index} className="guideStep">
-							{line}
+					{page.lines.map((line, lineIndex) => (
+						<div
+							key={lineIndex}
+							className={line.isHint ? 'guideStep guideStepHint' : 'guideStep'}>
+							{line.spans.map((span, spanIndex) => renderSpan(span, `${lineIndex}-${spanIndex}`))}
 						</div>
 					))}
 				</div>

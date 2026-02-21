@@ -1,4 +1,5 @@
 use crate::error::{command_error, CommandError};
+use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::AppHandle;
 
@@ -37,6 +38,7 @@ impl LevelingGuideManager {
             guide_path: progress.guide_path,
             guide,
             position,
+            icon_cache: HashMap::new(),
         };
 
         let mut guard = self
@@ -46,23 +48,23 @@ impl LevelingGuideManager {
         *guard = Some(loaded);
 
         let current = guard
-            .as_ref()
+            .as_mut()
             .ok_or_else(|| command_error("guide_not_loaded", "Guide not loaded"))?;
 
-        current_page_dto(current)
+        current_page_dto(app, current)
     }
 
-    pub fn get_current_page(&self) -> Result<LevelingGuidePageDto, CommandError> {
-        let guard = self
+    pub fn get_current_page(&self, app: &AppHandle) -> Result<LevelingGuidePageDto, CommandError> {
+        let mut guard = self
             .loaded
             .lock()
             .map_err(|_| command_error("guide_state_poisoned", "Guide state poisoned"))?;
 
         let loaded = guard
-            .as_ref()
+            .as_mut()
             .ok_or_else(|| command_error("guide_not_loaded", "Guide not loaded"))?;
 
-        current_page_dto(loaded)
+        current_page_dto(app, loaded)
     }
 
     pub fn get_current_progress(&self) -> Result<PersistedLevelingGuideProgress, CommandError> {
@@ -81,7 +83,7 @@ impl LevelingGuideManager {
         })
     }
 
-    pub fn reset_progress(&self) -> Result<LevelingGuidePageDto, CommandError> {
+    pub fn reset_progress(&self, app: &AppHandle) -> Result<LevelingGuidePageDto, CommandError> {
         let mut guard = self
             .loaded
             .lock()
@@ -92,10 +94,10 @@ impl LevelingGuideManager {
             .ok_or_else(|| command_error("guide_not_loaded", "Guide not loaded"))?;
 
         loaded.position = GuidePosition::start();
-        current_page_dto(loaded)
+        current_page_dto(app, loaded)
     }
 
-    pub fn next_page(&self) -> Result<LevelingGuidePageDto, CommandError> {
+    pub fn next_page(&self, app: &AppHandle) -> Result<LevelingGuidePageDto, CommandError> {
         let mut guard = self
             .loaded
             .lock()
@@ -111,19 +113,19 @@ impl LevelingGuideManager {
 
         if loaded.position.page_index + 1 < act.len() {
             loaded.position.page_index += 1;
-            return current_page_dto(loaded);
+            return current_page_dto(app, loaded);
         }
 
         if loaded.position.act_index + 1 < loaded.guide.len() {
             loaded.position.act_index += 1;
             loaded.position.page_index = 0;
-            return current_page_dto(loaded);
+            return current_page_dto(app, loaded);
         }
 
-        current_page_dto(loaded)
+        current_page_dto(app, loaded)
     }
 
-    pub fn previous_page(&self) -> Result<LevelingGuidePageDto, CommandError> {
+    pub fn previous_page(&self, app: &AppHandle) -> Result<LevelingGuidePageDto, CommandError> {
         let mut guard = self
             .loaded
             .lock()
@@ -135,11 +137,11 @@ impl LevelingGuideManager {
 
         if loaded.position.page_index > 0 {
             loaded.position.page_index -= 1;
-            return current_page_dto(loaded);
+            return current_page_dto(app, loaded);
         }
 
         if loaded.position.act_index == 0 {
-            return current_page_dto(loaded);
+            return current_page_dto(app, loaded);
         }
 
         loaded.position.act_index -= 1;
@@ -148,6 +150,6 @@ impl LevelingGuideManager {
         })?;
 
         loaded.position.page_index = act.len().saturating_sub(1);
-        current_page_dto(loaded)
+        current_page_dto(app, loaded)
     }
 }

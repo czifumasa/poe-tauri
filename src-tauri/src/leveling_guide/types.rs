@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 pub type GuideData = Vec<GuideAct>;
 pub type GuideAct = Vec<GuidePage>;
@@ -40,11 +41,30 @@ pub struct GuidePage {
     pub lines: Vec<String>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
+pub enum LevelingGuideSpanDto {
+    Text { text: String },
+    Image {
+        key: String,
+        #[serde(rename = "dataUri")]
+        data_uri: String,
+    },
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LevelingGuideLineDto {
+    pub is_hint: bool,
+    pub spans: Vec<LevelingGuideSpanDto>,
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct LoadedGuide {
     pub(crate) guide_path: String,
     pub(crate) guide: GuideData,
     pub(crate) position: GuidePosition,
+    pub(crate) icon_cache: HashMap<String, Option<String>>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -54,7 +74,7 @@ pub struct LevelingGuidePageDto {
     pub position: GuidePosition,
     pub act_count: usize,
     pub page_count_in_act: usize,
-    pub lines: Vec<String>,
+    pub lines: Vec<LevelingGuideLineDto>,
     pub has_previous: bool,
     pub has_next: bool,
 }

@@ -182,6 +182,19 @@
 	padding: 4px 0;
 }
 
+.guideStepHint {
+	color: #cfcfcf;
+	font-size: 13px;
+}
+
+.guideInlineImage {
+	height: 16px;
+	width: auto;
+	object-fit: contain;
+	vertical-align: -3px;
+	margin: 0 4px;
+}
+
 .guideNavigation {
 	display: flex;
 	gap: 8px;

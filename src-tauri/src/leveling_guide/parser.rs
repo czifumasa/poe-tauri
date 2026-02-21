@@ -1,6 +1,181 @@
 use crate::error::{command_error, CommandError};
+use base64::Engine;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+use tauri::AppHandle;
+use tauri::Manager;
 
-use super::types::{GuideAct, GuideData, GuidePage, GuidePosition, LevelingGuidePageDto, LoadedGuide};
+use super::types::{
+    GuideAct, GuideData, GuidePage, GuidePosition, LevelingGuideLineDto, LevelingGuidePageDto,
+    LevelingGuideSpanDto, LoadedGuide,
+};
+
+fn image_path_from_guide_path(guide_path: &str, key: &str) -> Option<PathBuf> {
+    let key = key.trim().replace(' ', "_");
+
+    let guide_relative_path = guide_path.strip_prefix("resource:")?;
+    let guide_dir = Path::new(guide_relative_path).parent()?;
+    Some(guide_dir.join("img").join(format!("{key}.png")))
+}
+
+fn load_image_data_uri_uncached(
+    app: &AppHandle,
+    guide_path: &str,
+    normalized_key: &str,
+) -> Result<Option<String>, CommandError> {
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|e: tauri::Error| command_error("resource_dir_failed", e.to_string()))?;
+
+    let relative_path = match image_path_from_guide_path(guide_path, normalized_key) {
+        Some(path) => path,
+        None => return Ok(None),
+    };
+
+    let absolute_path = resource_dir.join(relative_path);
+    let bytes = match std::fs::read(&absolute_path) {
+        Ok(bytes) => bytes,
+        Err(_) => return Ok(None),
+    };
+
+    let encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
+    Ok(Some(format!("data:image/png;base64,{encoded}")))
+}
+
+fn load_image_data_uri_cached(
+    app: &AppHandle,
+    guide_path: &str,
+    icon_cache: &mut HashMap<String, Option<String>>,
+    key: &str,
+) -> Result<Option<String>, CommandError> {
+    let normalized_key = key.trim().replace(' ', "_");
+    if let Some(cached) = icon_cache.get(&normalized_key) {
+        return Ok(cached.clone());
+    }
+
+    let resolved = load_image_data_uri_uncached(app, guide_path, &normalized_key)?;
+    icon_cache.insert(normalized_key, resolved.clone());
+    Ok(resolved)
+}
+
+fn strip_comment_and_resolve_area_name(line: &str) -> String {
+    let mut parts = line.split(";;").map(str::trim).collect::<Vec<&str>>();
+    if parts.len() <= 1 {
+        return line.trim().to_string();
+    }
+
+    let left = parts.remove(0);
+    let right = parts.first().copied().unwrap_or_default();
+
+    if !right.is_empty() && left.contains("areaid") {
+        return left
+            .split_whitespace()
+            .map(|token| if token.starts_with("areaid") { right } else { token })
+            .collect::<Vec<&str>>()
+            .join(" ")
+            .trim()
+            .to_string();
+    }
+
+    left.trim().to_string()
+}
+
+fn strip_format_tags(mut line: String) -> String {
+    while let Some(start) = line.find("(color:") {
+        let end = match line[start..].find(')') {
+            Some(offset) => start + offset + 1,
+            None => break,
+        };
+        line.replace_range(start..end, "");
+    }
+
+    line.replace("  ", " ").trim().to_string()
+}
+
+fn parse_line_is_hint(line: &str) -> (bool, &str) {
+    if let Some(rest) = line.strip_prefix("(hint)__") {
+        return (true, rest.trim());
+    }
+    if let Some(rest) = line.strip_prefix("(hint)_") {
+        return (true, rest.trim());
+    }
+    (false, line)
+}
+
+fn render_spans(
+    app: &AppHandle,
+    guide_path: &str,
+    icon_cache: &mut HashMap<String, Option<String>>,
+    line: &str,
+) -> Result<Vec<LevelingGuideSpanDto>, CommandError> {
+    let mut spans: Vec<LevelingGuideSpanDto> = Vec::new();
+    let mut remaining = line;
+
+    while let Some(start) = remaining.find("(img:") {
+        let (before, after_start) = remaining.split_at(start);
+        if !before.trim().is_empty() {
+            spans.push(LevelingGuideSpanDto::Text {
+                text: before.to_string(),
+            });
+        }
+
+        let after_start = &after_start[5..];
+        let end = match after_start.find(')') {
+            Some(index) => index,
+            None => {
+                spans.push(LevelingGuideSpanDto::Text {
+                    text: after_start.to_string(),
+                });
+                return Ok(spans);
+            }
+        };
+
+        let key = after_start[..end].trim();
+        if let Some(data_uri) = load_image_data_uri_cached(app, guide_path, icon_cache, key)? {
+            spans.push(LevelingGuideSpanDto::Image {
+                key: key.replace(' ', "_"),
+                data_uri,
+            });
+        }
+
+        remaining = after_start[end + 1..].as_ref();
+    }
+
+    if !remaining.trim().is_empty() {
+        spans.push(LevelingGuideSpanDto::Text {
+            text: remaining.to_string(),
+        });
+    }
+
+    Ok(spans)
+}
+
+fn render_line(
+    app: &AppHandle,
+    guide_path: &str,
+    icon_cache: &mut HashMap<String, Option<String>>,
+    line: &str,
+) -> Result<Option<LevelingGuideLineDto>, CommandError> {
+    if line.trim().is_empty() {
+        return Ok(None);
+    }
+
+    if line.trim_start().starts_with("quest-check:") {
+        return Ok(None);
+    }
+
+    let stripped = strip_comment_and_resolve_area_name(line);
+    let stripped = strip_format_tags(stripped);
+    let (is_hint, stripped) = parse_line_is_hint(&stripped);
+
+    let spans = render_spans(app, guide_path, icon_cache, stripped)?;
+    if spans.is_empty() {
+        return Ok(None);
+    }
+
+    Ok(Some(LevelingGuideLineDto { is_hint, spans }))
+}
 
 pub(crate) fn parse_guide_json(value: serde_json::Value) -> Result<GuideData, CommandError> {
     let acts = value
@@ -90,7 +265,10 @@ pub(crate) fn clamp_position(guide: &GuideData, position: GuidePosition) -> Guid
     }
 }
 
-pub(crate) fn current_page_dto(loaded: &LoadedGuide) -> Result<LevelingGuidePageDto, CommandError> {
+pub(crate) fn current_page_dto(
+    app: &AppHandle,
+    loaded: &mut LoadedGuide,
+) -> Result<LevelingGuidePageDto, CommandError> {
     let act = loaded.guide.get(loaded.position.act_index).ok_or_else(|| {
         command_error("guide_position_invalid", "Act index out of bounds")
     })?;
@@ -107,12 +285,21 @@ pub(crate) fn current_page_dto(loaded: &LoadedGuide) -> Result<LevelingGuidePage
         loaded.position.page_index + 1 < act.len()
     };
 
+    let lines = page
+        .lines
+        .iter()
+        .map(|line| render_line(app, &loaded.guide_path, &mut loaded.icon_cache, line))
+        .collect::<Result<Vec<Option<LevelingGuideLineDto>>, CommandError>>()?
+        .into_iter()
+        .flatten()
+        .collect::<Vec<LevelingGuideLineDto>>();
+
     Ok(LevelingGuidePageDto {
         guide_path: loaded.guide_path.clone(),
         position: loaded.position,
         act_count: loaded.guide.len(),
         page_count_in_act: act.len(),
-        lines: page.lines.clone(),
+        lines,
         has_previous,
         has_next,
     })

@@ -38,7 +38,7 @@ pub fn load_guide(
     manager: State<'_, LevelingGuideManager>,
 ) -> Result<LevelingGuidePageDto, CommandError> {
     if manager.is_loaded()? {
-        let page = manager.get_current_page()?;
+        let page = manager.get_current_page(&app)?;
         emit_page_updated(&app, &page)?;
         return Ok(page);
     }
@@ -51,13 +51,14 @@ pub fn load_guide(
 
 #[tauri::command]
 pub fn leveling_guide_get_current_page(
+    app: tauri::AppHandle,
     manager: State<'_, LevelingGuideManager>,
 ) -> Result<Option<LevelingGuidePageDto>, CommandError> {
     if !manager.is_loaded()? {
         return Ok(None);
     }
 
-    let page = manager.get_current_page()?;
+    let page = manager.get_current_page(&app)?;
     Ok(Some(page))
 }
 
@@ -67,7 +68,7 @@ pub fn leveling_guide_next_page(
     manager: State<'_, LevelingGuideManager>,
 ) -> Result<LevelingGuidePageDto, CommandError> {
     ensure_loaded(&app, &manager)?;
-    let page = manager.next_page()?;
+    let page = manager.next_page(&app)?;
     persist_current_progress(&app, &manager)?;
     emit_page_updated(&app, &page)?;
     Ok(page)
@@ -79,7 +80,7 @@ pub fn leveling_guide_previous_page(
     manager: State<'_, LevelingGuideManager>,
 ) -> Result<LevelingGuidePageDto, CommandError> {
     ensure_loaded(&app, &manager)?;
-    let page = manager.previous_page()?;
+    let page = manager.previous_page(&app)?;
     persist_current_progress(&app, &manager)?;
     emit_page_updated(&app, &page)?;
     Ok(page)
@@ -91,7 +92,7 @@ pub fn leveling_guide_reset_progress(
     manager: State<'_, LevelingGuideManager>,
 ) -> Result<LevelingGuidePageDto, CommandError> {
     ensure_loaded(&app, &manager)?;
-    let page = manager.reset_progress()?;
+    let page = manager.reset_progress(&app)?;
     persist_current_progress(&app, &manager)?;
     emit_page_updated(&app, &page)?;
     Ok(page)
