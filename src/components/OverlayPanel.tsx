@@ -27,8 +27,9 @@ export function OverlayPanel({ children }: OverlayPanelProps): JSX.Element {
 					return;
 				}
 				const rect = element.getBoundingClientRect();
-				const width = Math.ceil(rect.width);
-				const height = Math.ceil(rect.height);
+				const devicePixelRatio = window.devicePixelRatio || 1;
+				const width = Math.max(1, Math.round(rect.width * devicePixelRatio));
+				const height = Math.max(1, Math.round(rect.height * devicePixelRatio));
 				const last = lastReportedSizeRef.current;
 				if (last !== null && last.width === width && last.height === height) {
 					return;

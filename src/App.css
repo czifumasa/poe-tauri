@@ -1,284 +1,405 @@
 :root {
-	font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-	font-size: 16px;
-	line-height: 24px;
-	font-weight: 400;
+    font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
 
-	color: #0f0f0f;
-	background-color: #f6f6f6;
+    color: #0f0f0f;
+    background-color: #f6f6f6;
 
-	font-synthesis: none;
-	text-rendering: optimizeLegibility;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	-webkit-text-size-adjust: 100%;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
 }
 
 :root[data-view='overlay'] {
-	background-color: transparent;
-	color: #f6f6f6;
+    background-color: transparent;
+    color: #f6f6f6;
+    overflow: hidden;
 }
 
 :root[data-view='overlay'] body {
-	background-color: transparent;
+    background-color: transparent;
+    margin: 0;
+    overflow: hidden;
+}
+
+:root[data-view='overlay'] input,
+:root[data-view='overlay'] button {
+    color: rgba(255, 255, 255, 0.85);
+    background-color: rgba(18, 18, 18, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: none;
+}
+
+:root[data-view='overlay'] button:hover {
+    border-color: rgba(212, 175, 55, 0.45);
+}
+
+:root[data-view='overlay'] button:active {
+    background-color: rgba(22, 22, 22, 0.98);
 }
 
 .container {
-	margin: 0;
-	padding-top: 10vh;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	text-align: center;
-	gap: 16px;
+    margin: 0;
+    padding-top: 10vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    gap: 16px;
 }
 
 .errorMessage {
-	color: #ff4444;
-	background-color: rgba(255, 68, 68, 0.1);
-	border: 1px solid #ff4444;
-	border-radius: 8px;
-	padding: 12px;
-	margin: 0 auto;
-	max-width: 500px;
-	font-size: 14px;
+    color: #ff4444;
+    background-color: rgba(255, 68, 68, 0.1);
+    border: 1px solid #ff4444;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 0 auto;
+    max-width: 500px;
+    font-size: 14px;
 }
 
 .loadingMessage {
-	color: #4488ff;
-	font-size: 14px;
-	font-weight: 500;
+    color: #4488ff;
+    font-size: 14px;
+    font-weight: 500;
 }
 
 .overlayControls {
-	margin-top: 16px;
+    margin-top: 16px;
 }
 
 .dashboardGrid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-	gap: 16px;
-	width: 100%;
-	max-width: 900px;
-	margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 .dashboardCard {
-	text-align: left;
-	background: rgba(255, 255, 255, 0.65);
-	border: 1px solid rgba(0, 0, 0, 0.08);
-	border-radius: 12px;
-	padding: 12px;
+    text-align: left;
+    background: rgba(255, 255, 255, 0.65);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    padding: 12px;
 }
 
 .dashboardCard h2 {
-	margin: 0 0 8px;
-	font-size: 16px;
+    margin: 0 0 8px;
+    font-size: 16px;
 }
 
 .guideDashboardControls {
-	display: flex;
-	gap: 8px;
-	justify-content: center;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
 }
 
 .guideContentCompact .guideHeader {
-	font-size: 14px;
-	padding-bottom: 6px;
+    font-size: 14px;
+    padding-bottom: 6px;
 }
 
 .guideContentCompact .guideNavigation button {
-	padding: 6px 12px;
-	font-size: 13px;
+    padding: 6px 12px;
+    font-size: 13px;
 }
 
 .overlayContainer {
-	position: fixed;
-	inset: 0;
-	margin: 0;
-	padding: 0;
-	background: transparent;
-	pointer-events: none;
+    position: fixed;
+    inset: 0;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    pointer-events: none;
 }
 
 .overlayPanel {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 360px;
-	border-radius: 12px;
-	background: rgba(0, 0, 0, 0.65);
-	backdrop-filter: blur(6px);
-	padding: 12px;
-	pointer-events: auto;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 340px;
+    border-radius: 8px;
+    font-family: ui-serif, "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    background: linear-gradient(180deg, #161616 0%, #090909 100%);
+    padding: 0;
+    pointer-events: auto;
 }
 
 .overlayPanelBorder {
-	border: 2px solid red;
-	box-sizing: border-box;
+    position: relative;
+    border: 1px solid rgba(200, 169, 110, 0.42);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.8);
+    box-sizing: border-box;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.overlayPanelBorder::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 7px;
+    border: 1px solid rgba(200, 169, 110, 0.18);
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+        0 0 0 1px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
 }
 
 .guideNotLoaded {
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-	align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
 }
 
 .overlayMessage {
-	color: #ffcc00;
-	font-size: 14px;
-	text-align: center;
+    color: #ffcc00;
+    font-size: 14px;
+    text-align: center;
 }
 
 .overlayError {
-	color: #ff4444;
-	font-size: 12px;
-	text-align: center;
-	background-color: rgba(255, 68, 68, 0.1);
-	border: 1px solid #ff4444;
-	border-radius: 4px;
-	padding: 8px;
+    color: #ff4444;
+    font-size: 12px;
+    text-align: center;
+    background-color: rgba(255, 68, 68, 0.1);
+    border: 1px solid #ff4444;
+    border-radius: 4px;
+    padding: 8px;
 }
 
 .overlayLoading {
-	color: #4488ff;
-	font-size: 12px;
-	text-align: center;
+    color: #4488ff;
+    font-size: 12px;
+    text-align: center;
 }
 
 .loadGuideButton {
-	padding: 8px 16px;
-	font-size: 14px;
-	cursor: pointer;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
 }
 
 .guideContent {
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.guideContentOverlay {
+    gap: 8px;
 }
 
 .guideHeader {
-	font-weight: 700;
-	font-size: 16px;
-	color: #ffffff;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-	padding-bottom: 8px;
+    font-weight: 700;
+    font-size: 16px;
+    color: #ffffff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 8px;
+}
+
+.guideHeaderOverlay {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.78);
+    border-bottom: 1px solid rgba(200, 169, 110, 0.14);
+    padding: 5px 10px;
+    background: #0f0d00;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.guideHeaderOverlay .guideHeaderLeft {
+    font-weight: 700;
+    color: rgba(212, 175, 55, 0.95);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
+}
+
+.guideHeaderOverlay .guideHeaderRight {
+    font-weight: 600;
+    color: #383838;
+    letter-spacing: 0.05em;
 }
 
 .guideSteps {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	max-height: 400px;
-	overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 5px 0;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 .guideStep {
-	color: #e0e0e0;
-	font-size: 14px;
-	line-height: 1.4;
-	padding: 4px 0;
+    color: #e0e0e0;
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 4px 0;
+}
+
+.guideContentOverlay .guideStep {
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    padding: 3px 10px;
+    text-transform: uppercase;
 }
 
 .guideStepHint {
-	color: #cfcfcf;
-	font-size: 13px;
+    color: #4a4a4a;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    padding: 1px 8px 1px 22px;
+    margin-left: 6px;
+    border-left: 1px solid #222;
 }
 
 .guideInlineImage {
-	height: 16px;
-	width: auto;
-	object-fit: contain;
-	vertical-align: -3px;
-	margin: 0 4px;
+    height: 16px;
+    width: auto;
+    object-fit: contain;
+    vertical-align: -3px;
+    margin: 0 4px;
 }
 
 .guideNavigation {
-	display: flex;
-	gap: 8px;
-	justify-content: space-between;
-	margin-top: 8px;
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    margin-top: 8px;
 }
 
 .guideNavigation button {
-	flex: 1;
-	padding: 8px 16px;
-	font-size: 14px;
+    flex: 1;
+    padding: 8px 16px;
+    font-size: 14px;
 }
 
-.guideNavigation button:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
+.guideContentOverlay .guideNavigation {
+    margin-top: 0;
+    border-top: 1px solid #141414;
+    background: #060606;
+    padding: 6px 10px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.guideNavButton {
+    flex: 0 0 auto;
+    min-width: 110px;
+    background: none;
+    border: 1px solid #222;
+    box-shadow: none;
+    color: #555;
+    padding: 3px 10px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 11px;
+    transition: border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.guideNavButton:hover:not(:disabled) {
+    border-color: rgba(200, 169, 110, 0.35);
+    color: rgba(200, 169, 110, 0.85);
+}
+
+.guideNavButton:active:not(:disabled) {
+    background: rgba(26, 26, 26, 0.98);
+}
+
+.guideNavButton:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.guideNavigation button:disabled:not(.guideNavButton) {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .row {
-	display: flex;
-	justify-content: center;
+    display: flex;
+    justify-content: center;
 }
 
 a {
-	font-weight: 500;
-	color: #646cff;
-	text-decoration: inherit;
+    font-weight: 500;
+    color: #646cff;
+    text-decoration: inherit;
 }
 
 a:hover {
-	color: #535bf2;
+    color: #535bf2;
 }
 
 h1 {
-	text-align: center;
+    text-align: center;
 }
 
 input,
 button {
-	border-radius: 8px;
-	border: 1px solid transparent;
-	padding: 0.6em 1.2em;
-	font-size: 1em;
-	font-weight: 500;
-	font-family: inherit;
-	color: #0f0f0f;
-	background-color: #ffffff;
-	transition: border-color 0.25s;
-	box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    color: #0f0f0f;
+    background-color: #ffffff;
+    transition: border-color 0.25s;
+    box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
 }
 
 button {
-	cursor: pointer;
+    cursor: pointer;
 }
 
 button:hover {
-	border-color: #396cd8;
+    border-color: #396cd8;
 }
+
 button:active {
-	border-color: #396cd8;
-	background-color: #e8e8e8;
+    border-color: #396cd8;
+    background-color: #e8e8e8;
 }
 
 input,
 button {
-	outline: none;
+    outline: none;
 }
 
 @media (prefers-color-scheme: dark) {
-	:root {
-		color: #f6f6f6;
-		background-color: #2f2f2f;
-	}
+    :root {
+        color: #f6f6f6;
+        background-color: #2f2f2f;
+    }
 
-	a:hover {
-		color: #24c8db;
-	}
+    a:hover {
+        color: #24c8db;
+    }
 
-	input,
-	button {
-		color: #ffffff;
-		background-color: #0f0f0f98;
-	}
-	button:active {
-		background-color: #0f0f0f69;
-	}
+    input,
+    button {
+        color: #ffffff;
+        background-color: #0f0f0f98;
+    }
+
+    button:active {
+        background-color: #0f0f0f69;
+    }
 }

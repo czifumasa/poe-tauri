@@ -34,12 +34,12 @@ pub fn hide_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
 }
 
 #[tauri::command]
-pub fn set_overlay_panel_size(app: tauri::AppHandle, width: f64, height: f64) -> Result<(), CommandError> {
+pub fn set_overlay_panel_size(app: tauri::AppHandle, width: u32, height: u32) -> Result<(), CommandError> {
     let window = ensure_overlay_panel_window(&app)?;
-    let width = width.max(1.0);
-    let height = height.max(1.0);
+    let width = width.max(1);
+    let height = height.max(1);
     window
-        .set_size(tauri::Size::Logical(tauri::LogicalSize { width, height }))
+        .set_size(tauri::Size::Physical(tauri::PhysicalSize { width, height }))
         .map_err(|e| command_error("overlay_panel_window_set_size_failed", e.to_string()))?;
     Ok(())
 }
