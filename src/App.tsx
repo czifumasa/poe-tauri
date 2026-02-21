@@ -47,25 +47,49 @@ function App(): JSX.Element {
 	const [currentPage, setCurrentPage] = useState<LevelingGuidePageDto | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
-	const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
-	const refreshCurrentPage = useCallback(async (): Promise<void> => {
-		if (isRefreshing) {
-			return;
-		}
-		setIsRefreshing(true);
-		setError(null);
-		try {
-			const page = await invoke<LevelingGuidePageDto | null>('leveling_guide_get_current_page');
-			setCurrentPage(page);
-		} catch (err) {
-			const errorMessage = formatInvokeError(err);
-			setError(`Failed to load guide state: ${errorMessage}`);
-			console.error('Failed to load guide state:', err);
-		} finally {
-			setIsRefreshing(false);
-		}
-	}, [isRefreshing]);
+	useEffect((): (() => void) => {
+		let isDisposed = false;
+
+		void (async (): Promise<void> => {
+			setLoading(true);
+			setError(null);
+			try {
+				const existingPage = await invoke<LevelingGuidePageDto | null>(
+					'leveling_guide_get_current_page',
+				);
+				if (isDisposed) {
+					return;
+				}
+
+				if (existingPage !== null) {
+					setCurrentPage(existingPage);
+					return;
+				}
+
+				const loadedPage = await invoke<LevelingGuidePageDto>('load_guide');
+				if (isDisposed) {
+					return;
+				}
+				setCurrentPage(loadedPage);
+			} catch (err) {
+				if (isDisposed) {
+					return;
+				}
+				const errorMessage = formatInvokeError(err);
+				setError(`Failed to initialize guide: ${errorMessage}`);
+				console.error('Failed to initialize guide:', err);
+			} finally {
+				if (!isDisposed) {
+					setLoading(false);
+				}
+			}
+		})();
+
+		return (): void => {
+			isDisposed = true;
+		};
+	}, []);
 
 	const loadGuide = useCallback(async (): Promise<void> => {
 		setLoading(true);
@@ -141,16 +165,6 @@ function App(): JSX.Element {
 			}
 		};
 	}, []);
-
-	useEffect((): void => {
-		if (loading) {
-			return;
-		}
-		if (currentPage !== null) {
-			return;
-		}
-		void refreshCurrentPage();
-	}, [currentPage, loading, refreshCurrentPage]);
 
 	if (viewMode === 'overlay_panel') {
 		return (
