@@ -1,74 +1,41 @@
 import { JSX } from 'react';
-import type { Guide, GuidePage, ConditionalPage } from '../types/guide';
+import type { LevelingGuidePageDto } from '../types/guide';
 import { requestOverlayFocus } from './OverlayPanel';
 
-function isConditionalPage(page: GuidePage): page is ConditionalPage {
-	return typeof page === 'object' && 'condition' in page && 'lines' in page;
-}
-
-function extractTextLines(page: GuidePage): string[] {
-	if (isConditionalPage(page)) {
-		return page.lines;
-	}
-	return page;
-}
-
 interface LevelingGuideContentProps {
-	guide: Guide | null;
-	currentAct: number;
-	currentPage: number;
+	page: LevelingGuidePageDto | null;
 	loading: boolean;
 	error: string | null;
-	onNavigate: (actIndex: number, pageIndex: number) => void;
+	onNavigate: (direction: 'previous' | 'next' | 'reset') => Promise<void>;
 	onLoadGuide: () => Promise<void>;
 }
 
 export function LevelingGuideContent({
-	guide,
-	currentAct,
-	currentPage,
+	page,
 	loading,
 	error,
 	onNavigate,
 	onLoadGuide,
 }: LevelingGuideContentProps): JSX.Element {
 	function handlePrevious(): void {
-		if (!guide) return;
-
-		let newPage = currentPage - 1;
-		let newAct = currentAct;
-
-		if (newPage < 0) {
-			newAct -= 1;
-			if (newAct < 0) {
-				return;
-			}
-			newPage = guide[newAct].length - 1;
-		}
-
-		onNavigate(newAct, newPage);
+		if (!page) return;
+		void onNavigate('previous');
 		void requestOverlayFocus();
 	}
 
 	function handleNext(): void {
-		if (!guide) return;
-
-		let newPage = currentPage + 1;
-		let newAct = currentAct;
-
-		if (newPage >= guide[currentAct].length) {
-			newAct += 1;
-			if (newAct >= guide.length) {
-				return;
-			}
-			newPage = 0;
-		}
-
-		onNavigate(newAct, newPage);
+		if (!page) return;
+		void onNavigate('next');
 		void requestOverlayFocus();
 	}
 
-	if (!guide) {
+	function handleReset(): void {
+		if (!page) return;
+		void onNavigate('reset');
+		void requestOverlayFocus();
+	}
+
+	if (!page) {
 		return (
 			<div className="guideNotLoaded">
 				<div className="overlayMessage">Guide not loaded.</div>
@@ -88,49 +55,29 @@ export function LevelingGuideContent({
 		);
 	}
 
-	const act = guide[currentAct];
-	if (!act || !act[currentPage]) {
-		return <div className="overlayMessage">No content available.</div>;
-	}
-
-	const page: GuidePage = act[currentPage];
-	const lines = extractTextLines(page);
+	const header = `Act ${page.position.actIndex + 1} - Page ${page.position.pageIndex + 1}/${page.pageCountInAct}`;
 
 	return (
 		<div className="guideContent">
-			<div className="guideHeader">
-				Act {currentAct + 1} - Page {currentPage + 1}/{act.length}
-			</div>
+			<div className="guideHeader">{header}</div>
 			<div className="guideSteps">
-				{lines.map((line, index) => {
-					const cleanLine = line
-						.replace(/\(img:[^)]+\)/g, '')
-						.replace(/\(color:[^)]+\)/g, '')
-						.replace(/\(hint\)__/g, '→')
-						.replace(/\(hint\)_/g, '→')
-						.replace(/\(quest:[^)]+\)/g, '')
-						.replace(/<[^>]+>/g, '')
-						.replace(/areaid[^\s;]+/g, '')
-						.replace(/;;/g, '-')
-						.trim();
-
-					if (!cleanLine) return null;
-
-					return (
-						<div key={index} className="guideStep">
-							{cleanLine}
-						</div>
-					);
-				})}
+				{page.lines.map((line, index) => (
+					<div key={index} className="guideStep">
+						{line}
+					</div>
+				))}
 			</div>
 			<div className="guideNavigation">
-				<button type="button" onClick={handlePrevious} disabled={currentAct === 0 && currentPage === 0}>
+				<button type="button" onClick={handlePrevious} disabled={!page.hasPrevious || loading}>
 					← Previous
+				</button>
+				<button type="button" onClick={handleReset} disabled={loading}>
+					Reset
 				</button>
 				<button
 					type="button"
 					onClick={handleNext}
-					disabled={currentAct === guide.length - 1 && currentPage === act.length - 1}>
+					disabled={!page.hasNext || loading}>
 					Next →
 				</button>
 			</div>

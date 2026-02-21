@@ -1,10 +1,10 @@
-import { JSX, useMemo, useState } from 'react';
+import { JSX, useCallback, useEffect, useMemo, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import './App.css';
 import { MainView } from './components/MainView';
 import { OverlayPanel } from './components/OverlayPanel';
 import { LevelingGuideContent } from './components/LevelingGuideContent';
-import type { Guide } from './types/guide';
+import type { LevelingGuidePageDto } from './types/guide';
 
 type ViewMode = 'main' | 'overlay_panel';
 
@@ -43,20 +43,16 @@ function getViewMode(): ViewMode {
 
 function App(): JSX.Element {
 	const viewMode = useMemo<ViewMode>(() => getViewMode(), []);
-	const [guide, setGuide] = useState<Guide | null>(null);
-	const [currentAct, setCurrentAct] = useState<number>(0);
-	const [currentPage, setCurrentPage] = useState<number>(0);
+	const [currentPage, setCurrentPage] = useState<LevelingGuidePageDto | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
 
-	async function loadGuide(): Promise<void> {
+	const loadGuide = useCallback(async (): Promise<void> => {
 		setLoading(true);
 		setError(null);
 		try {
-			const guideData = await invoke<Guide>('load_guide');
-			setGuide(guideData);
-			setCurrentAct(0);
-			setCurrentPage(0);
+			const page = await invoke<LevelingGuidePageDto>('load_guide');
+			setCurrentPage(page);
 		} catch (err) {
 			const errorMessage = formatInvokeError(err);
 			setError(`Failed to load guide: ${errorMessage}`);
@@ -64,20 +60,44 @@ function App(): JSX.Element {
 		} finally {
 			setLoading(false);
 		}
-	}
+	}, []);
 
-	function handleNavigate(actIndex: number, pageIndex: number): void {
-		setCurrentAct(actIndex);
-		setCurrentPage(pageIndex);
-	}
+	const handleNavigate = useCallback(async (direction: 'previous' | 'next' | 'reset'): Promise<void> => {
+		setLoading(true);
+		setError(null);
+		try {
+			const command =
+				direction === 'previous'
+					? 'leveling_guide_previous_page'
+					: direction === 'next'
+						? 'leveling_guide_next_page'
+						: 'leveling_guide_reset_progress';
+			const page = await invoke<LevelingGuidePageDto>(command);
+			setCurrentPage(page);
+		} catch (err) {
+			const errorMessage = formatInvokeError(err);
+			setError(`Failed to navigate guide: ${errorMessage}`);
+			console.error('Failed to navigate guide:', err);
+		} finally {
+			setLoading(false);
+		}
+	}, []);
+
+	useEffect((): void => {
+		if (viewMode !== 'overlay_panel') {
+			return;
+		}
+		if (currentPage !== null || loading) {
+			return;
+		}
+		void loadGuide();
+	}, [currentPage, loadGuide, loading, viewMode]);
 
 	if (viewMode === 'overlay_panel') {
 		return (
 			<OverlayPanel>
 				<LevelingGuideContent
-					guide={guide}
-					currentAct={currentAct}
-					currentPage={currentPage}
+					page={currentPage}
 					loading={loading}
 					error={error}
 					onNavigate={handleNavigate}

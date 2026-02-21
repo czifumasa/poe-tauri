@@ -1,20 +1,28 @@
 use tauri::Manager;
 
 mod error;
+mod persistence;
+mod leveling_guide;
 mod window;
 mod commands;
 
 use commands::common::*;
 use commands::overlay::*;
 use commands::leveling_guide::*;
+use leveling_guide::LevelingGuideManager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_store::Builder::default().build())
+        .manage(LevelingGuideManager::default())
         .invoke_handler(tauri::generate_handler![
             greet,
             load_guide,
+            leveling_guide_next_page,
+            leveling_guide_previous_page,
+            leveling_guide_reset_progress,
             show_overlay,
             hide_overlay,
             set_overlay_click_through,
