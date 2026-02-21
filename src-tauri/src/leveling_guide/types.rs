@@ -65,6 +65,7 @@ pub(crate) struct LoadedGuide {
     pub(crate) guide: GuideData,
     pub(crate) position: GuidePosition,
     pub(crate) icon_cache: HashMap<String, Option<String>>,
+    pub(crate) area_name_by_id: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize)]

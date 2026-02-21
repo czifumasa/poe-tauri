@@ -59,26 +59,52 @@ fn load_image_data_uri_cached(
     Ok(resolved)
 }
 
-fn strip_comment_and_resolve_area_name(line: &str) -> String {
-    let mut parts = line.split(";;").map(str::trim).collect::<Vec<&str>>();
-    if parts.len() <= 1 {
-        return line.trim().to_string();
+fn split_area_id_token(token: &str) -> Option<(&str, &str)> {
+    if !token.starts_with("areaid") {
+        return None;
     }
 
-    let left = parts.remove(0);
-    let right = parts.first().copied().unwrap_or_default();
-
-    if !right.is_empty() && left.contains("areaid") {
-        return left
-            .split_whitespace()
-            .map(|token| if token.starts_with("areaid") { right } else { token })
-            .collect::<Vec<&str>>()
-            .join(" ")
-            .trim()
-            .to_string();
+    let after_prefix = &token[6..];
+    if after_prefix.is_empty() {
+        return None;
     }
 
-    left.trim().to_string()
+    let split_index = after_prefix
+        .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
+        .unwrap_or(after_prefix.len());
+
+    let (id, suffix) = after_prefix.split_at(split_index);
+    Some((id, suffix))
+}
+
+fn replace_areaid_tokens_with_area_names(
+    line: &str,
+    area_name_by_id: &HashMap<String, String>,
+) -> String {
+    line.split_whitespace()
+        .map(|token| {
+            let Some((id, suffix)) = split_area_id_token(token) else {
+                return token.to_string();
+            };
+
+            let Some(name) = area_name_by_id.get(id) else {
+                return token.to_string();
+            };
+
+            format!("{name}{suffix}")
+        })
+        .collect::<Vec<String>>()
+        .join(" ")
+        .trim()
+        .to_string()
+}
+
+fn strip_comment_and_resolve_area_name(
+    line: &str,
+    area_name_by_id: &HashMap<String, String>,
+) -> String {
+    let left = line.split(";;").next().unwrap_or_default().trim();
+    replace_areaid_tokens_with_area_names(left, area_name_by_id)
 }
 
 fn strip_format_tags(mut line: String) -> String {
@@ -155,6 +181,7 @@ fn render_line(
     app: &AppHandle,
     guide_path: &str,
     icon_cache: &mut HashMap<String, Option<String>>,
+    area_name_by_id: &HashMap<String, String>,
     line: &str,
 ) -> Result<Option<LevelingGuideLineDto>, CommandError> {
     if line.trim().is_empty() {
@@ -165,7 +192,7 @@ fn render_line(
         return Ok(None);
     }
 
-    let stripped = strip_comment_and_resolve_area_name(line);
+    let stripped = strip_comment_and_resolve_area_name(line, area_name_by_id);
     let stripped = strip_format_tags(stripped);
     let (is_hint, stripped) = parse_line_is_hint(&stripped);
 
@@ -288,7 +315,15 @@ pub(crate) fn current_page_dto(
     let lines = page
         .lines
         .iter()
-        .map(|line| render_line(app, &loaded.guide_path, &mut loaded.icon_cache, line))
+        .map(|line| {
+            render_line(
+                app,
+                &loaded.guide_path,
+                &mut loaded.icon_cache,
+                &loaded.area_name_by_id,
+                line,
+            )
+        })
         .collect::<Result<Vec<Option<LevelingGuideLineDto>>, CommandError>>()?
         .into_iter()
         .flatten()

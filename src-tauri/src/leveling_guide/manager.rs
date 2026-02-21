@@ -1,11 +1,51 @@
 use crate::error::{command_error, CommandError};
 use std::collections::HashMap;
+use std::path::Path;
 use std::sync::Mutex;
 use tauri::AppHandle;
 
 use super::io::read_guide_content;
 use super::parser::{clamp_position, current_page_dto, parse_guide_json};
 use super::types::{GuidePosition, LevelingGuidePageDto, LoadedGuide, PersistedLevelingGuideProgress};
+
+#[derive(Debug, Clone, serde::Deserialize)]
+struct AreaEntry {
+    id: String,
+    name: String,
+}
+
+fn resolve_areas_path(guide_path: &str) -> Option<String> {
+    let relative_resource_path = guide_path.strip_prefix("resource:");
+    let base_path = relative_resource_path.unwrap_or(guide_path);
+
+    let parent = Path::new(base_path).parent()?;
+    let areas_path = parent.join("areas.json");
+
+    if relative_resource_path.is_some() {
+        return Some(format!("resource:{}", areas_path.to_string_lossy()));
+    }
+
+    Some(areas_path.to_string_lossy().to_string())
+}
+
+fn load_area_name_by_id(app: &AppHandle, guide_path: &str) -> Result<HashMap<String, String>, CommandError> {
+    let areas_path = resolve_areas_path(guide_path)
+        .ok_or_else(|| command_error("areas_path_invalid", "Failed to resolve areas.json path"))?;
+
+    let content = read_guide_content(app, &areas_path)?;
+
+    let parsed: Vec<Vec<AreaEntry>> = serde_json::from_str(&content)
+        .map_err(|e| command_error("areas_parse_failed", e.to_string()))?;
+
+    let mut lookup: HashMap<String, String> = HashMap::new();
+    for act in parsed {
+        for area in act {
+            lookup.entry(area.id).or_insert(area.name);
+        }
+    }
+
+    Ok(lookup)
+}
 
 #[derive(Default)]
 pub struct LevelingGuideManager {
@@ -34,11 +74,14 @@ impl LevelingGuideManager {
         let guide = parse_guide_json(value)?;
         let position = clamp_position(&guide, progress.position);
 
+        let area_name_by_id = load_area_name_by_id(app, &progress.guide_path)?;
+
         let loaded = LoadedGuide {
             guide_path: progress.guide_path,
             guide,
             position,
             icon_cache: HashMap::new(),
+            area_name_by_id,
         };
 
         let mut guard = self
