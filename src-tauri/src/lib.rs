@@ -20,6 +20,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             load_guide,
+            leveling_guide_get_current_page,
             leveling_guide_next_page,
             leveling_guide_previous_page,
             leveling_guide_reset_progress,

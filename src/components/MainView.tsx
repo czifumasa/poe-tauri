@@ -1,7 +1,11 @@
-import { JSX } from 'react';
+import { JSX, ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 
-export function MainView(): JSX.Element {
+interface MainViewProps {
+	children: ReactNode;
+}
+
+export function MainView({ children }: MainViewProps): JSX.Element {
 	async function openOverlay(): Promise<void> {
 		await invoke('show_overlay');
 	}
@@ -21,6 +25,13 @@ export function MainView(): JSX.Element {
 				<button type="button" onClick={() => void hideOverlay()}>
 					Hide Overlay
 				</button>
+			</div>
+
+			<div className="dashboardGrid">
+				<section className="dashboardCard">
+					<h2>Leveling Guide</h2>
+					{children}
+				</section>
 			</div>
 		</main>
 	);
