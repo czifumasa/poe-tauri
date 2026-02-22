@@ -57,6 +57,45 @@ function InputMaskView(): JSX.Element {
 	return <></>;
 }
 
+type OverlayHeightVariant = 'oneLine' | 'twoLines' | 'threeLines' | 'fourLines' | 'fiveLines';
+
+function clampOverlayVariantLineCount(lineCount: number): number {
+	if (lineCount <= 1) {
+		return 1;
+	}
+	if (lineCount >= 5) {
+		return 5;
+	}
+	return lineCount;
+}
+
+function getOverlayHeightVariant(lineCount: number): OverlayHeightVariant {
+	switch (lineCount) {
+		case 1:
+			return 'oneLine';
+		case 2:
+			return 'twoLines';
+		case 3:
+			return 'threeLines';
+		case 4:
+			return 'fourLines';
+		default:
+			return 'fiveLines';
+	}
+}
+
+function getOverlayLogicalSize(page: LevelingGuidePageDto | null): { widthPx: number; heightPx: number; variant: OverlayHeightVariant } {
+	const headerHeightPx = 50;
+	const footerHeightPx = 50;
+	const lineHeightPx = 30;
+	const widthPx = 340;
+	const rawLineCount = page?.lines.length ?? 1;
+	const variantLineCount = clampOverlayVariantLineCount(rawLineCount);
+	const variant = getOverlayHeightVariant(variantLineCount);
+	const heightPx = headerHeightPx + footerHeightPx + lineHeightPx * variantLineCount;
+	return { widthPx, heightPx, variant };
+}
+
 function App(): JSX.Element {
 	const viewMode = useMemo<ViewMode>(() => getViewMode(), []);
 	const [currentPage, setCurrentPage] = useState<LevelingGuidePageDto | null>(null);
@@ -184,8 +223,9 @@ function App(): JSX.Element {
 	}
 
 	if (viewMode === 'overlay') {
+		const overlaySize = getOverlayLogicalSize(currentPage);
 		return (
-			<OverlayPanel>
+			<OverlayPanel logicalWidthPx={overlaySize.widthPx} logicalHeightPx={overlaySize.heightPx}>
 				<LevelingGuideContent
 					variant="overlay"
 					page={currentPage}

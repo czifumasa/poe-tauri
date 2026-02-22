@@ -3,7 +3,7 @@ use std::sync::mpsc;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 
 use crate::error::{command_error, CommandError};
-use crate::window::identifiers::{OVERLAY_VIEW_QUERY_VALUE, OVERLAY_WINDOW_LABEL};
+use crate::window::identifiers::{OVERLAY_DEFAULT_MARGIN_PX, OVERLAY_VIEW_QUERY_VALUE, OVERLAY_WINDOW_LABEL};
 
 #[cfg(linux_bsd_target_os)]
 use gtk_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
@@ -34,14 +34,14 @@ fn configure_overlay_layer_shell(window: &tauri::WebviewWindow) -> Result<bool, 
                     gtk_window.set_keyboard_mode(KeyboardMode::None);
                     gtk_window.set_exclusive_zone(0);
 
-                    gtk_window.set_anchor(Edge::Top, true);
+                    gtk_window.set_anchor(Edge::Top, false);
                     gtk_window.set_anchor(Edge::Left, true);
-                    gtk_window.set_anchor(Edge::Bottom, false);
+                    gtk_window.set_anchor(Edge::Bottom, true);
                     gtk_window.set_anchor(Edge::Right, false);
 
-                    gtk_window.set_layer_shell_margin(Edge::Top, 24);
-                    gtk_window.set_layer_shell_margin(Edge::Left, 24);
-                    gtk_window.set_layer_shell_margin(Edge::Bottom, 0);
+                    gtk_window.set_layer_shell_margin(Edge::Top, 0);
+                    gtk_window.set_layer_shell_margin(Edge::Left, OVERLAY_DEFAULT_MARGIN_PX);
+                    gtk_window.set_layer_shell_margin(Edge::Bottom, OVERLAY_DEFAULT_MARGIN_PX);
                     gtk_window.set_layer_shell_margin(Edge::Right, 0);
 
                     Ok(true)
@@ -81,11 +81,17 @@ pub fn ensure_overlay_window(app: &tauri::AppHandle) -> Result<tauri::WebviewWin
         .focusable(true)
         .visible(false)
         .resizable(false)
-        .inner_size(10.0, 10.0)
+        .inner_size(340.0, 130.0)
         .build()
         .map_err(|e| command_error("overlay_panel_window_create_failed", e.to_string()))
         .and_then(|window| {
             let _ = configure_overlay_layer_shell(&window)?;
+            window
+                .set_min_size(Some(tauri::Size::Physical(tauri::PhysicalSize {
+                    width: 1,
+                    height: 1,
+                })))
+                .map_err(|e| command_error("overlay_panel_window_set_min_size_failed", e.to_string()))?;
             Ok(window)
         })
 }

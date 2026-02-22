@@ -5,3 +5,5 @@ pub const INPUT_MASK_WINDOW_LABEL: &str = "input_mask";
 
 pub const OVERLAY_VIEW_QUERY_VALUE: &str = "overlay";
 pub const INPUT_MASK_VIEW_QUERY_VALUE: &str = "input-mask";
+
+pub const OVERLAY_DEFAULT_MARGIN_PX: i32 = 24;
