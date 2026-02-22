@@ -6,8 +6,9 @@ import { MainView } from './components/MainView';
 import { OverlayPanel } from './components/OverlayPanel';
 import { LevelingGuideContent } from './components/LevelingGuideContent';
 import type { LevelingGuidePageDto } from './types/guide';
+import { INPUT_MASK_VIEW_QUERY_VALUE, OVERLAY_VIEW_QUERY_VALUE } from './windowIdentifiers';
 
-type ViewMode = 'main' | 'overlay_panel';
+type ViewMode = 'main' | 'overlay' | 'input_mask';
 
 function formatInvokeError(error: unknown): string {
 	if (error instanceof Error) {
@@ -36,10 +37,24 @@ function formatInvokeError(error: unknown): string {
 function getViewMode(): ViewMode {
 	const params = new URLSearchParams(window.location.search);
 	const view = params.get('view');
-	if (view === 'overlay-panel') {
-		return 'overlay_panel';
+	if (view === OVERLAY_VIEW_QUERY_VALUE) {
+		return 'overlay';
+	}
+	if (view === INPUT_MASK_VIEW_QUERY_VALUE) {
+		return 'input_mask';
 	}
 	return 'main';
+}
+
+function InputMaskView(): JSX.Element {
+	useEffect((): (() => void) => {
+		document.documentElement.dataset.view = OVERLAY_VIEW_QUERY_VALUE;
+		return (): void => {
+			delete document.documentElement.dataset.view;
+		};
+	}, []);
+
+	return <></>;
 }
 
 function App(): JSX.Element {
@@ -55,9 +70,7 @@ function App(): JSX.Element {
 			setLoading(true);
 			setError(null);
 			try {
-				const existingPage = await invoke<LevelingGuidePageDto | null>(
-					'leveling_guide_get_current_page',
-				);
+				const existingPage = await invoke<LevelingGuidePageDto | null>('leveling_guide_get_current_page');
 				if (isDisposed) {
 					return;
 				}
@@ -166,7 +179,11 @@ function App(): JSX.Element {
 		};
 	}, []);
 
-	if (viewMode === 'overlay_panel') {
+	if (viewMode === 'input_mask') {
+		return <InputMaskView />;
+	}
+
+	if (viewMode === 'overlay') {
 		return (
 			<OverlayPanel>
 				<LevelingGuideContent

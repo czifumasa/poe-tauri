@@ -1,6 +1,8 @@
 use tauri::Manager;
 use crate::error::{command_error, CommandError};
-use crate::window::overlay_windows::{ensure_overlay_panel_window, ensure_overlay_window};
+use crate::window::identifiers::{INPUT_MASK_WINDOW_LABEL, OVERLAY_WINDOW_LABEL};
+use crate::window::input_mask_window::ensure_input_mask_window;
+use crate::window::overlay_window::ensure_overlay_window;
 
 #[cfg(linux_bsd_target_os)]
 use gtk_layer_shell::{KeyboardMode, LayerShell};
@@ -16,8 +18,8 @@ use std::sync::mpsc;
 
 #[tauri::command]
 pub fn show_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
-    let panel_window = ensure_overlay_panel_window(&app)?;
-    panel_window
+    let overlay_window = ensure_overlay_window(&app)?;
+    overlay_window
         .show()
         .map_err(|e| command_error("overlay_panel_window_show_failed", e.to_string()))?;
     Ok(())
@@ -25,7 +27,7 @@ pub fn show_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
 
 #[tauri::command]
 pub fn hide_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
-    if let Some(window) = app.get_webview_window("overlay_panel") {
+    if let Some(window) = app.get_webview_window(OVERLAY_WINDOW_LABEL) {
         window
             .hide()
             .map_err(|e| command_error("overlay_panel_window_hide_failed", e.to_string()))?;
@@ -35,7 +37,7 @@ pub fn hide_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
 
 #[tauri::command]
 pub fn set_overlay_panel_size(app: tauri::AppHandle, width: u32, height: u32) -> Result<(), CommandError> {
-    let window = ensure_overlay_panel_window(&app)?;
+    let window = ensure_overlay_window(&app)?;
     let width = width.max(1);
     let height = height.max(1);
     window
@@ -57,7 +59,7 @@ pub fn set_overlay_input_region(
     app: tauri::AppHandle,
     region: OverlayInputRegion,
 ) -> Result<(), CommandError> {
-    let window = ensure_overlay_window(&app)?;
+    let window = ensure_input_mask_window(&app)?;
 
     #[cfg(linux_bsd_target_os)]
     {
@@ -97,8 +99,8 @@ pub fn set_overlay_input_region(
 #[tauri::command]
 pub fn set_overlay_click_through(app: tauri::AppHandle, enabled: bool) -> Result<(), CommandError> {
     let window = app
-        .get_webview_window("overlay")
-        .ok_or_else(|| command_error("overlay_window_not_found", "overlay window not created"))?;
+        .get_webview_window(INPUT_MASK_WINDOW_LABEL)
+        .ok_or_else(|| command_error("overlay_window_not_found", "input_mask window not created"))?;
     window
         .set_ignore_cursor_events(enabled)
         .map_err(|e| command_error("overlay_window_set_click_through_failed", e.to_string()))?;
@@ -107,7 +109,7 @@ pub fn set_overlay_click_through(app: tauri::AppHandle, enabled: bool) -> Result
 
 #[tauri::command]
 pub fn set_overlay_interactive(app: tauri::AppHandle, interactive: bool) -> Result<(), CommandError> {
-    let window = ensure_overlay_panel_window(&app)?;
+    let window = ensure_overlay_window(&app)?;
 
     #[cfg(linux_bsd_target_os)]
     {

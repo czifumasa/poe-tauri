@@ -1,4 +1,5 @@
 use tauri::Manager;
+use crate::window::identifiers::{INPUT_MASK_WINDOW_LABEL, MAIN_WINDOW_LABEL, OVERLAY_WINDOW_LABEL};
 
 mod error;
 mod persistence;
@@ -33,14 +34,14 @@ pub fn run() {
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
-            if let Some(main_window) = app.get_webview_window("main") {
+            if let Some(main_window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
                 main_window.on_window_event(move |event| {
                     if let tauri::WindowEvent::CloseRequested { .. } = event {
-                        if let Some(overlay_panel) = app_handle.get_webview_window("overlay_panel") {
-                            let _ = overlay_panel.close();
-                        }
-                        if let Some(overlay) = app_handle.get_webview_window("overlay") {
+                        if let Some(overlay) = app_handle.get_webview_window(OVERLAY_WINDOW_LABEL) {
                             let _ = overlay.close();
+                        }
+                        if let Some(input_mask) = app_handle.get_webview_window(INPUT_MASK_WINDOW_LABEL) {
+                            let _ = input_mask.close();
                         }
                     }
                 });
