@@ -5,8 +5,8 @@ import './App.css';
 import { MainView } from './components/MainView';
 import { OverlayPanel } from './components/OverlayPanel';
 import { LevelingGuideContent } from './components/LevelingGuideContent';
-import type { LevelingGuidePageDto } from './types/guide';
-import { INPUT_MASK_VIEW_QUERY_VALUE, OVERLAY_VIEW_QUERY_VALUE } from './windowIdentifiers';
+import type { LevelingGuidePageDto } from './types/Guide.ts';
+import { INPUT_MASK_VIEW_QUERY_VALUE, OVERLAY_VIEW_QUERY_VALUE } from './constants/WindowIdentifiers.ts';
 
 type ViewMode = 'main' | 'overlay' | 'input_mask';
 
@@ -84,7 +84,11 @@ function getOverlayHeightVariant(lineCount: number): OverlayHeightVariant {
 	}
 }
 
-function getOverlayLogicalSize(page: LevelingGuidePageDto | null): { widthPx: number; heightPx: number; variant: OverlayHeightVariant } {
+function getOverlayLogicalSize(page: LevelingGuidePageDto | null): {
+	widthPx: number;
+	heightPx: number;
+	variant: OverlayHeightVariant;
+} {
 	const headerHeightPx = 50;
 	const footerHeightPx = 50;
 	const lineHeightPx = 30;
