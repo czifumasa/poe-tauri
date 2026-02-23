@@ -31,7 +31,7 @@ fn configure_overlay_layer_shell(window: &tauri::WebviewWindow) -> Result<bool, 
                     gtk_window.init_layer_shell();
                     gtk_window.set_namespace("poe-tauri-overlay");
                     gtk_window.set_layer(Layer::Overlay);
-                    gtk_window.set_keyboard_mode(KeyboardMode::None);
+                    gtk_window.set_keyboard_mode(KeyboardMode::OnDemand);
                     gtk_window.set_exclusive_zone(0);
 
                     gtk_window.set_anchor(Edge::Top, false);

@@ -1,7 +1,6 @@
 import { Fragment, JSX, useRef, type PointerEvent as ReactPointerEvent } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import type { LevelingGuideLineDto, LevelingGuidePageDto, LevelingGuideSpanDto } from '../../types/Guide.ts';
-import { requestOverlayFocus } from '../OverlayPanel/OverlayPanel';
 
 import './LevelingGuideContent.css';
 
@@ -112,12 +111,10 @@ function OverlayGuideContent(props: OverlayLevelingGuideContentProps): JSX.Eleme
 
 	const handlePrevious = (): void => {
 		void onNavigate('previous');
-		void requestOverlayFocus();
 	};
 
 	const handleNext = (): void => {
 		void onNavigate('next');
-		void requestOverlayFocus();
 	};
 
 	const scheduleApply = (): void => {
@@ -152,7 +149,6 @@ function OverlayGuideContent(props: OverlayLevelingGuideContentProps): JSX.Eleme
 	const handleHeaderPointerDown = (event: ReactPointerEvent<HTMLDivElement>): void => {
 		event.preventDefault();
 		event.currentTarget.setPointerCapture(event.pointerId);
-		void requestOverlayFocus();
 		dragStateRef.current = {
 			status: 'pending',
 			pointerId: event.pointerId,

@@ -6,9 +6,9 @@ import { MainView } from './components/MainView/MainView';
 import { OverlayPanel } from './components/OverlayPanel/OverlayPanel';
 import { LevelingGuideContent } from './components/LevelingGuideContent/LevelingGuideContent';
 import type { LevelingGuidePageDto } from './types/Guide.ts';
-import { INPUT_MASK_VIEW_QUERY_VALUE, OVERLAY_VIEW_QUERY_VALUE } from './constants/WindowIdentifiers.ts';
+import { OVERLAY_VIEW_QUERY_VALUE } from './constants/WindowIdentifiers.ts';
 
-type ViewMode = 'main' | 'overlay' | 'input_mask';
+type ViewMode = 'main' | 'overlay';
 
 function formatInvokeError(error: unknown): string {
 	if (error instanceof Error) {
@@ -40,22 +40,9 @@ function getViewMode(): ViewMode {
 	if (view === OVERLAY_VIEW_QUERY_VALUE) {
 		return 'overlay';
 	}
-	if (view === INPUT_MASK_VIEW_QUERY_VALUE) {
-		return 'input_mask';
-	}
 	return 'main';
 }
 
-function InputMaskView(): JSX.Element {
-	useEffect((): (() => void) => {
-		document.documentElement.dataset.view = OVERLAY_VIEW_QUERY_VALUE;
-		return (): void => {
-			delete document.documentElement.dataset.view;
-		};
-	}, []);
-
-	return <></>;
-}
 
 type OverlayHeightVariant = 'oneLine' | 'twoLines' | 'threeLines' | 'fourLines' | 'fiveLines';
 
@@ -221,10 +208,6 @@ function App(): JSX.Element {
 			}
 		};
 	}, []);
-
-	if (viewMode === 'input_mask') {
-		return <InputMaskView />;
-	}
 
 	if (viewMode === 'overlay') {
 		const overlaySize = getOverlayLogicalSize(currentPage);

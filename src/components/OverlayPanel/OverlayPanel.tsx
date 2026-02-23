@@ -13,10 +13,6 @@ interface OverlayPanelProps {
 export function OverlayPanel({ children, logicalWidthPx, logicalHeightPx }: OverlayPanelProps): JSX.Element {
 	const overlayPanelRef = useRef<HTMLDivElement | null>(null);
 
-	async function releaseOverlayFocus(): Promise<void> {
-		await invoke('set_overlay_interactive', { interactive: false });
-	}
-
 	useEffect((): (() => void) => {
 		document.documentElement.dataset.view = OVERLAY_VIEW_QUERY_VALUE;
 		const devicePixelRatio = window.devicePixelRatio || 1;
@@ -24,19 +20,7 @@ export function OverlayPanel({ children, logicalWidthPx, logicalHeightPx }: Over
 		const height = Math.max(1, Math.ceil(logicalHeightPx * devicePixelRatio));
 		void invoke('set_overlay_panel_size', { width, height });
 
-		const onFocusChanged = (): void => {
-			if (!document.hasFocus()) {
-				void releaseOverlayFocus();
-			}
-		};
-		window.addEventListener('focus', onFocusChanged);
-		window.addEventListener('blur', onFocusChanged);
-		const intervalId = window.setInterval(onFocusChanged, 250);
-
 		return (): void => {
-			window.clearInterval(intervalId);
-			window.removeEventListener('focus', onFocusChanged);
-			window.removeEventListener('blur', onFocusChanged);
 			delete document.documentElement.dataset.view;
 		};
 	}, [logicalWidthPx, logicalHeightPx]);
@@ -51,8 +35,4 @@ export function OverlayPanel({ children, logicalWidthPx, logicalHeightPx }: Over
 			</div>
 		</main>
 	);
-}
-
-export async function requestOverlayFocus(): Promise<void> {
-	await invoke('set_overlay_interactive', { interactive: true });
 }
