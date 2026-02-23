@@ -2,9 +2,9 @@ import { JSX, useCallback, useEffect, useMemo, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import './App.css';
-import { MainView } from './components/MainView';
-import { OverlayPanel } from './components/OverlayPanel';
-import { LevelingGuideContent } from './components/LevelingGuideContent';
+import { MainView } from './components/MainView/MainView';
+import { OverlayPanel } from './components/OverlayPanel/OverlayPanel';
+import { LevelingGuideContent } from './components/LevelingGuideContent/LevelingGuideContent';
 import type { LevelingGuidePageDto } from './types/Guide.ts';
 import { INPUT_MASK_VIEW_QUERY_VALUE, OVERLAY_VIEW_QUERY_VALUE } from './constants/WindowIdentifiers.ts';
 

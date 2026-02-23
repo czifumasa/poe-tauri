@@ -1,6 +1,8 @@
-import { JSX, ReactNode, useEffect, useRef } from 'react';
+import { JSX, type ReactNode, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { OVERLAY_VIEW_QUERY_VALUE } from '../constants/WindowIdentifiers.ts';
+import { OVERLAY_VIEW_QUERY_VALUE } from '../../constants/WindowIdentifiers.ts';
+
+import './OverlayPanel.css';
 
 interface OverlayPanelProps {
 	children: ReactNode;

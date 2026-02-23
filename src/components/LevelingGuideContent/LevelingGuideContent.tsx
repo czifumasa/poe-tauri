@@ -1,6 +1,8 @@
 import { Fragment, JSX } from 'react';
-import type { LevelingGuideLineDto, LevelingGuidePageDto, LevelingGuideSpanDto } from '../types/Guide.ts';
-import { requestOverlayFocus } from './OverlayPanel';
+import type { LevelingGuideLineDto, LevelingGuidePageDto, LevelingGuideSpanDto } from '../../types/Guide.ts';
+import { requestOverlayFocus } from '../OverlayPanel/OverlayPanel';
+
+import './LevelingGuideContent.css';
 
 type OverlayLevelingGuideContentProps = {
 	variant: 'overlay';

@@ -1,5 +1,7 @@
-import { JSX, ReactNode } from 'react';
+import { JSX, type ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+
+import './MainView.css';
 
 interface MainViewProps {
 	children: ReactNode;
