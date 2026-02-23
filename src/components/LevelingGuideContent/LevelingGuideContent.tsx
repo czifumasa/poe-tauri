@@ -1,4 +1,5 @@
-import { Fragment, JSX } from 'react';
+import { Fragment, JSX, useRef, type PointerEvent as ReactPointerEvent } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import type { LevelingGuideLineDto, LevelingGuidePageDto, LevelingGuideSpanDto } from '../../types/Guide.ts';
 import { requestOverlayFocus } from '../OverlayPanel/OverlayPanel';
 
@@ -52,8 +53,53 @@ function getDashboardHeaderLabel(page: LevelingGuidePageDto): string {
 	return `${actLabel} - Page ${page.position.pageIndex + 1}/${page.pageCountInAct}`;
 }
 
+type OverlayPositionDto =
+	| { type: 'absolute'; x: number; y: number }
+	| { type: 'layer_shell_margins'; left: number; bottom: number };
+
+type OverlayDragState =
+	| {
+			status: 'pending';
+			pointerId: number;
+			startClientX: number;
+			startClientY: number;
+	  }
+	| {
+			status: 'dragging';
+			pointerId: number;
+			startClientX: number;
+			startClientY: number;
+			startPosition: OverlayPositionDto;
+	  };
+
+function computeDraggedPosition(params: {
+	startPosition: OverlayPositionDto;
+	deltaX: number;
+	deltaY: number;
+}): OverlayPositionDto {
+	if (params.startPosition.type === 'absolute') {
+		return {
+			type: 'absolute',
+			x: Math.round(params.startPosition.x + params.deltaX),
+			y: Math.round(params.startPosition.y + params.deltaY),
+		};
+	}
+
+	return {
+		type: 'layer_shell_margins',
+		left: Math.max(0, Math.round(params.startPosition.left + params.deltaX)),
+		bottom: Math.max(0, Math.round(params.startPosition.bottom - params.deltaY)),
+	};
+}
+
 function OverlayGuideContent(props: OverlayLevelingGuideContentProps): JSX.Element {
 	const { page, loading, onNavigate } = props;
+	const dragStateRef = useRef<OverlayDragState | null>(null);
+	const animationFrameIdRef = useRef<number | null>(null);
+	const pendingPositionRef = useRef<OverlayPositionDto | null>(null);
+	const lastAppliedPositionRef = useRef<OverlayPositionDto | null>(null);
+	const isApplyingRef = useRef<boolean>(false);
+
 	if (page === null) {
 		return (
 			<div className="guideNotLoaded">
@@ -74,9 +120,128 @@ function OverlayGuideContent(props: OverlayLevelingGuideContentProps): JSX.Eleme
 		void requestOverlayFocus();
 	};
 
+	const scheduleApply = (): void => {
+		if (animationFrameIdRef.current !== null) {
+			return;
+		}
+
+		animationFrameIdRef.current = window.requestAnimationFrame(() => {
+			animationFrameIdRef.current = null;
+			const position = pendingPositionRef.current;
+			if (position === null) {
+				return;
+			}
+
+			if (isApplyingRef.current) {
+				scheduleApply();
+				return;
+			}
+
+			isApplyingRef.current = true;
+			lastAppliedPositionRef.current = position;
+			void invoke('overlay_apply_position', { position })
+				.catch((err: unknown) => {
+					console.error('Failed to apply overlay position:', err);
+				})
+				.finally(() => {
+					isApplyingRef.current = false;
+				});
+		});
+	};
+
+	const handleHeaderPointerDown = (event: ReactPointerEvent<HTMLDivElement>): void => {
+		event.preventDefault();
+		event.currentTarget.setPointerCapture(event.pointerId);
+		void requestOverlayFocus();
+		dragStateRef.current = {
+			status: 'pending',
+			pointerId: event.pointerId,
+			startClientX: event.clientX,
+			startClientY: event.clientY,
+		};
+
+		void invoke<OverlayPositionDto>('overlay_get_position')
+			.then((startPosition) => {
+				const state = dragStateRef.current;
+				if (state === null) {
+					return;
+				}
+				if (state.status !== 'pending') {
+					return;
+				}
+				dragStateRef.current = {
+					status: 'dragging',
+					pointerId: state.pointerId,
+					startClientX: state.startClientX,
+					startClientY: state.startClientY,
+					startPosition,
+				};
+			})
+			.catch((err: unknown) => {
+				console.error('Failed to get overlay position:', err);
+				dragStateRef.current = null;
+			});
+	};
+
+	const handleHeaderPointerMove = (event: ReactPointerEvent<HTMLDivElement>): void => {
+		const state = dragStateRef.current;
+		if (state === null) {
+			return;
+		}
+		if (state.pointerId !== event.pointerId) {
+			return;
+		}
+		if (state.status !== 'dragging') {
+			return;
+		}
+
+		const deltaX = event.clientX - state.startClientX;
+		const deltaY = event.clientY - state.startClientY;
+		const position = computeDraggedPosition({ startPosition: state.startPosition, deltaX, deltaY });
+		pendingPositionRef.current = position;
+		scheduleApply();
+	};
+
+	const endDragging = (event: ReactPointerEvent<HTMLDivElement>): void => {
+		const state = dragStateRef.current;
+		dragStateRef.current = null;
+		pendingPositionRef.current = null;
+
+		if (animationFrameIdRef.current !== null) {
+			window.cancelAnimationFrame(animationFrameIdRef.current);
+			animationFrameIdRef.current = null;
+		}
+
+		if (state === null) {
+			return;
+		}
+		if (state.pointerId !== event.pointerId) {
+			return;
+		}
+
+		if (state.status !== 'dragging') {
+			return;
+		}
+
+		const deltaX = event.clientX - state.startClientX;
+		const deltaY = event.clientY - state.startClientY;
+		const finalPosition = computeDraggedPosition({ startPosition: state.startPosition, deltaX, deltaY });
+		lastAppliedPositionRef.current = finalPosition;
+
+		void invoke('overlay_set_position', { position: finalPosition }).catch((err: unknown) => {
+			console.error('Failed to persist overlay position:', err);
+		});
+	};
+
 	return (
 		<div className="guideContent guideContentOverlay">
-			<div className="guideHeader guideHeaderOverlay">
+			<div
+				className="guideHeader guideHeaderOverlay"
+				onPointerDown={handleHeaderPointerDown}
+				onPointerMove={handleHeaderPointerMove}
+				onPointerUp={endDragging}
+				onPointerCancel={endDragging}
+				style={{ touchAction: 'none', cursor: 'move' }}>
 				<div className="guideHeaderLeft">{getActLabel(page)}</div>
 				<div className="guideHeaderRight">{getPageCounterLabel(page)}</div>
 			</div>
