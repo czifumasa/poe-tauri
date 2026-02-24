@@ -43,7 +43,6 @@ function getViewMode(): ViewMode {
 	return 'main';
 }
 
-
 type OverlayHeightVariant = 'oneLine' | 'twoLines' | 'threeLines' | 'fourLines' | 'fiveLines';
 
 function clampOverlayVariantLineCount(lineCount: number): number {

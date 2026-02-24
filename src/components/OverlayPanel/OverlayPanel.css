@@ -1,42 +1,42 @@
 .overlayContainer {
-    position: fixed;
-    inset: 0;
-    margin: 0;
-    padding: 0;
-    background: transparent;
-    pointer-events: none;
+	position: fixed;
+	inset: 0;
+	margin: 0;
+	padding: 0;
+	background: transparent;
+	pointer-events: none;
 }
 
 .overlayPanel {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 340px;
-    border-radius: 8px;
-    font-family: ui-serif, "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
-    background: linear-gradient(180deg, #161616 0%, #090909 100%);
-    padding: 0;
-    pointer-events: auto;
-    box-sizing: border-box;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 340px;
+	border-radius: 8px;
+	font-family: ui-serif, 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+	background: linear-gradient(180deg, #161616 0%, #090909 100%);
+	padding: 0;
+	pointer-events: auto;
+	box-sizing: border-box;
 }
 
 .overlayPanelBorder {
-    position: relative;
-    border: 1px solid rgba(200, 169, 110, 0.42);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.8);
-    box-sizing: border-box;
-    border-radius: 8px;
-    overflow: hidden;
+	position: relative;
+	border: 1px solid rgba(200, 169, 110, 0.42);
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.8);
+	box-sizing: border-box;
+	border-radius: 8px;
+	overflow: hidden;
 }
 
 .overlayPanelBorder::before {
-    content: '';
-    position: absolute;
-    inset: 1px;
-    border-radius: 7px;
-    border: 1px solid rgba(200, 169, 110, 0.18);
-    box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.03),
-        0 0 0 1px rgba(0, 0, 0, 0.35);
-    pointer-events: none;
+	content: '';
+	position: absolute;
+	inset: 1px;
+	border-radius: 7px;
+	border: 1px solid rgba(200, 169, 110, 0.18);
+	box-shadow:
+		inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+		0 0 0 1px rgba(0, 0, 0, 0.35);
+	pointer-events: none;
 }

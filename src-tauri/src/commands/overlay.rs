@@ -337,5 +337,37 @@ pub fn set_overlay_panel_size(
             .map_err(|e| command_error("overlay_panel_window_set_size_failed", e.to_string()))?;
     }
 
+    #[cfg(linux_bsd_target_os)]
+    {
+        let (sender, receiver) = mpsc::channel::<Result<(), CommandError>>();
+        let window_for_refresh = window.clone();
+        window
+            .run_on_main_thread(move || {
+                let result = (|| {
+                    let gtk_window = window_for_refresh
+                        .gtk_window()
+                        .map_err(|e| command_error("overlay_window_gtk_window_failed", e.to_string()))?;
+                    
+                    gtk_window.queue_draw();
+                    
+                    window_for_refresh.hide()
+                        .map_err(|e| command_error("overlay_window_hide_failed", e.to_string()))?;
+                    
+                    std::thread::sleep(std::time::Duration::from_millis(1));
+                    
+                    window_for_refresh.show()
+                        .map_err(|e| command_error("overlay_window_show_failed", e.to_string()))?;
+                    
+                    Ok(())
+                })();
+                let _ = sender.send(result);
+            })
+            .map_err(|e| command_error("overlay_window_main_thread_failed", e.to_string()))?;
+
+        receiver
+            .recv()
+            .map_err(|e| command_error("overlay_window_main_thread_channel_failed", e.to_string()))??;
+    }
+
     Ok(())
 }
