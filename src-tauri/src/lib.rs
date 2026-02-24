@@ -10,6 +10,7 @@ mod commands;
 use commands::common::*;
 use commands::overlay::*;
 use commands::leveling_guide::*;
+use commands::settings::*;
 use leveling_guide::LevelingGuideManager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -25,6 +26,8 @@ pub fn run() {
             leveling_guide_next_page,
             leveling_guide_previous_page,
             leveling_guide_reset_progress,
+            settings_get_leaguestart,
+            settings_set_leaguestart,
             show_overlay,
             hide_overlay,
             overlay_get_position,

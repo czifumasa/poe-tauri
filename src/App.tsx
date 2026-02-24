@@ -92,6 +92,8 @@ function App(): JSX.Element {
 	const [currentPage, setCurrentPage] = useState<LevelingGuidePageDto | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
+	const [leaguestart, setLeaguestart] = useState<boolean>(true);
+	const [settingsLoading, setSettingsLoading] = useState<boolean>(true);
 
 	useEffect((): (() => void) => {
 		let isDisposed = false;
@@ -132,6 +134,38 @@ function App(): JSX.Element {
 		return (): void => {
 			isDisposed = true;
 		};
+	}, []);
+
+	useEffect((): (() => void) => {
+		let isDisposed = false;
+		setSettingsLoading(true);
+		void (async (): Promise<void> => {
+			try {
+				const persistedValue = await invoke<boolean>('settings_get_leaguestart');
+				if (isDisposed) {
+					return;
+				}
+				setLeaguestart(persistedValue);
+			} catch (err) {
+				console.error('Failed to initialize leaguestart setting:', err);
+			} finally {
+				if (!isDisposed) {
+					setSettingsLoading(false);
+				}
+			}
+		})();
+		return (): void => {
+			isDisposed = true;
+		};
+	}, []);
+
+	const updateLeaguestart = useCallback(async (nextValue: boolean): Promise<void> => {
+		setLeaguestart(nextValue);
+		try {
+			await invoke('settings_set_leaguestart', { leaguestart: nextValue });
+		} catch (err) {
+			console.error('Failed to persist leaguestart setting:', err);
+		}
 	}, []);
 
 	const loadGuide = useCallback(async (): Promise<void> => {
@@ -223,7 +257,10 @@ function App(): JSX.Element {
 			<LevelingGuideDashboardSnippet
 				page={currentPage}
 				loading={loading}
+				settingsLoading={settingsLoading}
 				error={error}
+				leaguestart={leaguestart}
+				onLeaguestartChange={updateLeaguestart}
 				onLoadGuide={loadGuide}
 				onResetProgress={resetProgress}
 			/>
