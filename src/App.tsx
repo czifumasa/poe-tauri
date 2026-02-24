@@ -4,9 +4,10 @@ import { listen } from '@tauri-apps/api/event';
 import './App.css';
 import { MainView } from './components/MainView/MainView';
 import { OverlayPanel } from './components/OverlayPanel/OverlayPanel';
-import { LevelingGuideContent } from './components/LevelingGuideContent/LevelingGuideContent';
 import type { LevelingGuidePageDto } from './types/Guide.ts';
 import { OVERLAY_VIEW_QUERY_VALUE } from './constants/WindowIdentifiers.ts';
+import { LevelingGuideOverlay } from './components/LevelingGuide/overlay/LevelingGuideOverlay.tsx';
+import { LevelingGuideDashboardSnippet } from './components/LevelingGuide/snippet/LevelingGuideDashboardSnippet.tsx';
 
 type ViewMode = 'main' | 'overlay';
 
@@ -212,21 +213,14 @@ function App(): JSX.Element {
 		const overlaySize = getOverlayLogicalSize(currentPage);
 		return (
 			<OverlayPanel logicalWidthPx={overlaySize.widthPx} logicalHeightPx={overlaySize.heightPx}>
-				<LevelingGuideContent
-					variant="overlay"
-					page={currentPage}
-					loading={loading}
-					error={error}
-					onNavigate={handleNavigate}
-				/>
+				<LevelingGuideOverlay page={currentPage} loading={loading} error={error} onNavigate={handleNavigate} />
 			</OverlayPanel>
 		);
 	}
 
 	return (
 		<MainView>
-			<LevelingGuideContent
-				variant="dashboard"
+			<LevelingGuideDashboardSnippet
 				page={currentPage}
 				loading={loading}
 				error={error}

@@ -1,0 +1,86 @@
+.guideNotLoaded {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	align-items: center;
+}
+
+.overlayMessage {
+	color: #ffcc00;
+	font-size: 14px;
+	text-align: center;
+}
+
+.overlayError {
+	color: #ff4444;
+	font-size: 12px;
+	text-align: center;
+	background-color: rgba(255, 68, 68, 0.1);
+	border: 1px solid #ff4444;
+	border-radius: 4px;
+	padding: 8px;
+}
+
+.overlayLoading {
+	color: #4488ff;
+	font-size: 12px;
+	text-align: center;
+}
+
+.guideContent {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.guideHeader {
+	font-weight: 700;
+	font-size: 16px;
+	color: #ffffff;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+	padding-bottom: 8px;
+}
+
+.guideSteps {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	padding: 0;
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+.guideStep {
+	color: #e0e0e0;
+	font-size: 14px;
+	line-height: 1.4;
+	padding: 4px 0;
+}
+
+.guideInlineImage {
+	height: 16px;
+	width: auto;
+	object-fit: contain;
+	vertical-align: -3px;
+	margin: 0 4px;
+}
+
+.guideNavigation {
+	display: flex;
+	gap: 8px;
+	justify-content: space-between;
+	margin-top: 8px;
+}
+
+.guideNavigation button {
+	flex: 1;
+	padding: 8px 16px;
+	font-size: 14px;
+}
+
+.guideNavigation button:disabled:not(.guideNavButton) {
+	opacity: 0.5;
+	cursor: not-allowed;
+}

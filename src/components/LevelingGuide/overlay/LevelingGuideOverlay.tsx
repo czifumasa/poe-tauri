@@ -1,27 +1,16 @@
-import { Fragment, JSX, useRef, type PointerEvent as ReactPointerEvent } from 'react';
+import { Fragment, JSX, type PointerEvent as ReactPointerEvent, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import type { LevelingGuideLineDto, LevelingGuidePageDto, LevelingGuideSpanDto } from '../../types/Guide.ts';
+import type { LevelingGuideLineDto, LevelingGuidePageDto, LevelingGuideSpanDto } from '../../../types/Guide.ts';
 
-import './LevelingGuideContent.css';
+import '../LevelingGuideCommon.css';
+import './LevelingGuideOverlay.css';
 
-type OverlayLevelingGuideContentProps = {
-	variant: 'overlay';
+type LevelingGuideOverlayProps = {
 	page: LevelingGuidePageDto | null;
 	loading: boolean;
 	error: string | null;
 	onNavigate: (direction: 'previous' | 'next') => Promise<void>;
 };
-
-type DashboardLevelingGuideContentProps = {
-	variant: 'dashboard';
-	page: LevelingGuidePageDto | null;
-	loading: boolean;
-	error: string | null;
-	onLoadGuide: () => Promise<void>;
-	onResetProgress: () => Promise<void>;
-};
-
-type LevelingGuideContentProps = OverlayLevelingGuideContentProps | DashboardLevelingGuideContentProps;
 
 function renderSpan(span: LevelingGuideSpanDto, key: string): JSX.Element {
 	if (span.type === 'image') {
@@ -45,11 +34,6 @@ function getActLabel(page: LevelingGuidePageDto): string {
 
 function getPageCounterLabel(page: LevelingGuidePageDto): string {
 	return `${page.position.pageIndex + 1} / ${page.pageCountInAct}`;
-}
-
-function getDashboardHeaderLabel(page: LevelingGuidePageDto): string {
-	const actLabel = `Act ${page.position.actIndex + 1}`;
-	return `${actLabel} - Page ${page.position.pageIndex + 1}/${page.pageCountInAct}`;
 }
 
 type OverlayPositionDto =
@@ -91,12 +75,11 @@ function computeDraggedPosition(params: {
 	};
 }
 
-function OverlayGuideContent(props: OverlayLevelingGuideContentProps): JSX.Element {
+export function LevelingGuideOverlay(props: LevelingGuideOverlayProps): JSX.Element {
 	const { page, loading, onNavigate } = props;
 	const dragStateRef = useRef<OverlayDragState | null>(null);
 	const animationFrameIdRef = useRef<number | null>(null);
 	const pendingPositionRef = useRef<OverlayPositionDto | null>(null);
-	const lastAppliedPositionRef = useRef<OverlayPositionDto | null>(null);
 	const isApplyingRef = useRef<boolean>(false);
 
 	if (page === null) {
@@ -135,7 +118,6 @@ function OverlayGuideContent(props: OverlayLevelingGuideContentProps): JSX.Eleme
 			}
 
 			isApplyingRef.current = true;
-			lastAppliedPositionRef.current = position;
 			void invoke('overlay_apply_position', { position })
 				.catch((err: unknown) => {
 					console.error('Failed to apply overlay position:', err);
@@ -193,8 +175,8 @@ function OverlayGuideContent(props: OverlayLevelingGuideContentProps): JSX.Eleme
 
 		const deltaX = event.clientX - state.startClientX;
 		const deltaY = event.clientY - state.startClientY;
-		const position = computeDraggedPosition({ startPosition: state.startPosition, deltaX, deltaY });
-		pendingPositionRef.current = position;
+
+		pendingPositionRef.current = computeDraggedPosition({ startPosition: state.startPosition, deltaX, deltaY });
 		scheduleApply();
 	};
 
@@ -222,7 +204,6 @@ function OverlayGuideContent(props: OverlayLevelingGuideContentProps): JSX.Eleme
 		const deltaX = event.clientX - state.startClientX;
 		const deltaY = event.clientY - state.startClientY;
 		const finalPosition = computeDraggedPosition({ startPosition: state.startPosition, deltaX, deltaY });
-		lastAppliedPositionRef.current = finalPosition;
 
 		void invoke('overlay_set_position', { position: finalPosition }).catch((err: unknown) => {
 			console.error('Failed to persist overlay position:', err);
@@ -255,59 +236,5 @@ function OverlayGuideContent(props: OverlayLevelingGuideContentProps): JSX.Eleme
 				</button>
 			</div>
 		</div>
-	);
-}
-
-function DashboardGuideContent(props: DashboardLevelingGuideContentProps): JSX.Element {
-	const { page, loading } = props;
-	if (page === null) {
-		return (
-			<div className="guideNotLoaded">
-				<div className="overlayMessage">Guide is not initialized.</div>
-				{props.error && <div className="overlayError">{props.error}</div>}
-				{loading && <div className="overlayLoading">Loading guide...</div>}
-				<div className="guideDashboardControls">
-					<button type="button" className="loadGuideButton" onClick={() => void props.onLoadGuide()} disabled={loading}>
-						Load Guide
-					</button>
-					<button type="button" onClick={() => void props.onResetProgress()} disabled>
-						Reset
-					</button>
-				</div>
-			</div>
-		);
-	}
-
-	return (
-		<div className="guideContent guideContentCompact">
-			<div className="guideHeader">{getDashboardHeaderLabel(page)}</div>
-			<div className="guideNavigation">
-				<button type="button" onClick={() => void props.onLoadGuide()} disabled={loading}>
-					Load
-				</button>
-				<button type="button" onClick={() => void props.onResetProgress()} disabled={loading}>
-					Reset
-				</button>
-			</div>
-		</div>
-	);
-}
-
-export function LevelingGuideContent({ page, loading, error, ...rest }: LevelingGuideContentProps): JSX.Element {
-	if (rest.variant === 'overlay') {
-		return (
-			<OverlayGuideContent variant="overlay" page={page} loading={loading} error={error} onNavigate={rest.onNavigate} />
-		);
-	}
-
-	return (
-		<DashboardGuideContent
-			variant="dashboard"
-			page={page}
-			loading={loading}
-			error={error}
-			onLoadGuide={rest.onLoadGuide}
-			onResetProgress={rest.onResetProgress}
-		/>
 	);
 }
