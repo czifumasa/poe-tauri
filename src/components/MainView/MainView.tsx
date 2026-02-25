@@ -16,6 +16,10 @@ export function MainView({ children }: MainViewProps): JSX.Element {
 		await invoke('hide_overlay');
 	}
 
+	async function resetSettings(): Promise<void> {
+		await invoke('settings_wipe');
+	}
+
 	return (
 		<main className="container">
 			<h1>Poe Tauri</h1>
@@ -26,6 +30,9 @@ export function MainView({ children }: MainViewProps): JSX.Element {
 				</button>
 				<button type="button" onClick={() => void hideOverlay()}>
 					Hide Overlay
+				</button>
+				<button type="button" onClick={() => void resetSettings()}>
+					Reset settings
 				</button>
 			</div>
 

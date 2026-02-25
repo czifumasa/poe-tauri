@@ -25,3 +25,8 @@ pub fn settings_get_leaguestart(app: tauri::AppHandle) -> Result<bool, CommandEr
 pub fn settings_set_leaguestart(app: tauri::AppHandle, leaguestart: bool) -> Result<(), CommandError> {
     store::set_value(&app, LEAGUESTART_STORE_KEY, &leaguestart)
 }
+
+#[tauri::command]
+pub fn settings_wipe(app: tauri::AppHandle) -> Result<(), CommandError> {
+    store::wipe(&app)
+}

@@ -28,6 +28,7 @@ pub fn run() {
             leveling_guide_reset_progress,
             settings_get_leaguestart,
             settings_set_leaguestart,
+            settings_wipe,
             show_overlay,
             hide_overlay,
             overlay_get_position,
@@ -51,3 +52,4 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+

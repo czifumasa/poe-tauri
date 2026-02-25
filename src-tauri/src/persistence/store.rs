@@ -42,3 +42,17 @@ pub fn set_value<T: Serialize>(app: &AppHandle, key: &str, value: &T) -> Result<
 
     Ok(())
 }
+
+pub fn wipe(app: &AppHandle) -> Result<(), CommandError> {
+    let store = app
+        .store(STORE_FILE)
+        .map_err(|e| command_error("store_open_failed", e.to_string()))?;
+
+    store.clear();
+
+    store
+        .save()
+        .map_err(|e| command_error("store_save_failed", e.to_string()))?;
+
+    Ok(())
+}
