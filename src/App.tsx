@@ -5,6 +5,7 @@ import './App.css';
 import { MainView } from './components/MainView/MainView';
 import { OverlayPanel } from './components/OverlayPanel/OverlayPanel';
 import type { LevelingGuidePageDto } from './types/Guide.ts';
+import type { LevelingGuideSettings } from './types/Settings.ts';
 import { OVERLAY_VIEW_QUERY_VALUE } from './constants/WindowIdentifiers.ts';
 import { LevelingGuideOverlay } from './components/LevelingGuide/overlay/LevelingGuideOverlay.tsx';
 import { LevelingGuideDashboardSnippet } from './components/LevelingGuide/snippet/LevelingGuideDashboardSnippet.tsx';
@@ -92,7 +93,7 @@ function App(): JSX.Element {
 	const [currentPage, setCurrentPage] = useState<LevelingGuidePageDto | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
-	const [leaguestart, setLeaguestart] = useState<boolean>(true);
+	const [settings, setSettings] = useState<LevelingGuideSettings>({ leagueStart: true, overlayPosition: null });
 	const [settingsLoading, setSettingsLoading] = useState<boolean>(true);
 
 	useEffect((): (() => void) => {
@@ -141,13 +142,13 @@ function App(): JSX.Element {
 		setSettingsLoading(true);
 		void (async (): Promise<void> => {
 			try {
-				const persistedValue = await invoke<boolean>('settings_get_leaguestart');
+				const persistedSettings = await invoke<LevelingGuideSettings>('settings_get_leveling_guide');
 				if (isDisposed) {
 					return;
 				}
-				setLeaguestart(persistedValue);
+				setSettings(persistedSettings);
 			} catch (err) {
-				console.error('Failed to initialize leaguestart setting:', err);
+				console.error('Failed to initialize leveling guide settings:', err);
 			} finally {
 				if (!isDisposed) {
 					setSettingsLoading(false);
@@ -159,14 +160,15 @@ function App(): JSX.Element {
 		};
 	}, []);
 
-	const updateLeaguestart = useCallback(async (nextValue: boolean): Promise<void> => {
-		setLeaguestart(nextValue);
+	const updateLeagueStart = useCallback(async (nextValue: boolean): Promise<void> => {
+		const updatedSettings: LevelingGuideSettings = { ...settings, leagueStart: nextValue };
+		setSettings(updatedSettings);
 		try {
-			await invoke('settings_set_leaguestart', { leaguestart: nextValue });
+			await invoke('settings_set_leveling_guide', { settings: updatedSettings });
 		} catch (err) {
-			console.error('Failed to persist leaguestart setting:', err);
+			console.error('Failed to persist leveling guide settings:', err);
 		}
-	}, []);
+	}, [settings]);
 
 	const loadGuide = useCallback(async (): Promise<void> => {
 		setLoading(true);
@@ -259,8 +261,8 @@ function App(): JSX.Element {
 				loading={loading}
 				settingsLoading={settingsLoading}
 				error={error}
-				leaguestart={leaguestart}
-				onLeaguestartChange={updateLeaguestart}
+				leagueStart={settings.leagueStart}
+				onLeagueStartChange={updateLeagueStart}
 				onLoadGuide={loadGuide}
 				onResetProgress={resetProgress}
 			/>

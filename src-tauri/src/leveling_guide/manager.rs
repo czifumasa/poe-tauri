@@ -6,7 +6,7 @@ use tauri::AppHandle;
 
 use super::io::read_guide_content;
 use super::parser::{clamp_position, current_page_dto, parse_guide_json};
-use super::types::{GuidePosition, LevelingGuidePageDto, LoadedGuide, PersistedLevelingGuideProgress};
+use super::types::{GuidePosition, LevelingGuidePageDto, LoadedGuide, PersistedGuidePosition, PersistedLevelingGuideProgress};
 
 #[derive(Debug, Clone, serde::Deserialize)]
 struct AreaEntry {
@@ -72,7 +72,7 @@ impl LevelingGuideManager {
             .map_err(|e| command_error("guide_parse_failed", e.to_string()))?;
 
         let guide = parse_guide_json(value)?;
-        let position = clamp_position(&guide, progress.position);
+        let position = clamp_position(&guide, progress.position.to_runtime());
 
         let area_name_by_id = load_area_name_by_id(app, &progress.guide_path)?;
 
@@ -122,7 +122,7 @@ impl LevelingGuideManager {
 
         Ok(PersistedLevelingGuideProgress {
             guide_path: loaded.guide_path.clone(),
-            position: loaded.position,
+            position: PersistedGuidePosition::from(loaded.position),
         })
     }
 

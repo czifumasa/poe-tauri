@@ -9,8 +9,8 @@ type LevelingGuideDashboardSnippetProps = {
 	loading: boolean;
 	settingsLoading: boolean;
 	error: string | null;
-	leaguestart: boolean;
-	onLeaguestartChange: (value: boolean) => Promise<void>;
+	leagueStart: boolean;
+	onLeagueStartChange: (value: boolean) => Promise<void>;
 	onLoadGuide: () => Promise<void>;
 	onResetProgress: () => Promise<void>;
 };
@@ -31,11 +31,11 @@ export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnipp
 				<label className="leaguestartToggle">
 					<input
 						type="checkbox"
-						checked={props.leaguestart}
-						onChange={(event) => void props.onLeaguestartChange(event.currentTarget.checked)}
+						checked={props.leagueStart}
+						onChange={(event) => void props.onLeagueStartChange(event.currentTarget.checked)}
 						disabled={settingsLoading}
 					/>
-					Leaguestart
+					League start
 				</label>
 				<div className="guideDashboardControls">
 					<button type="button" className="loadGuideButton" onClick={() => void props.onLoadGuide()} disabled={loading}>
@@ -56,11 +56,11 @@ export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnipp
 				<label className="leaguestartToggle">
 					<input
 						type="checkbox"
-						checked={props.leaguestart}
-						onChange={(event) => void props.onLeaguestartChange(event.currentTarget.checked)}
+						checked={props.leagueStart}
+						onChange={(event) => void props.onLeagueStartChange(event.currentTarget.checked)}
 						disabled={settingsLoading}
 					/>
-					Leaguestart
+					League start
 				</label>
 				<button type="button" onClick={() => void props.onLoadGuide()} disabled={loading}>
 					Load

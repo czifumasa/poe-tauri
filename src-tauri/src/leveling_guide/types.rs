@@ -21,17 +21,40 @@ impl GuidePosition {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+pub struct PersistedGuidePosition {
+    pub act_index: usize,
+    pub page_index: usize,
+}
+
+impl PersistedGuidePosition {
+    pub fn to_runtime(self) -> GuidePosition {
+        GuidePosition {
+            act_index: self.act_index,
+            page_index: self.page_index,
+        }
+    }
+}
+
+impl From<GuidePosition> for PersistedGuidePosition {
+    fn from(position: GuidePosition) -> Self {
+        Self {
+            act_index: position.act_index,
+            page_index: position.page_index,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PersistedLevelingGuideProgress {
     pub guide_path: String,
-    pub position: GuidePosition,
+    pub position: PersistedGuidePosition,
 }
 
 impl PersistedLevelingGuideProgress {
     pub fn default_for_resource(relative_resource_path: &str) -> Self {
         Self {
             guide_path: format!("resource:{relative_resource_path}"),
-            position: GuidePosition::start(),
+            position: PersistedGuidePosition::from(GuidePosition::start()),
         }
     }
 }
