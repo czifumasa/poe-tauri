@@ -1,108 +1,106 @@
 .guideContentOverlay {
-	gap: 0;
-	height: 100%;
-	min-height: 0;
-	overflow: hidden;
+    gap: 0;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .guideHeaderOverlay {
-	display: flex;
-	align-items: baseline;
-	justify-content: space-between;
-	font-size: 10px;
-	letter-spacing: 0.22em;
-	text-transform: uppercase;
-	color: rgba(255, 255, 255, 0.78);
-	border-bottom: 1px solid rgba(200, 169, 110, 0.14);
-	padding: 5px 10px;
-	background: #0f0d00;
-	border-top-left-radius: 8px;
-	border-top-right-radius: 8px;
-	height: 50px;
-	box-sizing: border-box;
-	flex: 0 0 50px;
-	min-height: 50px;
-	max-height: 50px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.78);
+    border-bottom: 1px solid rgba(200, 169, 110, 0.14);
+    padding: 5px 10px;
+    background: #0f0d00;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    height: 50px;
+    box-sizing: border-box;
+    flex: 0 0 50px;
+    min-height: 50px;
+    max-height: 50px;
 }
 
 .guideHeaderOverlay .guideHeaderLeft {
-	font-weight: 700;
-	color: rgba(212, 175, 55, 0.95);
-	text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
+    font-weight: 700;
+    color: rgba(212, 175, 55, 0.95);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
 }
 
 .guideHeaderOverlay .guideHeaderRight {
-	font-weight: 600;
-	color: #383838;
-	letter-spacing: 0.05em;
+    font-weight: 600;
+    color: #383838;
+    letter-spacing: 0.05em;
 }
 
 .guideContentOverlay .guideStep {
-	font-size: 12px;
-	letter-spacing: 0.03em;
-	padding: 3px 10px;
-	text-transform: uppercase;
-	height: 30px;
-	box-sizing: border-box;
-	display: flex;
-	align-items: center;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    padding: 3px 10px;
+    text-transform: uppercase;
+    height: 30px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.guideStepHint {
-	color: #4a4a4a;
-	font-size: 11px;
-	letter-spacing: 0.08em;
-	padding: 1px 8px 1px 22px;
-	margin-left: 6px;
-	border-left: 1px solid #222;
+.guideStep.guideStepHint {
+    color: #979797;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    padding: 1px 8px 1px 22px;
+    margin-left: 6px;
 }
 
 .guideContentOverlay .guideNavigation {
-	margin-top: 0;
-	border-top: 1px solid #141414;
-	background: #060606;
-	padding: 6px 10px;
-	border-bottom-left-radius: 8px;
-	border-bottom-right-radius: 8px;
-	height: 50px;
-	box-sizing: border-box;
-	flex: 0 0 50px;
-	min-height: 50px;
-	max-height: 50px;
+    margin-top: 0;
+    border-top: 1px solid #141414;
+    background: #060606;
+    padding: 6px 10px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    height: 50px;
+    box-sizing: border-box;
+    flex: 0 0 50px;
+    min-height: 50px;
+    max-height: 50px;
 }
 
 .guideNavButton {
-	flex: 0 0 auto;
-	min-width: 110px;
-	background: none;
-	border: 1px solid #222;
-	box-shadow: none;
-	color: #555;
-	padding: 3px 10px;
-	border-radius: 3px;
-	text-transform: uppercase;
-	letter-spacing: 0.1em;
-	font-size: 11px;
-	transition:
-		border-color 0.15s ease,
-		background-color 0.15s ease,
-		color 0.15s ease,
-		opacity 0.15s ease;
+    flex: 0 0 auto;
+    min-width: 110px;
+    background: none;
+    border: 1px solid #222;
+    box-shadow: none;
+    color: #555;
+    padding: 3px 10px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 11px;
+    transition: border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .guideNavButton:hover:not(:disabled) {
-	border-color: rgba(200, 169, 110, 0.35);
-	color: rgba(200, 169, 110, 0.85);
+    border-color: rgba(200, 169, 110, 0.35);
+    color: rgba(200, 169, 110, 0.85);
 }
 
 .guideNavButton:active:not(:disabled) {
-	background: rgba(26, 26, 26, 0.98);
+    background: rgba(26, 26, 26, 0.98);
 }
 
 .guideNavButton:disabled {
-	opacity: 0.35;
-	cursor: not-allowed;
+    opacity: 0.35;
+    cursor: not-allowed;
 }

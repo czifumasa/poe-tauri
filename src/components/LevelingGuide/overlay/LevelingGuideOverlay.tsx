@@ -31,6 +31,7 @@ function renderLine(line: LevelingGuideLineDto, lineIndex: number): JSX.Element 
 	return (
 		<div key={lineIndex} className={lineClassName}>
 			<span>
+				{!line.isHint && '• '}
 				{line.spans.map((span, spanIndex) => renderSpan(span, `${lineIndex}-${spanIndex}`))}
 			</span>
 		</div>
