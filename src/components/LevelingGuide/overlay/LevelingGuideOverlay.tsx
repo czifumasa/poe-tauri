@@ -16,6 +16,13 @@ function renderSpan(span: LevelingGuideSpanDto, key: string): JSX.Element {
 	if (span.type === 'image') {
 		return <img key={key} className="guideInlineImage" src={span.dataUri} alt={span.key} />;
 	}
+	if (span.color) {
+		return (
+			<span key={key} style={{ color: span.color }}>
+				{span.text}
+			</span>
+		);
+	}
 	return <Fragment key={key}>{span.text}</Fragment>;
 }
 
@@ -23,7 +30,9 @@ function renderLine(line: LevelingGuideLineDto, lineIndex: number): JSX.Element 
 	const lineClassName = line.isHint ? 'guideStep guideStepHint' : 'guideStep';
 	return (
 		<div key={lineIndex} className={lineClassName}>
-			{line.spans.map((span, spanIndex) => renderSpan(span, `${lineIndex}-${spanIndex}`))}
+			<span>
+				{line.spans.map((span, spanIndex) => renderSpan(span, `${lineIndex}-${spanIndex}`))}
+			</span>
 		</div>
 	);
 }

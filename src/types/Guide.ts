@@ -7,6 +7,7 @@ export type LevelingGuideSpanDto =
 	| {
 			type: 'text';
 			text: string;
+			color?: string;
 	  }
 	| {
 			type: 'image';

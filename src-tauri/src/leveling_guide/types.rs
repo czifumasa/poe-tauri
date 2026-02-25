@@ -67,7 +67,11 @@ pub struct GuidePage {
 #[derive(Debug, Clone, Serialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum LevelingGuideSpanDto {
-    Text { text: String },
+    Text {
+        text: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        color: Option<String>,
+    },
     Image {
         key: String,
         #[serde(rename = "dataUri")]

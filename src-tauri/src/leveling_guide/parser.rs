@@ -10,6 +10,8 @@ use super::types::{
     LevelingGuideSpanDto, LoadedGuide,
 };
 
+const BOSS_TARGET_COLOR: &str = "#ff8111";
+
 fn image_path_from_guide_path(guide_path: &str, key: &str) -> Option<PathBuf> {
     let key = key.trim().replace(' ', "_");
 
@@ -108,15 +110,157 @@ fn strip_comment_and_resolve_area_name(
 }
 
 fn strip_format_tags(mut line: String) -> String {
-    while let Some(start) = line.find("(color:") {
-        let end = match line[start..].find(')') {
-            Some(offset) => start + offset + 1,
-            None => break,
-        };
-        line.replace_range(start..end, "");
+    line = line.trim().to_string();
+    line
+}
+
+#[derive(Debug, Clone, Copy)]
+struct BossHighlightState {
+    previous_was_kill: bool,
+}
+
+fn split_segment_preserving_whitespace(segment: &str) -> Vec<(bool, String)> {
+    let mut pieces: Vec<(bool, String)> = Vec::new();
+
+    let mut buffer = String::new();
+    let mut buffer_is_whitespace: Option<bool> = None;
+
+    for ch in segment.chars() {
+        let is_whitespace = ch.is_whitespace();
+
+        match buffer_is_whitespace {
+            None => {
+                buffer_is_whitespace = Some(is_whitespace);
+                buffer.push(ch);
+            }
+            Some(current_is_whitespace) if current_is_whitespace == is_whitespace => {
+                buffer.push(ch);
+            }
+            Some(current_is_whitespace) => {
+                pieces.push((current_is_whitespace, std::mem::take(&mut buffer)));
+                buffer_is_whitespace = Some(is_whitespace);
+                buffer.push(ch);
+            }
+        }
     }
 
-    line.replace("  ", " ").trim().to_string()
+    if !buffer.is_empty() {
+        pieces.push((buffer_is_whitespace.unwrap_or(false), buffer));
+    }
+
+    pieces
+}
+
+fn parse_inline_color_tag(mut token: String) -> (Option<String>, String) {
+    let mut last_color: Option<String> = None;
+    while let Some(start) = token.find("(color:") {
+        let after_start = &token[start + 7..];
+        let Some(end_offset) = after_start.find(')') else {
+            break;
+        };
+        let color = after_start[..end_offset].trim().to_string();
+        last_color = Some(color);
+
+        let end = start + 7 + end_offset + 1;
+        token.replace_range(start..end, "");
+    }
+    (last_color, token)
+}
+
+fn css_color_from_tag(color: &str) -> String {
+    let trimmed = color.trim();
+    if trimmed.starts_with('#') {
+        return trimmed.to_string();
+    }
+
+    let is_hex = !trimmed.is_empty()
+        && trimmed
+            .chars()
+            .all(|c: char| c.is_ascii_hexdigit());
+
+    if is_hex && (trimmed.len() == 6 || trimmed.len() == 3) {
+        return format!("#{}", trimmed.to_ascii_lowercase());
+    }
+
+    trimmed.to_string()
+}
+
+fn normalize_token_for_comparison(token: &str) -> String {
+    token
+        .trim_matches(|c: char| c == ',' || c == '.' || c == ':' || c == ')')
+        .to_ascii_lowercase()
+}
+
+fn render_text_segment_with_boss_highlight(
+    state: &mut BossHighlightState,
+    segment: &str,
+) -> Vec<LevelingGuideSpanDto> {
+    let pieces = split_segment_preserving_whitespace(segment);
+    let mut spans: Vec<LevelingGuideSpanDto> = Vec::new();
+
+    let mut buffered_text = String::new();
+    let mut buffered_color: Option<String> = None;
+
+    let flush = |spans: &mut Vec<LevelingGuideSpanDto>, buffered_text: &mut String, buffered_color: &mut Option<String>| {
+        if buffered_text.is_empty() {
+            return;
+        }
+
+        spans.push(LevelingGuideSpanDto::Text {
+            text: std::mem::take(buffered_text),
+            color: buffered_color.take(),
+        });
+    };
+
+    for (is_whitespace, raw_piece) in pieces {
+        if raw_piece.is_empty() {
+            continue;
+        }
+
+        if is_whitespace {
+            if buffered_color.is_some() {
+                flush(&mut spans, &mut buffered_text, &mut buffered_color);
+            }
+            buffered_text.push_str(&raw_piece);
+            buffered_color = None;
+            continue;
+        }
+
+        let (explicit_color, mut text) = parse_inline_color_tag(raw_piece);
+
+        let has_arena_prefix = text.contains("arena:");
+        if has_arena_prefix {
+            text = text.replace("arena:", "");
+        }
+
+        if text.is_empty() {
+            continue;
+        }
+
+        let comparison = normalize_token_for_comparison(&text);
+
+        let excluded_from_kill = comparison == "everything" || comparison == "it";
+
+        let boss_highlight = (state.previous_was_kill && !excluded_from_kill && !comparison.is_empty())
+            || (has_arena_prefix && !comparison.is_empty());
+
+        let color = explicit_color
+            .as_deref()
+            .map(css_color_from_tag)
+            .or_else(|| boss_highlight.then(|| BOSS_TARGET_COLOR.to_string()));
+
+        if buffered_color != color {
+            flush(&mut spans, &mut buffered_text, &mut buffered_color);
+            buffered_color = color;
+        }
+        buffered_text.push_str(&text);
+
+        let is_kill_word = comparison == "kill";
+        state.previous_was_kill = is_kill_word;
+    }
+
+    flush(&mut spans, &mut buffered_text, &mut buffered_color);
+    spans
 }
 
 fn parse_line_is_hint(line: &str) -> (bool, &str) {
@@ -137,14 +281,16 @@ fn render_spans(
 ) -> Result<Vec<LevelingGuideSpanDto>, CommandError> {
     let mut spans: Vec<LevelingGuideSpanDto> = Vec::new();
     let mut remaining = line;
+    let mut highlight_state = BossHighlightState {
+        previous_was_kill: false,
+    };
 
     while let Some(start) = remaining.find("(img:") {
         let (before, after_start) = remaining.split_at(start);
-        if !before.trim().is_empty() {
-            spans.push(LevelingGuideSpanDto::Text {
-                text: before.to_string(),
-            });
-        }
+        spans.extend(render_text_segment_with_boss_highlight(
+            &mut highlight_state,
+            before,
+        ));
 
         let after_start = &after_start[5..];
         let end = match after_start.find(')') {
@@ -152,6 +298,7 @@ fn render_spans(
             None => {
                 spans.push(LevelingGuideSpanDto::Text {
                     text: after_start.to_string(),
+                    color: None,
                 });
                 return Ok(spans);
             }
@@ -168,11 +315,10 @@ fn render_spans(
         remaining = after_start[end + 1..].as_ref();
     }
 
-    if !remaining.trim().is_empty() {
-        spans.push(LevelingGuideSpanDto::Text {
-            text: remaining.to_string(),
-        });
-    }
+    spans.extend(render_text_segment_with_boss_highlight(
+        &mut highlight_state,
+        remaining,
+    ));
 
     Ok(spans)
 }
