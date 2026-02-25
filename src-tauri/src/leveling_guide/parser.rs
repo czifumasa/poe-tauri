@@ -11,6 +11,7 @@ use super::types::{
 };
 
 const BOSS_TARGET_COLOR: &str = "#ff8111";
+const AREA_NAME_COLOR_TAG: &str = "fec076";
 
 fn image_path_from_guide_path(guide_path: &str, key: &str) -> Option<PathBuf> {
     let key = key.trim().replace(' ', "_");
@@ -93,7 +94,26 @@ fn replace_areaid_tokens_with_area_names(
                 return token.to_string();
             };
 
-            format!("{name}{suffix}")
+            let mut words = name
+                .split_whitespace()
+                .map(str::to_string)
+                .collect::<Vec<String>>();
+
+            if words.is_empty() {
+                return token.to_string();
+            }
+
+            if !suffix.is_empty() {
+                if let Some(last) = words.last_mut() {
+                    last.push_str(suffix);
+                }
+            }
+
+            words
+                .into_iter()
+                .map(|word| format!("(color:{AREA_NAME_COLOR_TAG}){word}"))
+                .collect::<Vec<String>>()
+                .join(" ")
         })
         .collect::<Vec<String>>()
         .join(" ")
