@@ -15,6 +15,14 @@ use std::sync::mpsc;
 
 const OVERLAY_POSITION_STORE_KEY: &str = "overlay_position";
 
+const OVERLAY_PANEL_SIZE_STORE_KEY: &str = "overlay_panel_size";
+
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+pub struct OverlayPanelSize {
+    pub width: u32,
+    pub height: u32,
+}
+
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum OverlayPosition {
@@ -233,6 +241,12 @@ pub fn set_overlay_panel_size(
     let window = ensure_overlay_window(&app)?;
     let width = width.max(1);
     let height = height.max(1);
+
+    store::set_value(
+        &app,
+        OVERLAY_PANEL_SIZE_STORE_KEY,
+        &OverlayPanelSize { width, height },
+    )?;
 
     #[cfg(linux_bsd_target_os)]
     {

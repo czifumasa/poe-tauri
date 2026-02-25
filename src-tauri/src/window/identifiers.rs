@@ -4,4 +4,8 @@ pub const OVERLAY_WINDOW_LABEL: &str = "overlay";
 
 pub const OVERLAY_VIEW_QUERY_VALUE: &str = "overlay";
 
+pub const HINT_TOOLTIP_WINDOW_LABEL: &str = "hint-tooltip";
+
+pub const HINT_TOOLTIP_VIEW_QUERY_VALUE: &str = "hintTooltip";
+
 pub const OVERLAY_DEFAULT_MARGIN_PX: i32 = 24;

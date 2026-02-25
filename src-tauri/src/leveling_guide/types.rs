@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 pub type GuideData = Vec<GuideAct>;
 pub type GuideAct = Vec<GuidePage>;
@@ -71,12 +72,22 @@ pub enum LevelingGuideSpanDto {
         text: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         color: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        hint: Option<LevelingGuideHintDto>,
     },
     Image {
         key: String,
         #[serde(rename = "dataUri")]
         data_uri: String,
     },
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LevelingGuideHintDto {
+    pub key: String,
+    #[serde(rename = "dataUri")]
+    pub data_uri: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -93,6 +104,9 @@ pub(crate) struct LoadedGuide {
     pub(crate) position: GuidePosition,
     pub(crate) icon_cache: HashMap<String, Option<String>>,
     pub(crate) area_name_by_id: HashMap<String, String>,
+    pub(crate) hint_keys: Vec<String>,
+    pub(crate) hint_image_path_by_key: HashMap<String, PathBuf>,
+    pub(crate) hint_image_cache: HashMap<String, Option<String>>,
 }
 
 #[derive(Debug, Clone, Serialize)]

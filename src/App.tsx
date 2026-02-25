@@ -6,11 +6,12 @@ import { MainView } from './components/MainView/MainView';
 import { OverlayPanel } from './components/OverlayPanel/OverlayPanel';
 import type { LevelingGuidePageDto } from './types/Guide.ts';
 import type { LevelingGuideSettings } from './types/Settings.ts';
-import { OVERLAY_VIEW_QUERY_VALUE } from './constants/WindowIdentifiers.ts';
+import { HINT_TOOLTIP_VIEW_QUERY_VALUE, OVERLAY_VIEW_QUERY_VALUE } from './constants/WindowIdentifiers.ts';
 import { LevelingGuideOverlay } from './components/LevelingGuide/overlay/LevelingGuideOverlay.tsx';
 import { LevelingGuideDashboardSnippet } from './components/LevelingGuide/snippet/LevelingGuideDashboardSnippet.tsx';
+import { HintTooltipView } from './components/HintTooltip/HintTooltipView.tsx';
 
-type ViewMode = 'main' | 'overlay';
+type ViewMode = 'main' | 'overlay' | 'hintTooltip';
 
 function formatInvokeError(error: unknown): string {
 	if (error instanceof Error) {
@@ -41,6 +42,9 @@ function getViewMode(): ViewMode {
 	const view = params.get('view');
 	if (view === OVERLAY_VIEW_QUERY_VALUE) {
 		return 'overlay';
+	}
+	if (view === HINT_TOOLTIP_VIEW_QUERY_VALUE) {
+		return 'hintTooltip';
 	}
 	return 'main';
 }
@@ -160,15 +164,18 @@ function App(): JSX.Element {
 		};
 	}, []);
 
-	const updateLeagueStart = useCallback(async (nextValue: boolean): Promise<void> => {
-		const updatedSettings: LevelingGuideSettings = { ...settings, leagueStart: nextValue };
-		setSettings(updatedSettings);
-		try {
-			await invoke('settings_set_leveling_guide', { settings: updatedSettings });
-		} catch (err) {
-			console.error('Failed to persist leveling guide settings:', err);
-		}
-	}, [settings]);
+	const updateLeagueStart = useCallback(
+		async (nextValue: boolean): Promise<void> => {
+			const updatedSettings: LevelingGuideSettings = { ...settings, leagueStart: nextValue };
+			setSettings(updatedSettings);
+			try {
+				await invoke('settings_set_leveling_guide', { settings: updatedSettings });
+			} catch (err) {
+				console.error('Failed to persist leveling guide settings:', err);
+			}
+		},
+		[settings],
+	);
 
 	const loadGuide = useCallback(async (): Promise<void> => {
 		setLoading(true);
@@ -252,6 +259,10 @@ function App(): JSX.Element {
 				<LevelingGuideOverlay page={currentPage} loading={loading} error={error} onNavigate={handleNavigate} />
 			</OverlayPanel>
 		);
+	}
+
+	if (viewMode === 'hintTooltip') {
+		return <HintTooltipView />;
 	}
 
 	return (

@@ -1,5 +1,5 @@
 use tauri::Manager;
-use crate::window::identifiers::{MAIN_WINDOW_LABEL, OVERLAY_WINDOW_LABEL};
+use crate::window::identifiers::{HINT_TOOLTIP_WINDOW_LABEL, MAIN_WINDOW_LABEL, OVERLAY_WINDOW_LABEL};
 
 mod error;
 mod persistence;
@@ -11,6 +11,7 @@ use commands::common::*;
 use commands::overlay::*;
 use commands::leveling_guide::*;
 use commands::settings::*;
+use commands::hint_tooltip::*;
 use leveling_guide::LevelingGuideManager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -34,7 +35,10 @@ pub fn run() {
             overlay_get_position,
             overlay_set_position,
             overlay_apply_position,
-            set_overlay_panel_size
+            set_overlay_panel_size,
+            hint_tooltip_show,
+            hint_tooltip_hide,
+            hint_tooltip_get_last_content
         ])
         .setup(|app| {
             let app_handle = app.handle().clone();
@@ -43,6 +47,9 @@ pub fn run() {
                     if let tauri::WindowEvent::CloseRequested { .. } = event {
                         if let Some(overlay) = app_handle.get_webview_window(OVERLAY_WINDOW_LABEL) {
                             let _ = overlay.close();
+                        }
+                        if let Some(tooltip) = app_handle.get_webview_window(HINT_TOOLTIP_WINDOW_LABEL) {
+                            let _ = tooltip.close();
                         }
                     }
                 });

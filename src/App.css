@@ -20,7 +20,19 @@
 	overflow: hidden;
 }
 
+:root[data-view='hintTooltip'] {
+	background-color: transparent;
+	color: #f6f6f6;
+	overflow: hidden;
+}
+
 :root[data-view='overlay'] body {
+	background-color: transparent;
+	margin: 0;
+	overflow: hidden;
+}
+
+:root[data-view='hintTooltip'] body {
 	background-color: transparent;
 	margin: 0;
 	overflow: hidden;

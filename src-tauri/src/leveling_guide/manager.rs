@@ -1,8 +1,9 @@
 use crate::error::{command_error, CommandError};
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::AppHandle;
+use tauri::Manager;
 
 use super::io::read_guide_content;
 use super::parser::{clamp_position, current_page_dto, parse_guide_json};
@@ -12,6 +13,78 @@ use super::types::{GuidePosition, LevelingGuidePageDto, LoadedGuide, PersistedGu
 struct AreaEntry {
     id: String,
     name: String,
+}
+
+fn load_hint_index(
+    app: &AppHandle,
+    guide_path: &str,
+) -> Result<(Vec<String>, HashMap<String, PathBuf>), CommandError> {
+    let guide_relative_path = guide_path.strip_prefix("resource:").ok_or_else(|| {
+        command_error(
+            "hints_path_invalid",
+            "Hints are only supported for resource: guides",
+        )
+    })?;
+
+    let guide_dir = Path::new(guide_relative_path).parent().ok_or_else(|| {
+        command_error("hints_path_invalid", "Failed to resolve guide directory")
+    })?;
+
+    let hints_relative_dir = guide_dir.join("img").join("hints");
+
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|e: tauri::Error| command_error("resource_dir_failed", e.to_string()))?;
+
+    let hints_absolute_dir = resource_dir.join(&hints_relative_dir);
+    let entries = match std::fs::read_dir(&hints_absolute_dir) {
+        Ok(entries) => entries,
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+            return Ok((Vec::new(), HashMap::new()));
+        }
+        Err(err) => {
+            return Err(command_error(
+                "hints_dir_read_failed",
+                format!("{}: {}", hints_absolute_dir.display(), err),
+            ));
+        }
+    };
+
+    let mut hint_image_path_by_key: HashMap<String, PathBuf> = HashMap::new();
+    for entry in entries {
+        let entry = entry.map_err(|e| command_error("hints_dir_read_failed", e.to_string()))?;
+        let file_type = entry
+            .file_type()
+            .map_err(|e| command_error("hints_dir_read_failed", e.to_string()))?;
+        if !file_type.is_file() {
+            continue;
+        }
+
+        let path = entry.path();
+        let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
+            continue;
+        };
+
+        let key = stem.to_ascii_lowercase();
+        let Some(file_name) = path.file_name().and_then(|s| s.to_str()) else {
+            continue;
+        };
+
+        hint_image_path_by_key.insert(key, hints_relative_dir.join(file_name));
+    }
+
+    let mut hint_keys = hint_image_path_by_key
+        .keys()
+        .cloned()
+        .collect::<Vec<String>>();
+    hint_keys.sort_by(|left, right| {
+        let left_len = left.replace('_', " ").len();
+        let right_len = right.replace('_', " ").len();
+        right_len.cmp(&left_len).then_with(|| left.cmp(right))
+    });
+
+    Ok((hint_keys, hint_image_path_by_key))
 }
 
 fn resolve_areas_path(guide_path: &str) -> Option<String> {
@@ -76,12 +149,17 @@ impl LevelingGuideManager {
 
         let area_name_by_id = load_area_name_by_id(app, &progress.guide_path)?;
 
+        let (hint_keys, hint_image_path_by_key) = load_hint_index(app, &progress.guide_path)?;
+
         let loaded = LoadedGuide {
             guide_path: progress.guide_path,
             guide,
             position,
             icon_cache: HashMap::new(),
             area_name_by_id,
+            hint_keys,
+            hint_image_path_by_key,
+            hint_image_cache: HashMap::new(),
         };
 
         let mut guard = self

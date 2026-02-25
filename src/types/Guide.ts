@@ -8,6 +8,10 @@ export type LevelingGuideSpanDto =
 			type: 'text';
 			text: string;
 			color?: string;
+			hint?: {
+				key: string;
+				dataUri: string;
+			};
 	  }
 	| {
 			type: 'image';
