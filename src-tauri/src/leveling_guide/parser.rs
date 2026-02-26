@@ -14,6 +14,7 @@ const BOSS_TARGET_COLOR: &str = "#ff8111";
 const AREA_NAME_COLOR_TAG: &str = "fec076";
 const HINT_HIGHLIGHT_COLOR: &str = "Aqua";
 const QUEST_ITEM_COLOR: &str = "Lime";
+const QUEST_REFERENCE_COLOR: &str = "#ffdb1f";
 
 fn image_path_from_guide_path(guide_path: &str, key: &str) -> Option<PathBuf> {
     let key = key.trim().replace(' ', "_");
@@ -280,6 +281,21 @@ fn parse_inline_quest_tag(mut token: String) -> (Option<String>, String) {
     (last_quest_item, token)
 }
 
+fn apply_quest_reference_formatting(mut token: String) -> (bool, String) {
+    if !(token.contains('<') || token.contains('>')) {
+        return (false, token);
+    }
+
+    token = token.replace('<', "").replace('>', "");
+    token = token.replace('_', " ");
+
+    if token.chars().last().is_some_and(|ch: char| ch.is_ascii_digit()) {
+        token.pop();
+    }
+
+    (true, token)
+}
+
 fn css_color_from_tag(color: &str) -> String {
     let trimmed = color.trim();
     if trimmed.starts_with('#') {
@@ -459,6 +475,9 @@ fn render_text_segment_with_boss_highlight(
         let (quest_item, without_quest) = parse_inline_quest_tag(without_hint);
         let (explicit_color, mut text) = parse_inline_color_tag(without_quest);
 
+        let (quest_reference, formatted_text) = apply_quest_reference_formatting(text);
+        text = formatted_text;
+
         let has_arena_prefix = text.contains("arena:");
         if has_arena_prefix {
             text = text.replace("arena:", "");
@@ -490,6 +509,7 @@ fn render_text_segment_with_boss_highlight(
             .as_ref()
             .map(|_| HINT_HIGHLIGHT_COLOR.to_string())
             .or_else(|| explicit_color.as_deref().map(css_color_from_tag))
+            .or_else(|| quest_reference.then(|| QUEST_REFERENCE_COLOR.to_string()))
             .or_else(|| quest_item.as_ref().map(|_| QUEST_ITEM_COLOR.to_string()))
             .or_else(|| boss_highlight.then(|| BOSS_TARGET_COLOR.to_string()));
 
