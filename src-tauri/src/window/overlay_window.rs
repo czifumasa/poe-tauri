@@ -8,6 +8,48 @@ use crate::window::identifiers::{OVERLAY_DEFAULT_MARGIN_PX, OVERLAY_VIEW_QUERY_V
 #[cfg(linux_bsd_target_os)]
 use gtk_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
 
+#[cfg(linux_bsd_target_os)]
+use gtk::prelude::GtkWindowExt;
+
+fn configure_x11_window_hints(window: &tauri::WebviewWindow) -> Result<(), CommandError> {
+    #[cfg(linux_bsd_target_os)]
+    {
+        let (sender, receiver) = mpsc::channel::<Result<(), CommandError>>();
+        let window_for_closure = window.clone();
+
+        window
+            .run_on_main_thread(move || {
+                let result = (|| {
+                    let gtk_window = window_for_closure
+                        .gtk_window()
+                        .map_err(|e| {
+                            command_error("overlay_panel_window_gtk_window_failed", e.to_string())
+                        })?;
+
+                    gtk_window.set_keep_above(true);
+                    gtk_window.set_accept_focus(false);
+                    gtk_window.set_skip_taskbar_hint(true);
+                    gtk_window.set_skip_pager_hint(true);
+                    
+                    Ok(())
+                })();
+
+                let _ = sender.send(result);
+            })
+            .map_err(|e| command_error("overlay_panel_window_main_thread_failed", e.to_string()))?;
+
+        return receiver.recv().map_err(|e| {
+            command_error("overlay_panel_window_main_thread_channel_failed", e.to_string())
+        })?;
+    }
+
+    #[cfg(not(linux_bsd_target_os))]
+    {
+        let _ = window;
+        Ok(())
+    }
+}
+
 fn configure_overlay_layer_shell(window: &tauri::WebviewWindow) -> Result<bool, CommandError> {
     #[cfg(linux_bsd_target_os)]
     {
@@ -63,6 +105,21 @@ fn configure_overlay_layer_shell(window: &tauri::WebviewWindow) -> Result<bool, 
     }
 }
 
+pub fn ensure_always_on_top(window: &tauri::WebviewWindow) -> Result<(), CommandError> {
+    window
+        .set_always_on_top(true)
+        .map_err(|e| command_error("overlay_panel_window_set_always_on_top_failed", e.to_string()))?;
+    
+    #[cfg(linux_bsd_target_os)]
+    {
+        if !gtk_layer_shell::is_supported() {
+            configure_x11_window_hints(window)?;
+        }
+    }
+    
+    Ok(())
+}
+
 pub fn ensure_overlay_window(app: &tauri::AppHandle) -> Result<tauri::WebviewWindow, CommandError> {
     if let Some(window) = app.get_webview_window(OVERLAY_WINDOW_LABEL) {
         return Ok(window);
@@ -85,7 +142,12 @@ pub fn ensure_overlay_window(app: &tauri::AppHandle) -> Result<tauri::WebviewWin
         .build()
         .map_err(|e| command_error("overlay_panel_window_create_failed", e.to_string()))
         .and_then(|window| {
-            let _ = configure_overlay_layer_shell(&window)?;
+            let is_layer_shell = configure_overlay_layer_shell(&window)?;
+            
+            if !is_layer_shell {
+                configure_x11_window_hints(&window)?;
+            }
+            
             window
                 .set_min_size(Some(tauri::Size::Physical(tauri::PhysicalSize {
                     width: 1,

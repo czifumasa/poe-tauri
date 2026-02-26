@@ -2,7 +2,7 @@ use tauri::Manager;
 use crate::error::{command_error, CommandError};
 use crate::persistence::store;
 use crate::window::identifiers::{OVERLAY_DEFAULT_MARGIN_PX, OVERLAY_WINDOW_LABEL};
-use crate::window::overlay_window::ensure_overlay_window;
+use crate::window::overlay_window::{ensure_always_on_top, ensure_overlay_window};
 
 #[cfg(linux_bsd_target_os)]
 use gtk_layer_shell::{Edge, LayerShell};
@@ -169,6 +169,8 @@ pub fn show_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
     overlay_window
         .show()
         .map_err(|e| command_error("overlay_panel_window_show_failed", e.to_string()))?;
+    
+    ensure_always_on_top(&overlay_window)?;
     
     Ok(())
 }
@@ -381,6 +383,8 @@ pub fn set_overlay_panel_size(
         receiver
             .recv()
             .map_err(|e| command_error("overlay_window_main_thread_channel_failed", e.to_string()))??;
+        
+        ensure_always_on_top(&window)?;
     }
 
     Ok(())
