@@ -4,7 +4,7 @@ use tauri::{AppHandle, Emitter, Manager};
 
 use crate::error::{command_error, CommandError};
 use crate::persistence::store;
-use crate::window::hint_tooltip_window::ensure_hint_tooltip_window;
+use crate::window::hint_tooltip_window::{ensure_hint_tooltip_always_on_top, ensure_hint_tooltip_window};
 use crate::window::identifiers::{OVERLAY_DEFAULT_MARGIN_PX, OVERLAY_WINDOW_LABEL};
 
 use crate::commands::overlay::{OverlayPanelSize, OverlayPosition};
@@ -285,6 +285,8 @@ pub fn hint_tooltip_show(
     window
         .show()
         .map_err(|e| command_error("hint_tooltip_show_failed", e.to_string()))?;
+
+    ensure_hint_tooltip_always_on_top(&window)?;
 
     window
         .emit(HINT_TOOLTIP_CONTENT_EVENT, payload)
