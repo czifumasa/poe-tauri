@@ -13,6 +13,7 @@ use super::types::{
 const BOSS_TARGET_COLOR: &str = "#ff8111";
 const AREA_NAME_COLOR_TAG: &str = "fec076";
 const HINT_HIGHLIGHT_COLOR: &str = "Aqua";
+const QUEST_ITEM_COLOR: &str = "Lime";
 
 fn image_path_from_guide_path(guide_path: &str, key: &str) -> Option<PathBuf> {
     let key = key.trim().replace(' ', "_");
@@ -261,6 +262,24 @@ fn parse_inline_hint_tag(mut token: String) -> (Option<String>, String) {
     (last_hint, token)
 }
 
+fn parse_inline_quest_tag(mut token: String) -> (Option<String>, String) {
+    let mut last_quest_item: Option<String> = None;
+    while let Some(start) = token.find("(quest:") {
+        let after_start = &token[start + 7..];
+        let Some(end_offset) = after_start.find(')') else {
+            break;
+        };
+
+        let quest_item_raw = after_start[..end_offset].trim().to_string();
+        let quest_item_display = quest_item_raw.replace('_', " ");
+        last_quest_item = Some(quest_item_display.clone());
+
+        let end = start + 7 + end_offset + 1;
+        token.replace_range(start..end, &quest_item_display);
+    }
+    (last_quest_item, token)
+}
+
 fn css_color_from_tag(color: &str) -> String {
     let trimmed = color.trim();
     if trimmed.starts_with('#') {
@@ -437,7 +456,8 @@ fn render_text_segment_with_boss_highlight(
         }
 
         let (hint_key, without_hint) = parse_inline_hint_tag(raw_piece.clone());
-        let (explicit_color, mut text) = parse_inline_color_tag(without_hint);
+        let (quest_item, without_quest) = parse_inline_quest_tag(without_hint);
+        let (explicit_color, mut text) = parse_inline_color_tag(without_quest);
 
         let has_arena_prefix = text.contains("arena:");
         if has_arena_prefix {
@@ -470,6 +490,7 @@ fn render_text_segment_with_boss_highlight(
             .as_ref()
             .map(|_| HINT_HIGHLIGHT_COLOR.to_string())
             .or_else(|| explicit_color.as_deref().map(css_color_from_tag))
+            .or_else(|| quest_item.as_ref().map(|_| QUEST_ITEM_COLOR.to_string()))
             .or_else(|| boss_highlight.then(|| BOSS_TARGET_COLOR.to_string()));
 
         let should_flush = buffered_color != color
