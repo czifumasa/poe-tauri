@@ -81,8 +81,7 @@ export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnipp
 									void props.onBanditsChoiceChange(next);
 								}
 							}}
-							disabled={settingsLoading}
-						>
+							disabled={settingsLoading}>
 							{banditsChoiceOptions.map((option) => (
 								<option key={option.value} value={option.value}>
 									{option.label}
@@ -145,8 +144,7 @@ export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnipp
 								void props.onBanditsChoiceChange(next);
 							}
 						}}
-						disabled={settingsLoading}
-					>
+						disabled={settingsLoading}>
 						{banditsChoiceOptions.map((option) => (
 							<option key={option.value} value={option.value}>
 								{option.label}

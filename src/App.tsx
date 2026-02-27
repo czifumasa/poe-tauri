@@ -55,8 +55,8 @@ function clampOverlayVariantLineCount(lineCount: number): number {
 	if (lineCount <= 1) {
 		return 1;
 	}
-	if (lineCount >= 5) {
-		return 5;
+	if (lineCount >= 6) {
+		return 6;
 	}
 	return lineCount;
 }
@@ -81,9 +81,9 @@ function getOverlayLogicalSize(page: LevelingGuidePageDto | null): {
 	heightPx: number;
 	variant: OverlayHeightVariant;
 } {
-	const headerHeightPx = 50;
-	const footerHeightPx = 50;
-	const lineHeightPx = 30;
+	const headerHeightPx = 36;
+	const footerHeightPx = 36;
+	const lineHeightPx = 24;
 	const widthPx = 340;
 	const rawLineCount = page?.lines.length ?? 1;
 	const variantLineCount = clampOverlayVariantLineCount(rawLineCount);

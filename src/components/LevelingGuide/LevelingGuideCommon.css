@@ -74,12 +74,6 @@
 	margin-top: 8px;
 }
 
-.guideNavigation button {
-	flex: 1;
-	padding: 8px 16px;
-	font-size: 14px;
-}
-
 .guideNavigation button:disabled:not(.guideNavButton) {
 	opacity: 0.5;
 	cursor: not-allowed;
