@@ -39,3 +39,32 @@
 	font-size: 14px;
 	cursor: pointer;
 }
+
+.clientLogPathRow {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 13px;
+	color: #e0e0e0;
+}
+
+.clientLogPathLabel {
+	white-space: nowrap;
+	font-weight: 600;
+}
+
+.clientLogPathValue {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 260px;
+	color: #a0a0a0;
+	font-size: 12px;
+}
+
+.clientLogPathButton {
+	padding: 2px 8px;
+	font-size: 12px;
+	cursor: pointer;
+	white-space: nowrap;
+}

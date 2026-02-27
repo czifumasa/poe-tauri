@@ -1,4 +1,5 @@
 mod io;
+pub(crate) mod log_watcher;
 mod manager;
 mod parser;
 pub(crate) mod progress;

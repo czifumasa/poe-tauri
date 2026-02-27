@@ -1,4 +1,9 @@
+use std::sync::Arc;
+
+use tauri::State;
+
 use crate::error::CommandError;
+use crate::leveling_guide::LevelingGuideManager;
 use crate::persistence::store;
 use crate::persistence::settings::{BanditsChoice, LevelingGuideSettings};
 
@@ -10,6 +15,7 @@ pub struct LevelingGuideSettingsDto {
     pub optional_quests: bool,
     pub level_recommendations: bool,
     pub bandits_choice: BanditsChoice,
+    pub client_log_path: Option<String>,
 }
 
 fn leveling_guide_settings_to_dto(settings: LevelingGuideSettings) -> LevelingGuideSettingsDto {
@@ -19,6 +25,7 @@ fn leveling_guide_settings_to_dto(settings: LevelingGuideSettings) -> LevelingGu
         optional_quests: settings.optional_quests,
         level_recommendations: settings.level_recommendations,
         bandits_choice: settings.bandits_choice,
+        client_log_path: settings.client_log_path,
     }
 }
 
@@ -29,6 +36,7 @@ fn leveling_guide_settings_from_dto(dto: LevelingGuideSettingsDto) -> LevelingGu
         optional_quests: dto.optional_quests,
         level_recommendations: dto.level_recommendations,
         bandits_choice: dto.bandits_choice,
+        client_log_path: dto.client_log_path,
     }
 }
 
@@ -41,10 +49,17 @@ pub fn settings_get_leveling_guide(app: tauri::AppHandle) -> Result<LevelingGuid
 #[tauri::command]
 pub fn settings_set_leveling_guide(
     app: tauri::AppHandle,
+    manager: State<'_, Arc<LevelingGuideManager>>,
     settings: LevelingGuideSettingsDto,
 ) -> Result<(), CommandError> {
     let persisted = leveling_guide_settings_from_dto(settings);
-    store::set_value(&app, LevelingGuideSettings::STORE_KEY, &persisted)
+    store::set_value(&app, LevelingGuideSettings::STORE_KEY, &persisted)?;
+
+    if let Err(err) = manager.restart_log_watcher_if_configured(&app) {
+        eprintln!("Failed to restart log watcher after settings change: {:?}", err);
+    }
+
+    Ok(())
 }
 
 #[tauri::command]

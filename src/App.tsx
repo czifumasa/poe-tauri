@@ -1,6 +1,7 @@
 import { JSX, useCallback, useEffect, useMemo, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import { open } from '@tauri-apps/plugin-dialog';
 import './App.css';
 import { MainView } from './components/MainView/MainView';
 import { OverlayPanel } from './components/OverlayPanel/OverlayPanel';
@@ -103,6 +104,7 @@ function App(): JSX.Element {
 		optionalQuests: true,
 		levelRecommendations: true,
 		banditsChoice: 'KillAll',
+		clientLogPath: null,
 	});
 	const [settingsLoading, setSettingsLoading] = useState<boolean>(true);
 
@@ -222,6 +224,35 @@ function App(): JSX.Element {
 		[settings],
 	);
 
+	const browseClientLogPath = useCallback(async (): Promise<void> => {
+		const selected = await open({
+			title: 'Select Client.txt',
+			multiple: false,
+			directory: false,
+			filters: [{ name: 'Log files', extensions: ['txt'] }],
+		});
+		if (selected === null) {
+			return;
+		}
+		const updatedSettings: LevelingGuideSettings = { ...settings, clientLogPath: selected };
+		setSettings(updatedSettings);
+		try {
+			await invoke('settings_set_leveling_guide', { settings: updatedSettings });
+		} catch (err) {
+			console.error('Failed to persist client log path:', err);
+		}
+	}, [settings]);
+
+	const clearClientLogPath = useCallback(async (): Promise<void> => {
+		const updatedSettings: LevelingGuideSettings = { ...settings, clientLogPath: null };
+		setSettings(updatedSettings);
+		try {
+			await invoke('settings_set_leveling_guide', { settings: updatedSettings });
+		} catch (err) {
+			console.error('Failed to clear client log path:', err);
+		}
+	}, [settings]);
+
 	const loadGuide = useCallback(async (): Promise<void> => {
 		setLoading(true);
 		setError(null);
@@ -325,6 +356,9 @@ function App(): JSX.Element {
 				onLevelRecommendationsChange={updateLevelRecommendations}
 				banditsChoice={settings.banditsChoice}
 				onBanditsChoiceChange={updateBanditsChoice}
+				clientLogPath={settings.clientLogPath}
+				onClientLogPathBrowse={browseClientLogPath}
+				onClientLogPathClear={clearClientLogPath}
 				onLoadGuide={loadGuide}
 				onResetProgress={resetProgress}
 			/>

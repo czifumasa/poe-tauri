@@ -3,11 +3,12 @@ use crate::persistence::settings::LevelingGuideSettings;
 use crate::persistence::store;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use tauri::AppHandle;
 use tauri::Manager;
 
 use super::io::read_guide_content;
+use super::log_watcher::{spawn_log_watcher, LogWatcherHandle};
 use super::parser::{clamp_position, current_page_dto, next_position, parse_guide_json, previous_position};
 use super::types::{GuidePosition, LevelingGuidePageDto, LoadedGuide, PersistedGuidePosition, PersistedLevelingGuideProgress};
 
@@ -122,9 +123,18 @@ fn load_area_name_by_id(app: &AppHandle, guide_path: &str) -> Result<HashMap<Str
     Ok(lookup)
 }
 
-#[derive(Default)]
 pub struct LevelingGuideManager {
     loaded: Mutex<Option<LoadedGuide>>,
+    watcher_handle: Mutex<Option<LogWatcherHandle>>,
+}
+
+impl Default for LevelingGuideManager {
+    fn default() -> Self {
+        Self {
+            loaded: Mutex::new(None),
+            watcher_handle: Mutex::new(None),
+        }
+    }
 }
 
 impl LevelingGuideManager {
@@ -171,6 +181,7 @@ impl LevelingGuideManager {
             hint_keys,
             hint_image_path_by_key,
             hint_image_cache: HashMap::new(),
+            target_area_id: None,
         };
 
         let mut guard = self
@@ -259,5 +270,96 @@ impl LevelingGuideManager {
         let settings = Self::load_settings(app)?;
         loaded.position = previous_position(&loaded.guide, loaded.position, &settings);
         current_page_dto(app, loaded, &settings)
+    }
+
+    #[allow(dead_code)]
+    pub fn get_target_area_id(&self) -> Result<Option<String>, CommandError> {
+        let guard = self
+            .loaded
+            .lock()
+            .map_err(|_| command_error("guide_state_poisoned", "Guide state poisoned"))?;
+
+        let target = guard
+            .as_ref()
+            .and_then(|loaded| loaded.target_area_id.clone());
+
+        Ok(target)
+    }
+
+    pub fn try_auto_advance(
+        &self,
+        app: &AppHandle,
+        area_id: &str,
+    ) -> Result<Option<LevelingGuidePageDto>, CommandError> {
+        let mut guard = self
+            .loaded
+            .lock()
+            .map_err(|_| command_error("guide_state_poisoned", "Guide state poisoned"))?;
+
+        let loaded = match guard.as_mut() {
+            Some(loaded) => loaded,
+            None => return Ok(None),
+        };
+
+        let matches = loaded
+            .target_area_id
+            .as_deref()
+            .is_some_and(|target| target == area_id);
+
+        if !matches {
+            return Ok(None);
+        }
+
+        let settings = Self::load_settings(app)?;
+        loaded.position = next_position(&loaded.guide, loaded.position, &settings);
+        let page = current_page_dto(app, loaded, &settings)?;
+        Ok(Some(page))
+    }
+
+    pub fn start_log_watcher(
+        self: &Arc<Self>,
+        app: &AppHandle,
+        log_path: &str,
+    ) -> Result<(), CommandError> {
+        self.stop_log_watcher();
+
+        let handle = spawn_log_watcher(app, self, log_path)
+            .map_err(|e| command_error("log_watcher_start_failed", e))?;
+
+        let mut guard = self
+            .watcher_handle
+            .lock()
+            .map_err(|_| command_error("watcher_state_poisoned", "Watcher state poisoned"))?;
+        *guard = Some(handle);
+
+        Ok(())
+    }
+
+    pub fn stop_log_watcher(&self) {
+        if let Ok(mut guard) = self.watcher_handle.lock() {
+            if let Some(handle) = guard.take() {
+                handle.stop();
+            }
+        }
+    }
+
+    pub fn restart_log_watcher_if_configured(
+        self: &Arc<Self>,
+        app: &AppHandle,
+    ) -> Result<(), CommandError> {
+        let settings = Self::load_settings(app)?;
+        let Some(log_path) = settings.client_log_path.as_deref() else {
+            return Ok(());
+        };
+
+        if log_path.is_empty() {
+            return Ok(());
+        }
+
+        if !self.is_loaded()? {
+            return Ok(());
+        }
+
+        self.start_log_watcher(app, log_path)
     }
 }

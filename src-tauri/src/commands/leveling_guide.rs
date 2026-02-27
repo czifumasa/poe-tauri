@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::error::{command_error, CommandError};
 use crate::leveling_guide::{LevelingGuideManager, LevelingGuidePageDto};
 use crate::leveling_guide::progress::{
@@ -17,13 +19,14 @@ fn emit_page_updated(app: &AppHandle, page: &LevelingGuidePageDto) -> Result<(),
         .map_err(|e| command_error("leveling_guide_emit_failed", e.to_string()))
 }
 
-fn ensure_loaded(app: &AppHandle, manager: &LevelingGuideManager) -> Result<(), CommandError> {
+fn ensure_loaded(app: &AppHandle, manager: &Arc<LevelingGuideManager>) -> Result<(), CommandError> {
     if manager.is_loaded()? {
         return Ok(());
     }
 
     let progress = load_leveling_guide_progress(app, DEFAULT_GUIDE_RELATIVE_RESOURCE_PATH)?;
     let _ = manager.load(app, progress)?;
+    start_log_watcher_if_configured(app, manager);
     Ok(())
 }
 
@@ -32,10 +35,16 @@ fn persist_current_progress(app: &AppHandle, manager: &LevelingGuideManager) -> 
     save_leveling_guide_progress(app, &progress)
 }
 
+fn start_log_watcher_if_configured(app: &AppHandle, manager: &Arc<LevelingGuideManager>) {
+    if let Err(err) = manager.restart_log_watcher_if_configured(app) {
+        eprintln!("Failed to start log watcher: {:?}", err);
+    }
+}
+
 #[tauri::command]
 pub fn load_guide(
     app: tauri::AppHandle,
-    manager: State<'_, LevelingGuideManager>,
+    manager: State<'_, Arc<LevelingGuideManager>>,
 ) -> Result<LevelingGuidePageDto, CommandError> {
     if manager.is_loaded()? {
         let page = manager.get_current_page(&app)?;
@@ -45,6 +54,7 @@ pub fn load_guide(
 
     let progress = load_leveling_guide_progress(&app, DEFAULT_GUIDE_RELATIVE_RESOURCE_PATH)?;
     let page = manager.load(&app, progress)?;
+    start_log_watcher_if_configured(&app, &manager);
     emit_page_updated(&app, &page)?;
     Ok(page)
 }
@@ -52,7 +62,7 @@ pub fn load_guide(
 #[tauri::command]
 pub fn leveling_guide_get_current_page(
     app: tauri::AppHandle,
-    manager: State<'_, LevelingGuideManager>,
+    manager: State<'_, Arc<LevelingGuideManager>>,
 ) -> Result<Option<LevelingGuidePageDto>, CommandError> {
     if !manager.is_loaded()? {
         return Ok(None);
@@ -65,7 +75,7 @@ pub fn leveling_guide_get_current_page(
 #[tauri::command]
 pub fn leveling_guide_next_page(
     app: tauri::AppHandle,
-    manager: State<'_, LevelingGuideManager>,
+    manager: State<'_, Arc<LevelingGuideManager>>,
 ) -> Result<LevelingGuidePageDto, CommandError> {
     ensure_loaded(&app, &manager)?;
     let page = manager.next_page(&app)?;
@@ -77,7 +87,7 @@ pub fn leveling_guide_next_page(
 #[tauri::command]
 pub fn leveling_guide_previous_page(
     app: tauri::AppHandle,
-    manager: State<'_, LevelingGuideManager>,
+    manager: State<'_, Arc<LevelingGuideManager>>,
 ) -> Result<LevelingGuidePageDto, CommandError> {
     ensure_loaded(&app, &manager)?;
     let page = manager.previous_page(&app)?;
@@ -89,7 +99,7 @@ pub fn leveling_guide_previous_page(
 #[tauri::command]
 pub fn leveling_guide_reset_progress(
     app: tauri::AppHandle,
-    manager: State<'_, LevelingGuideManager>,
+    manager: State<'_, Arc<LevelingGuideManager>>,
 ) -> Result<LevelingGuidePageDto, CommandError> {
     ensure_loaded(&app, &manager)?;
     let page = manager.reset_progress(&app)?;

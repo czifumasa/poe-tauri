@@ -163,14 +163,6 @@ fn extract_last_area_id_from_page(page: &GuidePage) -> Option<String> {
     last_area_id
 }
 
-fn resolve_target_area(
-    page: &GuidePage,
-    area_name_by_id: &HashMap<String, String>,
-) -> Option<String> {
-    let area_id = extract_last_area_id_from_page(page)?;
-    area_name_by_id.get(&area_id).cloned()
-}
-
 fn replace_areaid_tokens_with_area_names(
     line: &str,
     area_name_by_id: &HashMap<String, String>,
@@ -1135,7 +1127,12 @@ pub(crate) fn current_page_dto(
         .flatten()
         .collect::<Vec<LevelingGuideLineDto>>();
 
-    let target_area = resolve_target_area(page, &loaded.area_name_by_id);
+    let target_area_id = extract_last_area_id_from_page(page);
+    let target_area = target_area_id
+        .as_deref()
+        .and_then(|id| loaded.area_name_by_id.get(id).cloned());
+
+    loaded.target_area_id = target_area_id.clone();
 
     Ok(LevelingGuidePageDto {
         guide_path: loaded.guide_path.clone(),
@@ -1149,5 +1146,6 @@ pub(crate) fn current_page_dto(
         has_previous,
         has_next,
         target_area,
+        target_area_id,
     })
 }

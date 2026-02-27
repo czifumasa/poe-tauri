@@ -11,4 +11,5 @@ export type LevelingGuideSettings = {
 	optionalQuests: boolean;
 	levelRecommendations: boolean;
 	banditsChoice: BanditsChoice;
+	clientLogPath: string | null;
 };

@@ -1,4 +1,4 @@
-#[derive(Clone, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct CommandError {
     pub kind: String,
     pub message: String,

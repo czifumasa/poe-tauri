@@ -33,4 +33,5 @@ export interface LevelingGuidePageDto {
 	hasPrevious: boolean;
 	hasNext: boolean;
 	targetArea?: string;
+	targetAreaId?: string;
 }

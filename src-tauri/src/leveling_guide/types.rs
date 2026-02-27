@@ -116,6 +116,7 @@ pub(crate) struct LoadedGuide {
     pub(crate) hint_keys: Vec<String>,
     pub(crate) hint_image_path_by_key: HashMap<String, PathBuf>,
     pub(crate) hint_image_cache: HashMap<String, Option<String>>,
+    pub(crate) target_area_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -130,4 +131,6 @@ pub struct LevelingGuidePageDto {
     pub has_next: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub target_area: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_area_id: Option<String>,
 }

@@ -18,9 +18,23 @@ type LevelingGuideDashboardSnippetProps = {
 	onLevelRecommendationsChange: (value: boolean) => Promise<void>;
 	banditsChoice: BanditsChoice;
 	onBanditsChoiceChange: (value: BanditsChoice) => Promise<void>;
+	clientLogPath: string | null;
+	onClientLogPathBrowse: () => Promise<void>;
+	onClientLogPathClear: () => Promise<void>;
 	onLoadGuide: () => Promise<void>;
 	onResetProgress: () => Promise<void>;
 };
+
+function formatLogPathDisplay(path: string | null): string {
+	if (path === null || path === '') {
+		return 'Not set';
+	}
+	const maxLength = 40;
+	if (path.length <= maxLength) {
+		return path;
+	}
+	return `…${path.slice(-(maxLength - 1))}`;
+}
 
 const banditsChoiceOptions: ReadonlyArray<{ value: BanditsChoice; label: string }> = [
 	{ value: 'KillAll', label: 'Kill all' },
@@ -74,7 +88,7 @@ export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnipp
 						/>
 						Level recommendations
 					</label>
-					<label className="leaguestartToggle">
+						<label className="leaguestartToggle">
 						<span>Bandits</span>
 						<select
 							value={props.banditsChoice}
@@ -93,6 +107,28 @@ export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnipp
 							))}
 						</select>
 					</label>
+					<div className="clientLogPathRow">
+						<span className="clientLogPathLabel">Client.txt</span>
+						<span className="clientLogPathValue" title={props.clientLogPath ?? ''}>
+							{formatLogPathDisplay(props.clientLogPath)}
+						</span>
+						<button
+							type="button"
+							className="clientLogPathButton"
+							onClick={() => void props.onClientLogPathBrowse()}
+							disabled={settingsLoading}>
+							Browse
+						</button>
+						{props.clientLogPath !== null && (
+							<button
+								type="button"
+								className="clientLogPathButton"
+								onClick={() => void props.onClientLogPathClear()}
+								disabled={settingsLoading}>
+								Clear
+							</button>
+						)}
+					</div>
 				</div>
 				<div className="guideDashboardControls">
 					<button type="button" className="loadGuideButton" onClick={() => void props.onLoadGuide()} disabled={loading}>
@@ -156,6 +192,28 @@ export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnipp
 						))}
 					</select>
 				</label>
+				<div className="clientLogPathRow">
+					<span className="clientLogPathLabel">Client.txt</span>
+					<span className="clientLogPathValue" title={props.clientLogPath ?? ''}>
+						{formatLogPathDisplay(props.clientLogPath)}
+					</span>
+					<button
+						type="button"
+						className="clientLogPathButton"
+						onClick={() => void props.onClientLogPathBrowse()}
+						disabled={settingsLoading}>
+						Browse
+					</button>
+					{props.clientLogPath !== null && (
+						<button
+							type="button"
+							className="clientLogPathButton"
+							onClick={() => void props.onClientLogPathClear()}
+							disabled={settingsLoading}>
+							Clear
+						</button>
+					)}
+				</div>
 			</div>
 			<div className="guideNavigation">
 				<button type="button" onClick={() => void props.onLoadGuide()} disabled={loading}>
