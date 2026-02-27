@@ -16,6 +16,7 @@ const HINT_HIGHLIGHT_COLOR: &str = "Aqua";
 const QUEST_ITEM_COLOR: &str = "Lime";
 const QUEST_REFERENCE_COLOR: &str = "#ffdb1f";
 const ARENA_IMAGE_FOLLOWUP_COLOR: &str = "#cc99ff";
+const TRIAL_OR_LAB_COLOR: &str = "#569777";
 
 fn image_path_from_guide_path(guide_path: &str, key: &str) -> Option<PathBuf> {
     let key = key.trim().replace(' ', "_");
@@ -191,6 +192,7 @@ fn strip_comment_and_resolve_area_name(
 
 fn strip_format_tags(mut line: String) -> String {
     line = line.trim().to_string();
+    line = line.replace("(a11)", "(epilogue)");
     line
 }
 
@@ -488,6 +490,11 @@ fn render_text_segment_with_boss_highlight(
         let (quest_reference, formatted_text) = apply_quest_reference_formatting(text);
         text = formatted_text;
 
+        let is_trial_or_lab = {
+            let probe = text.to_ascii_lowercase();
+            probe.contains("trial") || probe.contains("_lab")
+        };
+
         if text.contains('_') {
             text = text.replace('_', " ");
         }
@@ -527,9 +534,10 @@ fn render_text_segment_with_boss_highlight(
             .map(|_| HINT_HIGHLIGHT_COLOR.to_string())
             .or_else(|| explicit_color.as_deref().map(css_color_from_tag))
             .or_else(|| arena_followup_highlight.then(|| ARENA_IMAGE_FOLLOWUP_COLOR.to_string()))
+            .or_else(|| boss_highlight.then(|| BOSS_TARGET_COLOR.to_string()))
             .or_else(|| quest_reference.then(|| QUEST_REFERENCE_COLOR.to_string()))
             .or_else(|| quest_item.as_ref().map(|_| QUEST_ITEM_COLOR.to_string()))
-            .or_else(|| boss_highlight.then(|| BOSS_TARGET_COLOR.to_string()));
+            .or_else(|| is_trial_or_lab.then(|| TRIAL_OR_LAB_COLOR.to_string()));
 
         let should_flush = buffered_color != color
             || buffered_hint_key.as_deref() != effective_hint_key.as_deref();
