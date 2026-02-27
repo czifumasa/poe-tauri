@@ -32,4 +32,5 @@ export interface LevelingGuidePageDto {
 	lines: LevelingGuideLineDto[];
 	hasPrevious: boolean;
 	hasNext: boolean;
+	targetArea?: string;
 }

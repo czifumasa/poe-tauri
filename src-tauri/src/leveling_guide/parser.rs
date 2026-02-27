@@ -142,6 +142,35 @@ fn split_area_id_token(token: &str) -> Option<(&str, &str)> {
     Some((id, suffix))
 }
 
+fn extract_last_area_id_from_page(page: &GuidePage) -> Option<String> {
+    let mut last_area_id: Option<String> = None;
+
+    for line in &page.lines {
+        let trimmed = line.trim();
+        if trimmed.starts_with("(hint)_") {
+            continue;
+        }
+
+        let without_comment = trimmed.split(";;").next().unwrap_or_default();
+
+        for token in without_comment.split_whitespace() {
+            if let Some((id, _)) = split_area_id_token(token) {
+                last_area_id = Some(id.to_string());
+            }
+        }
+    }
+
+    last_area_id
+}
+
+fn resolve_target_area(
+    page: &GuidePage,
+    area_name_by_id: &HashMap<String, String>,
+) -> Option<String> {
+    let area_id = extract_last_area_id_from_page(page)?;
+    area_name_by_id.get(&area_id).cloned()
+}
+
 fn replace_areaid_tokens_with_area_names(
     line: &str,
     area_name_by_id: &HashMap<String, String>,
@@ -1106,6 +1135,8 @@ pub(crate) fn current_page_dto(
         .flatten()
         .collect::<Vec<LevelingGuideLineDto>>();
 
+    let target_area = resolve_target_area(page, &loaded.area_name_by_id);
+
     Ok(LevelingGuidePageDto {
         guide_path: loaded.guide_path.clone(),
         position: GuidePosition {
@@ -1117,5 +1148,6 @@ pub(crate) fn current_page_dto(
         lines,
         has_previous,
         has_next,
+        target_area,
     })
 }

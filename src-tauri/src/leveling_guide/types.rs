@@ -128,4 +128,6 @@ pub struct LevelingGuidePageDto {
     pub lines: Vec<LevelingGuideLineDto>,
     pub has_previous: bool,
     pub has_next: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_area: Option<String>,
 }

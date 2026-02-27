@@ -31,7 +31,11 @@ const banditsChoiceOptions: ReadonlyArray<{ value: BanditsChoice; label: string 
 
 function getDashboardHeaderLabel(page: LevelingGuidePageDto): string {
 	const actLabel = `Act ${page.position.actIndex + 1}`;
-	return `${actLabel} - Page ${page.position.pageIndex + 1}/${page.pageCountInAct}`;
+	const pageLabel = `Page ${page.position.pageIndex + 1}/${page.pageCountInAct}`;
+	if (page.targetArea) {
+		return `${actLabel} - ${pageLabel} — ${page.targetArea}`;
+	}
+	return `${actLabel} - ${pageLabel}`;
 }
 
 export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnippetProps): JSX.Element {
