@@ -15,6 +15,7 @@ const AREA_NAME_COLOR_TAG: &str = "fec076";
 const HINT_HIGHLIGHT_COLOR: &str = "Aqua";
 const QUEST_ITEM_COLOR: &str = "Lime";
 const QUEST_REFERENCE_COLOR: &str = "#ffdb1f";
+const ARENA_IMAGE_FOLLOWUP_COLOR: &str = "#cc99ff";
 
 fn image_path_from_guide_path(guide_path: &str, key: &str) -> Option<PathBuf> {
     let key = key.trim().replace(' ', "_");
@@ -196,6 +197,15 @@ fn strip_format_tags(mut line: String) -> String {
 #[derive(Debug, Clone, Copy)]
 struct BossHighlightState {
     previous_was_kill: bool,
+    previous_was_arena_image: bool,
+}
+
+fn is_arena_followup_image_key(key: &str) -> bool {
+    let normalized = key
+        .trim()
+        .to_ascii_lowercase()
+        .replace(' ', "_");
+    normalized == "arena" || normalized == "in-out2"
 }
 
 fn split_segment_preserving_whitespace(segment: &str) -> Vec<(bool, String)> {
@@ -478,6 +488,10 @@ fn render_text_segment_with_boss_highlight(
         let (quest_reference, formatted_text) = apply_quest_reference_formatting(text);
         text = formatted_text;
 
+        if text.contains('_') {
+            text = text.replace('_', " ");
+        }
+
         let has_arena_prefix = text.contains("arena:");
         if has_arena_prefix {
             text = text.replace("arena:", "");
@@ -486,6 +500,9 @@ fn render_text_segment_with_boss_highlight(
         if text.is_empty() {
             continue;
         }
+
+        let arena_followup_highlight = state.previous_was_arena_image && text.trim() != ",";
+        state.previous_was_arena_image = false;
 
         let comparison = normalize_token_for_comparison(&text);
 
@@ -509,6 +526,7 @@ fn render_text_segment_with_boss_highlight(
             .as_ref()
             .map(|_| HINT_HIGHLIGHT_COLOR.to_string())
             .or_else(|| explicit_color.as_deref().map(css_color_from_tag))
+            .or_else(|| arena_followup_highlight.then(|| ARENA_IMAGE_FOLLOWUP_COLOR.to_string()))
             .or_else(|| quest_reference.then(|| QUEST_REFERENCE_COLOR.to_string()))
             .or_else(|| quest_item.as_ref().map(|_| QUEST_ITEM_COLOR.to_string()))
             .or_else(|| boss_highlight.then(|| BOSS_TARGET_COLOR.to_string()));
@@ -567,6 +585,7 @@ fn render_spans(
     let mut remaining = line;
     let mut highlight_state = BossHighlightState {
         previous_was_kill: false,
+        previous_was_arena_image: false,
     };
 
     while let Some(start) = remaining.find("(img:") {
@@ -594,6 +613,7 @@ fn render_spans(
         };
 
         let key = after_start[..end].trim();
+        highlight_state.previous_was_arena_image = is_arena_followup_image_key(key);
         if let Some(data_uri) = load_image_data_uri_cached(app, guide_path, icon_cache, key)? {
             spans.push(LevelingGuideSpanDto::Image {
                 key: key.replace(' ', "_"),

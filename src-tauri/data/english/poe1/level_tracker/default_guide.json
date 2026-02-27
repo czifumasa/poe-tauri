@@ -91,7 +91,7 @@
 		],
 		["find & enter areaid1_1_11_2 ;; the cavern of anger", "(hint)__ flow of the water points to it"],
 		[
-			"find & enter (img:arena) merveil's lair (lvl:11-13)",
+			"find & enter (img:arena) merveil's_lair (lvl:11-13)",
 			"(hint)__ flow of the water points to it",
 			"kill merveil, enter areaid1_2_1 ;; the southern forest"
 		]
