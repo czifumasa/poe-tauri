@@ -5,7 +5,7 @@ import './App.css';
 import { MainView } from './components/MainView/MainView';
 import { OverlayPanel } from './components/OverlayPanel/OverlayPanel';
 import type { LevelingGuidePageDto } from './types/Guide.ts';
-import type { LevelingGuideSettings } from './types/Settings.ts';
+import type { BanditsChoice, LevelingGuideSettings } from './types/Settings.ts';
 import { HINT_TOOLTIP_VIEW_QUERY_VALUE, OVERLAY_VIEW_QUERY_VALUE } from './constants/WindowIdentifiers.ts';
 import { LevelingGuideOverlay } from './components/LevelingGuide/overlay/LevelingGuideOverlay.tsx';
 import { LevelingGuideDashboardSnippet } from './components/LevelingGuide/snippet/LevelingGuideDashboardSnippet.tsx';
@@ -97,7 +97,13 @@ function App(): JSX.Element {
 	const [currentPage, setCurrentPage] = useState<LevelingGuidePageDto | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
-	const [settings, setSettings] = useState<LevelingGuideSettings>({ leagueStart: true, overlayPosition: null });
+	const [settings, setSettings] = useState<LevelingGuideSettings>({
+		leagueStart: true,
+		overlayPosition: null,
+		optionalQuests: true,
+		levelRecommendations: true,
+		banditsChoice: 'KillAll',
+	});
 	const [settingsLoading, setSettingsLoading] = useState<boolean>(true);
 
 	useEffect((): (() => void) => {
@@ -167,6 +173,45 @@ function App(): JSX.Element {
 	const updateLeagueStart = useCallback(
 		async (nextValue: boolean): Promise<void> => {
 			const updatedSettings: LevelingGuideSettings = { ...settings, leagueStart: nextValue };
+			setSettings(updatedSettings);
+			try {
+				await invoke('settings_set_leveling_guide', { settings: updatedSettings });
+			} catch (err) {
+				console.error('Failed to persist leveling guide settings:', err);
+			}
+		},
+		[settings],
+	);
+
+	const updateOptionalQuests = useCallback(
+		async (nextValue: boolean): Promise<void> => {
+			const updatedSettings: LevelingGuideSettings = { ...settings, optionalQuests: nextValue };
+			setSettings(updatedSettings);
+			try {
+				await invoke('settings_set_leveling_guide', { settings: updatedSettings });
+			} catch (err) {
+				console.error('Failed to persist leveling guide settings:', err);
+			}
+		},
+		[settings],
+	);
+
+	const updateLevelRecommendations = useCallback(
+		async (nextValue: boolean): Promise<void> => {
+			const updatedSettings: LevelingGuideSettings = { ...settings, levelRecommendations: nextValue };
+			setSettings(updatedSettings);
+			try {
+				await invoke('settings_set_leveling_guide', { settings: updatedSettings });
+			} catch (err) {
+				console.error('Failed to persist leveling guide settings:', err);
+			}
+		},
+		[settings],
+	);
+
+	const updateBanditsChoice = useCallback(
+		async (nextValue: BanditsChoice): Promise<void> => {
+			const updatedSettings: LevelingGuideSettings = { ...settings, banditsChoice: nextValue };
 			setSettings(updatedSettings);
 			try {
 				await invoke('settings_set_leveling_guide', { settings: updatedSettings });
@@ -274,6 +319,12 @@ function App(): JSX.Element {
 				error={error}
 				leagueStart={settings.leagueStart}
 				onLeagueStartChange={updateLeagueStart}
+				optionalQuests={settings.optionalQuests}
+				onOptionalQuestsChange={updateOptionalQuests}
+				levelRecommendations={settings.levelRecommendations}
+				onLevelRecommendationsChange={updateLevelRecommendations}
+				banditsChoice={settings.banditsChoice}
+				onBanditsChoiceChange={updateBanditsChoice}
 				onLoadGuide={loadGuide}
 				onResetProgress={resetProgress}
 			/>

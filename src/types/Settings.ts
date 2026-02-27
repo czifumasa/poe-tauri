@@ -3,7 +3,12 @@ export type OverlayPosition = {
 	y: number;
 };
 
+export type BanditsChoice = 'KillAll' | 'HelpAlira' | 'HelpOak' | 'HelpKraityn';
+
 export type LevelingGuideSettings = {
 	leagueStart: boolean;
 	overlayPosition: OverlayPosition | null;
+	optionalQuests: boolean;
+	levelRecommendations: boolean;
+	banditsChoice: BanditsChoice;
 };

@@ -1,18 +1,24 @@
 use crate::error::CommandError;
 use crate::persistence::store;
-use crate::persistence::settings::LevelingGuideSettings;
+use crate::persistence::settings::{BanditsChoice, LevelingGuideSettings};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LevelingGuideSettingsDto {
     pub league_start: bool,
     pub overlay_position: Option<crate::persistence::settings::OverlayPosition>,
+    pub optional_quests: bool,
+    pub level_recommendations: bool,
+    pub bandits_choice: BanditsChoice,
 }
 
 fn leveling_guide_settings_to_dto(settings: LevelingGuideSettings) -> LevelingGuideSettingsDto {
     LevelingGuideSettingsDto {
         league_start: settings.league_start,
         overlay_position: settings.overlay_position,
+        optional_quests: settings.optional_quests,
+        level_recommendations: settings.level_recommendations,
+        bandits_choice: settings.bandits_choice,
     }
 }
 
@@ -20,6 +26,9 @@ fn leveling_guide_settings_from_dto(dto: LevelingGuideSettingsDto) -> LevelingGu
     LevelingGuideSettings {
         league_start: dto.league_start,
         overlay_position: dto.overlay_position,
+        optional_quests: dto.optional_quests,
+        level_recommendations: dto.level_recommendations,
+        bandits_choice: dto.bandits_choice,
     }
 }
 
