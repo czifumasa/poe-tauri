@@ -5,7 +5,7 @@ use std::path::PathBuf;
 pub type GuideData = Vec<GuideAct>;
 pub type GuideAct = Vec<GuidePage>;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GuidePosition {
     pub act_index: usize,
@@ -63,6 +63,15 @@ impl PersistedLevelingGuideProgress {
 #[derive(Debug, Clone)]
 pub struct GuidePage {
     pub lines: Vec<String>,
+    pub condition: Option<GuideCondition>,
+}
+
+#[derive(Debug, Clone)]
+pub enum GuideCondition {
+    LeagueStart { enabled: bool },
+    Bandit { allowed: Vec<String> },
+    OptionalQuests { enabled: bool },
+    LevelRecommendations { enabled: bool },
 }
 
 #[derive(Debug, Clone, Serialize)]

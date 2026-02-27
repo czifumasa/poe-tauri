@@ -1,4 +1,5 @@
 use crate::error::{command_error, CommandError};
+use crate::persistence::settings::LevelingGuideSettings;
 use base64::Engine;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -6,8 +7,8 @@ use tauri::AppHandle;
 use tauri::Manager;
 
 use super::types::{
-    GuideAct, GuideData, GuidePage, GuidePosition, LevelingGuideLineDto, LevelingGuidePageDto,
-    LevelingGuideHintDto, LevelingGuideSpanDto, LoadedGuide,
+    GuideAct, GuideCondition, GuideData, GuidePage, GuidePosition, LevelingGuideLineDto,
+    LevelingGuidePageDto, LevelingGuideHintDto, LevelingGuideSpanDto, LoadedGuide,
 };
 
 const BOSS_TARGET_COLOR: &str = "#ff8111";
@@ -194,6 +195,160 @@ fn strip_format_tags(mut line: String) -> String {
     line = line.trim().to_string();
     line = line.replace("(a11)", "(epilogue)");
     line
+}
+
+fn strip_level_recommendation_tokens(line: &str) -> String {
+    let mut out = String::new();
+    let mut cursor: usize = 0;
+
+    while let Some(offset) = line[cursor..].find("(lvl:") {
+        let start = cursor + offset;
+        out.push_str(&line[cursor..start]);
+
+        if out.ends_with(' ') {
+            out.pop();
+        }
+
+        let Some(end_offset) = line[start..].find(')') else {
+            out.push_str(&line[start..]);
+            return out;
+        };
+
+        cursor = start + end_offset + 1;
+    }
+
+    out.push_str(&line[cursor..]);
+    out
+}
+
+fn apply_level_recommendation_setting(line: &str, settings: &LevelingGuideSettings) -> String {
+    if settings.level_recommendations {
+        return line.replace("(lvl:", "(");
+    }
+    strip_level_recommendation_tokens(line)
+}
+
+fn bandit_key(settings: &LevelingGuideSettings) -> &'static str {
+    use crate::persistence::settings::BanditsChoice;
+
+    match settings.bandits_choice {
+        BanditsChoice::KillAll => "none",
+        BanditsChoice::HelpAlira => "alira",
+        BanditsChoice::HelpOak => "oak",
+        BanditsChoice::HelpKraityn => "kraityn",
+    }
+}
+
+fn is_page_allowed(page: &GuidePage, settings: &LevelingGuideSettings) -> bool {
+    let Some(condition) = page.condition.as_ref() else {
+        return true;
+    };
+
+    match condition {
+        GuideCondition::LeagueStart { enabled } => settings.league_start == *enabled,
+        GuideCondition::Bandit { allowed } => allowed.iter().any(|key| key == bandit_key(settings)),
+        GuideCondition::OptionalQuests { enabled } => settings.optional_quests == *enabled,
+        GuideCondition::LevelRecommendations { enabled } => settings.level_recommendations == *enabled,
+    }
+}
+
+fn eligible_page_indices(act: &GuideAct, settings: &LevelingGuideSettings) -> Vec<usize> {
+    act.iter()
+        .enumerate()
+        .filter(|(_, page)| is_page_allowed(page, settings))
+        .map(|(index, _)| index)
+        .collect()
+}
+
+fn first_eligible_page_in_act(act: &GuideAct, settings: &LevelingGuideSettings) -> Option<usize> {
+    act.iter()
+        .enumerate()
+        .find(|(_, page)| is_page_allowed(page, settings))
+        .map(|(index, _)| index)
+}
+
+fn last_eligible_page_in_act(act: &GuideAct, settings: &LevelingGuideSettings) -> Option<usize> {
+    act.iter()
+        .enumerate()
+        .rev()
+        .find(|(_, page)| is_page_allowed(page, settings))
+        .map(|(index, _)| index)
+}
+
+pub(crate) fn next_position(
+    guide: &GuideData,
+    position: GuidePosition,
+    settings: &LevelingGuideSettings,
+) -> GuidePosition {
+    if guide.is_empty() {
+        return GuidePosition::start();
+    }
+
+    let mut act_index = position.act_index.min(guide.len().saturating_sub(1));
+    let page_index = position.page_index;
+
+    if let Some(act) = guide.get(act_index) {
+        for index in (page_index + 1)..act.len() {
+            if is_page_allowed(&act[index], settings) {
+                return GuidePosition { act_index, page_index: index };
+            }
+        }
+    }
+
+    act_index += 1;
+    while act_index < guide.len() {
+        if let Some(act) = guide.get(act_index) {
+            if let Some(first) = first_eligible_page_in_act(act, settings) {
+                return GuidePosition { act_index, page_index: first };
+            }
+        }
+        act_index += 1;
+    }
+
+    GuidePosition {
+        act_index: position.act_index,
+        page_index: position.page_index,
+    }
+}
+
+pub(crate) fn previous_position(
+    guide: &GuideData,
+    position: GuidePosition,
+    settings: &LevelingGuideSettings,
+) -> GuidePosition {
+    if guide.is_empty() {
+        return GuidePosition::start();
+    }
+
+    let mut act_index = position.act_index.min(guide.len().saturating_sub(1));
+    let page_index = position.page_index.min(
+        guide
+            .get(act_index)
+            .map(|act| act.len().saturating_sub(1))
+            .unwrap_or(0),
+    );
+
+    if let Some(act) = guide.get(act_index) {
+        for index in (0..page_index).rev() {
+            if is_page_allowed(&act[index], settings) {
+                return GuidePosition { act_index, page_index: index };
+            }
+        }
+    }
+
+    while act_index > 0 {
+        act_index -= 1;
+        if let Some(act) = guide.get(act_index) {
+            if let Some(last) = last_eligible_page_in_act(act, settings) {
+                return GuidePosition { act_index, page_index: last };
+            }
+        }
+    }
+
+    GuidePosition {
+        act_index: position.act_index,
+        page_index: position.page_index,
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -652,6 +807,7 @@ fn render_line(
     hint_keys: &[String],
     hint_image_path_by_key: &HashMap<String, PathBuf>,
     hint_image_cache: &mut HashMap<String, Option<String>>,
+    settings: &LevelingGuideSettings,
     line: &str,
 ) -> Result<Option<LevelingGuideLineDto>, CommandError> {
     if line.trim().is_empty() {
@@ -665,6 +821,7 @@ fn render_line(
     let stripped = strip_comment_and_resolve_area_name(line, area_name_by_id);
     let stripped = strip_format_tags(stripped);
     let (is_hint, stripped) = parse_line_is_hint(&stripped);
+    let stripped = apply_level_recommendation_setting(stripped, settings);
 
     let spans = render_spans(
         app,
@@ -673,7 +830,7 @@ fn render_line(
         hint_keys,
         hint_image_path_by_key,
         hint_image_cache,
-        stripped,
+        &stripped,
     )?;
     if spans.is_empty() {
         return Ok(None);
@@ -710,10 +867,18 @@ pub(crate) fn parse_guide_json(value: serde_json::Value) -> Result<GuideData, Co
                             })
                             .collect::<Result<Vec<String>, CommandError>>()?;
 
-                        return Ok(GuidePage { lines: parsed_lines });
+                        return Ok(GuidePage {
+                            lines: parsed_lines,
+                            condition: None,
+                        });
                     }
 
                     if let Some(object) = page_value.as_object() {
+                        let condition = object
+                            .get("condition")
+                            .map(|value| parse_guide_condition(value))
+                            .transpose()?;
+
                         if let Some(lines_value) = object.get("lines") {
                             let lines = lines_value.as_array().ok_or_else(|| {
                                 command_error(
@@ -734,7 +899,10 @@ pub(crate) fn parse_guide_json(value: serde_json::Value) -> Result<GuideData, Co
                                 })
                                 .collect::<Result<Vec<String>, CommandError>>()?;
 
-                            return Ok(GuidePage { lines: parsed_lines });
+                            return Ok(GuidePage {
+                                lines: parsed_lines,
+                                condition,
+                            });
                         }
                     }
 
@@ -748,47 +916,174 @@ pub(crate) fn parse_guide_json(value: serde_json::Value) -> Result<GuideData, Co
         .collect::<Result<Vec<GuideAct>, CommandError>>()
 }
 
-pub(crate) fn clamp_position(guide: &GuideData, position: GuidePosition) -> GuidePosition {
+fn parse_guide_condition(value: &serde_json::Value) -> Result<GuideCondition, CommandError> {
+    let array = value
+        .as_array()
+        .ok_or_else(|| command_error("guide_invalid_format", "Expected condition to be an array"))?;
+    if array.len() != 2 {
+        return Err(command_error(
+            "guide_invalid_format",
+            "Expected condition to have exactly 2 elements",
+        ));
+    }
+
+    let key = array[0]
+        .as_str()
+        .ok_or_else(|| command_error("guide_invalid_format", "Expected condition key to be a string"))?;
+
+    match key {
+        "league-start" => {
+            let value = array[1].as_str().ok_or_else(|| {
+                command_error("guide_invalid_format", "Expected league-start condition value")
+            })?;
+            let enabled = match value {
+                "yes" => true,
+                "no" => false,
+                _ => {
+                    return Err(command_error(
+                        "guide_invalid_format",
+                        "Expected league-start condition to be yes/no",
+                    ))
+                }
+            };
+            Ok(GuideCondition::LeagueStart { enabled })
+        }
+        "bandit" => {
+            let allowed = array[1].as_array().ok_or_else(|| {
+                command_error("guide_invalid_format", "Expected bandit condition to be an array")
+            })?;
+            let allowed = allowed
+                .iter()
+                .map(|value| {
+                    value.as_str().map(str::to_string).ok_or_else(|| {
+                        command_error(
+                            "guide_invalid_format",
+                            "Expected bandit condition values to be strings",
+                        )
+                    })
+                })
+                .collect::<Result<Vec<String>, CommandError>>()?;
+            Ok(GuideCondition::Bandit { allowed })
+        }
+        "optional-quests" => {
+            let value = array[1].as_str().ok_or_else(|| {
+                command_error("guide_invalid_format", "Expected optional-quests condition value")
+            })?;
+            let enabled = match value {
+                "yes" => true,
+                "no" => false,
+                _ => {
+                    return Err(command_error(
+                        "guide_invalid_format",
+                        "Expected optional-quests condition to be yes/no",
+                    ))
+                }
+            };
+            Ok(GuideCondition::OptionalQuests { enabled })
+        }
+        "level-recommendations" => {
+            let value = array[1].as_str().ok_or_else(|| {
+                command_error(
+                    "guide_invalid_format",
+                    "Expected level-recommendations condition value",
+                )
+            })?;
+            let enabled = match value {
+                "yes" => true,
+                "no" => false,
+                _ => {
+                    return Err(command_error(
+                        "guide_invalid_format",
+                        "Expected level-recommendations condition to be yes/no",
+                    ))
+                }
+            };
+            Ok(GuideCondition::LevelRecommendations { enabled })
+        }
+        _ => Err(command_error(
+            "guide_invalid_format",
+            format!("Unknown condition key: {key}"),
+        )),
+    }
+}
+
+pub(crate) fn clamp_position(
+    guide: &GuideData,
+    position: GuidePosition,
+    settings: &LevelingGuideSettings,
+) -> GuidePosition {
     if guide.is_empty() {
         return GuidePosition::start();
     }
 
     let act_index = position.act_index.min(guide.len().saturating_sub(1));
-    let act = &guide[act_index];
-    if act.is_empty() {
-        return GuidePosition {
-            act_index,
-            page_index: 0,
-        };
-    }
-
-    let page_index = position.page_index.min(act.len().saturating_sub(1));
-
-    GuidePosition {
+    let mut clamped = GuidePosition {
         act_index,
-        page_index,
+        page_index: position.page_index,
+    };
+
+    if let Some(act) = guide.get(clamped.act_index) {
+        if act.is_empty() {
+            clamped.page_index = 0;
+        } else {
+            clamped.page_index = clamped.page_index.min(act.len().saturating_sub(1));
+        }
     }
+
+    if guide
+        .get(clamped.act_index)
+        .and_then(|act| act.get(clamped.page_index))
+        .is_some_and(|page| is_page_allowed(page, settings))
+    {
+        return clamped;
+    }
+
+    let forward = next_position(guide, clamped, settings);
+    if forward != clamped {
+        return forward;
+    }
+
+    let backward = previous_position(guide, clamped, settings);
+    if backward != clamped {
+        return backward;
+    }
+
+    for (act_index, act) in guide.iter().enumerate() {
+        if let Some(first) = first_eligible_page_in_act(act, settings) {
+            return GuidePosition {
+                act_index,
+                page_index: first,
+            };
+        }
+    }
+
+    GuidePosition::start()
 }
 
 pub(crate) fn current_page_dto(
     app: &AppHandle,
     loaded: &mut LoadedGuide,
+    settings: &LevelingGuideSettings,
 ) -> Result<LevelingGuidePageDto, CommandError> {
+    loaded.position = clamp_position(&loaded.guide, loaded.position, settings);
+
     let act = loaded.guide.get(loaded.position.act_index).ok_or_else(|| {
         command_error("guide_position_invalid", "Act index out of bounds")
     })?;
+
+    let eligible = eligible_page_indices(act, settings);
+    let page_count_in_act = eligible.len();
+    let display_page_index = eligible
+        .iter()
+        .position(|index| *index == loaded.position.page_index)
+        .unwrap_or(0);
 
     let page = act.get(loaded.position.page_index).ok_or_else(|| {
         command_error("guide_position_invalid", "Page index out of bounds")
     })?;
 
-    let has_previous = !(loaded.position.act_index == 0 && loaded.position.page_index == 0);
-
-    let has_next = if loaded.position.act_index + 1 < loaded.guide.len() {
-        true
-    } else {
-        loaded.position.page_index + 1 < act.len()
-    };
+    let has_previous = previous_position(&loaded.guide, loaded.position, settings) != loaded.position;
+    let has_next = next_position(&loaded.guide, loaded.position, settings) != loaded.position;
 
     let lines = page
         .lines
@@ -802,6 +1097,7 @@ pub(crate) fn current_page_dto(
                 &loaded.hint_keys,
                 &loaded.hint_image_path_by_key,
                 &mut loaded.hint_image_cache,
+                settings,
                 line,
             )
         })
@@ -812,9 +1108,12 @@ pub(crate) fn current_page_dto(
 
     Ok(LevelingGuidePageDto {
         guide_path: loaded.guide_path.clone(),
-        position: loaded.position,
+        position: GuidePosition {
+            act_index: loaded.position.act_index,
+            page_index: display_page_index,
+        },
         act_count: loaded.guide.len(),
-        page_count_in_act: act.len(),
+        page_count_in_act,
         lines,
         has_previous,
         has_next,

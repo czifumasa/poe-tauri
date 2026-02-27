@@ -1,4 +1,6 @@
 use crate::error::{command_error, CommandError};
+use crate::persistence::settings::LevelingGuideSettings;
+use crate::persistence::store;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -6,7 +8,7 @@ use tauri::AppHandle;
 use tauri::Manager;
 
 use super::io::read_guide_content;
-use super::parser::{clamp_position, current_page_dto, parse_guide_json};
+use super::parser::{clamp_position, current_page_dto, next_position, parse_guide_json, previous_position};
 use super::types::{GuidePosition, LevelingGuidePageDto, LoadedGuide, PersistedGuidePosition, PersistedLevelingGuideProgress};
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -126,6 +128,14 @@ pub struct LevelingGuideManager {
 }
 
 impl LevelingGuideManager {
+    fn load_settings(app: &AppHandle) -> Result<LevelingGuideSettings, CommandError> {
+        let maybe_settings = store::get_optional::<LevelingGuideSettings>(
+            app,
+            LevelingGuideSettings::STORE_KEY,
+        )?;
+        Ok(maybe_settings.unwrap_or_default())
+    }
+
     pub fn is_loaded(&self) -> Result<bool, CommandError> {
         let guard = self
             .loaded
@@ -145,7 +155,8 @@ impl LevelingGuideManager {
             .map_err(|e| command_error("guide_parse_failed", e.to_string()))?;
 
         let guide = parse_guide_json(value)?;
-        let position = clamp_position(&guide, progress.position.to_runtime());
+        let settings = Self::load_settings(app)?;
+        let position = clamp_position(&guide, progress.position.to_runtime(), &settings);
 
         let area_name_by_id = load_area_name_by_id(app, &progress.guide_path)?;
 
@@ -172,7 +183,7 @@ impl LevelingGuideManager {
             .as_mut()
             .ok_or_else(|| command_error("guide_not_loaded", "Guide not loaded"))?;
 
-        current_page_dto(app, current)
+        current_page_dto(app, current, &settings)
     }
 
     pub fn get_current_page(&self, app: &AppHandle) -> Result<LevelingGuidePageDto, CommandError> {
@@ -185,7 +196,8 @@ impl LevelingGuideManager {
             .as_mut()
             .ok_or_else(|| command_error("guide_not_loaded", "Guide not loaded"))?;
 
-        current_page_dto(app, loaded)
+        let settings = Self::load_settings(app)?;
+        current_page_dto(app, loaded, &settings)
     }
 
     pub fn get_current_progress(&self) -> Result<PersistedLevelingGuideProgress, CommandError> {
@@ -215,7 +227,8 @@ impl LevelingGuideManager {
             .ok_or_else(|| command_error("guide_not_loaded", "Guide not loaded"))?;
 
         loaded.position = GuidePosition::start();
-        current_page_dto(app, loaded)
+        let settings = Self::load_settings(app)?;
+        current_page_dto(app, loaded, &settings)
     }
 
     pub fn next_page(&self, app: &AppHandle) -> Result<LevelingGuidePageDto, CommandError> {
@@ -228,22 +241,9 @@ impl LevelingGuideManager {
             .as_mut()
             .ok_or_else(|| command_error("guide_not_loaded", "Guide not loaded"))?;
 
-        let act = loaded.guide.get(loaded.position.act_index).ok_or_else(|| {
-            command_error("guide_position_invalid", "Act index out of bounds")
-        })?;
-
-        if loaded.position.page_index + 1 < act.len() {
-            loaded.position.page_index += 1;
-            return current_page_dto(app, loaded);
-        }
-
-        if loaded.position.act_index + 1 < loaded.guide.len() {
-            loaded.position.act_index += 1;
-            loaded.position.page_index = 0;
-            return current_page_dto(app, loaded);
-        }
-
-        current_page_dto(app, loaded)
+        let settings = Self::load_settings(app)?;
+        loaded.position = next_position(&loaded.guide, loaded.position, &settings);
+        current_page_dto(app, loaded, &settings)
     }
 
     pub fn previous_page(&self, app: &AppHandle) -> Result<LevelingGuidePageDto, CommandError> {
@@ -256,21 +256,8 @@ impl LevelingGuideManager {
             .as_mut()
             .ok_or_else(|| command_error("guide_not_loaded", "Guide not loaded"))?;
 
-        if loaded.position.page_index > 0 {
-            loaded.position.page_index -= 1;
-            return current_page_dto(app, loaded);
-        }
-
-        if loaded.position.act_index == 0 {
-            return current_page_dto(app, loaded);
-        }
-
-        loaded.position.act_index -= 1;
-        let act = loaded.guide.get(loaded.position.act_index).ok_or_else(|| {
-            command_error("guide_position_invalid", "Act index out of bounds")
-        })?;
-
-        loaded.position.page_index = act.len().saturating_sub(1);
-        current_page_dto(app, loaded)
+        let settings = Self::load_settings(app)?;
+        loaded.position = previous_position(&loaded.guide, loaded.position, &settings);
+        current_page_dto(app, loaded, &settings)
     }
 }
