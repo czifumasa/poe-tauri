@@ -12,25 +12,25 @@
 
 .guideSnippetActLabel {
 	font-size: 13px;
-	color: #8a94a8;
+	color: rgba(200, 169, 110, 0.55);
 }
 
 .guideSnippetPageLabel {
 	font-size: 13px;
-	color: #8a94a8;
+	color: rgba(200, 169, 110, 0.55);
 }
 
 .guideSnippetProgressBar {
 	height: 4px;
 	border-radius: 2px;
-	background: rgba(255, 255, 255, 0.08);
+	background: rgba(200, 169, 110, 0.12);
 	overflow: hidden;
 }
 
 .guideSnippetProgressFill {
 	height: 100%;
 	border-radius: 2px;
-	background: #4a9ec8;
+	background: rgba(212, 175, 55, 0.85);
 	min-width: 4px;
 	transition: width 0.3s ease;
 }

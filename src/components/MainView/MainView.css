@@ -25,14 +25,14 @@
 	content: '';
 	flex: 1;
 	height: 1px;
-	background: rgba(255, 255, 255, 0.06);
+	background: rgba(200, 169, 110, 0.1);
 }
 
 .mainViewModulesDividerLabel {
 	font-size: 10px;
 	font-weight: 600;
 	letter-spacing: 2px;
-	color: #4a5264;
+	color: rgba(200, 169, 110, 0.3);
 }
 
 .mainViewModulesGrid {

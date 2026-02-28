@@ -4,8 +4,8 @@
 	line-height: 24px;
 	font-weight: 400;
 
-	color: #e0e4ec;
-	background-color: #0e1320;
+	color: rgba(255, 255, 255, 0.78);
+	background-color: #0a0800;
 
 	font-synthesis: none;
 	text-rendering: optimizeLegibility;
@@ -16,7 +16,7 @@
 
 body {
 	margin: 0;
-	background-color: #0e1320;
+	background-color: #0a0800;
 }
 
 :root[data-view='overlay'] {
@@ -71,19 +71,19 @@ body {
 }
 
 .loadingMessage {
-	color: #4a9ec8;
+	color: rgba(200, 169, 110, 0.7);
 	font-size: 14px;
 	font-weight: 500;
 }
 
 a {
 	font-weight: 500;
-	color: #4a9ec8;
+	color: rgba(212, 175, 55, 0.85);
 	text-decoration: inherit;
 }
 
 a:hover {
-	color: #6ec1e4;
+	color: rgba(212, 175, 55, 1);
 }
 
 input,
@@ -94,7 +94,7 @@ button {
 	font-size: 1em;
 	font-weight: 500;
 	font-family: inherit;
-	color: #e0e4ec;
+	color: rgba(255, 255, 255, 0.78);
 	background-color: transparent;
 	transition: border-color 0.25s;
 	box-shadow: none;
@@ -105,11 +105,11 @@ button {
 }
 
 button:hover {
-	border-color: rgba(255, 255, 255, 0.15);
+	border-color: rgba(200, 169, 110, 0.35);
 }
 
 button:active {
-	background-color: rgba(255, 255, 255, 0.04);
+	background-color: rgba(200, 169, 110, 0.06);
 }
 
 input,
