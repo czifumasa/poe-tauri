@@ -7,8 +7,8 @@ use tauri::AppHandle;
 use tauri::Manager;
 
 use super::types::{
-    GuideAct, GuideCondition, GuideData, GuidePage, GuidePosition, LevelingGuideLineDto,
-    LevelingGuidePageDto, LevelingGuideHintDto, LevelingGuideSpanDto, LoadedGuide,
+    GuideAct, GuideCondition, GuideData, GuidePage, GuidePosition, LevelingGuideHintDto,
+    LevelingGuideLineDto, LevelingGuidePageDto, LevelingGuideSpanDto, LoadedGuide,
 };
 
 const BOSS_TARGET_COLOR: &str = "#ff8111";
@@ -242,9 +242,39 @@ fn strip_level_recommendation_tokens(line: &str) -> String {
     out
 }
 
+fn render_level_recommendation_tokens(line: &str) -> String {
+    let mut out = String::new();
+    let mut cursor: usize = 0;
+
+    while let Some(offset) = line[cursor..].find("(lvl:") {
+        let start = cursor + offset;
+        out.push_str(&line[cursor..start]);
+
+        let Some(end_offset) = line[start..].find(')') else {
+            out.push_str(&line[start..]);
+            return out;
+        };
+
+        let token_end = start + end_offset;
+        let raw_level_range = line[start + 5..token_end].trim();
+        if raw_level_range.is_empty() {
+            out.push_str(&line[start..=token_end]);
+        } else {
+            out.push_str("(");
+            out.push_str(raw_level_range);
+            out.push_str(" lvl)");
+        }
+
+        cursor = token_end + 1;
+    }
+
+    out.push_str(&line[cursor..]);
+    out
+}
+
 fn apply_level_recommendation_setting(line: &str, settings: &LevelingGuideSettings) -> String {
     if settings.level_recommendations {
-        return line.replace("(lvl:", "(");
+        return render_level_recommendation_tokens(line);
     }
     strip_level_recommendation_tokens(line)
 }
@@ -269,7 +299,9 @@ fn is_page_allowed(page: &GuidePage, settings: &LevelingGuideSettings) -> bool {
         GuideCondition::LeagueStart { enabled } => settings.league_start == *enabled,
         GuideCondition::Bandit { allowed } => allowed.iter().any(|key| key == bandit_key(settings)),
         GuideCondition::OptionalQuests { enabled } => settings.optional_quests == *enabled,
-        GuideCondition::LevelRecommendations { enabled } => settings.level_recommendations == *enabled,
+        GuideCondition::LevelRecommendations { enabled } => {
+            settings.level_recommendations == *enabled
+        }
     }
 }
 
@@ -311,7 +343,10 @@ pub(crate) fn next_position(
     if let Some(act) = guide.get(act_index) {
         for index in (page_index + 1)..act.len() {
             if is_page_allowed(&act[index], settings) {
-                return GuidePosition { act_index, page_index: index };
+                return GuidePosition {
+                    act_index,
+                    page_index: index,
+                };
             }
         }
     }
@@ -320,7 +355,10 @@ pub(crate) fn next_position(
     while act_index < guide.len() {
         if let Some(act) = guide.get(act_index) {
             if let Some(first) = first_eligible_page_in_act(act, settings) {
-                return GuidePosition { act_index, page_index: first };
+                return GuidePosition {
+                    act_index,
+                    page_index: first,
+                };
             }
         }
         act_index += 1;
@@ -352,7 +390,10 @@ pub(crate) fn previous_position(
     if let Some(act) = guide.get(act_index) {
         for index in (0..page_index).rev() {
             if is_page_allowed(&act[index], settings) {
-                return GuidePosition { act_index, page_index: index };
+                return GuidePosition {
+                    act_index,
+                    page_index: index,
+                };
             }
         }
     }
@@ -361,7 +402,10 @@ pub(crate) fn previous_position(
         act_index -= 1;
         if let Some(act) = guide.get(act_index) {
             if let Some(last) = last_eligible_page_in_act(act, settings) {
-                return GuidePosition { act_index, page_index: last };
+                return GuidePosition {
+                    act_index,
+                    page_index: last,
+                };
             }
         }
     }
@@ -379,10 +423,7 @@ struct BossHighlightState {
 }
 
 fn is_arena_followup_image_key(key: &str) -> bool {
-    let normalized = key
-        .trim()
-        .to_ascii_lowercase()
-        .replace(' ', "_");
+    let normalized = key.trim().to_ascii_lowercase().replace(' ', "_");
     normalized == "arena" || normalized == "in-out2"
 }
 
@@ -477,7 +518,11 @@ fn apply_quest_reference_formatting(mut token: String) -> (bool, String) {
     token = token.replace('<', "").replace('>', "");
     token = token.replace('_', " ");
 
-    if token.chars().last().is_some_and(|ch: char| ch.is_ascii_digit()) {
+    if token
+        .chars()
+        .last()
+        .is_some_and(|ch: char| ch.is_ascii_digit())
+    {
         token.pop();
     }
 
@@ -490,10 +535,7 @@ fn css_color_from_tag(color: &str) -> String {
         return trimmed.to_string();
     }
 
-    let is_hex = !trimmed.is_empty()
-        && trimmed
-            .chars()
-            .all(|c: char| c.is_ascii_hexdigit());
+    let is_hex = !trimmed.is_empty() && trimmed.chars().all(|c: char| c.is_ascii_hexdigit());
 
     if is_hex && (trimmed.len() == 6 || trimmed.len() == 3) {
         return format!("#{}", trimmed.to_ascii_lowercase());
@@ -691,11 +733,14 @@ fn render_text_segment_with_boss_highlight(
 
         let excluded_from_kill = comparison == "everything" || comparison == "it";
 
-        let boss_highlight = (state.previous_was_kill && !excluded_from_kill && !comparison.is_empty())
-            || (has_arena_prefix && !comparison.is_empty());
+        let boss_highlight =
+            (state.previous_was_kill && !excluded_from_kill && !comparison.is_empty())
+                || (has_arena_prefix && !comparison.is_empty());
 
         let hint_data_uri = match hint_key.as_deref() {
-            Some(key) => load_hint_data_uri_cached(app, hint_image_path_by_key, hint_image_cache, key)?,
+            Some(key) => {
+                load_hint_data_uri_cached(app, hint_image_path_by_key, hint_image_cache, key)?
+            }
             None => None,
         };
 
@@ -865,8 +910,7 @@ pub(crate) fn parse_guide_json(value: serde_json::Value) -> Result<GuideData, Co
         .as_array()
         .ok_or_else(|| command_error("guide_invalid_format", "Expected top-level guide array"))?;
 
-    acts
-        .iter()
+    acts.iter()
         .map(|act_value| {
             let pages = act_value.as_array().ok_or_else(|| {
                 command_error("guide_invalid_format", "Expected act to be an array")
@@ -938,9 +982,9 @@ pub(crate) fn parse_guide_json(value: serde_json::Value) -> Result<GuideData, Co
 }
 
 fn parse_guide_condition(value: &serde_json::Value) -> Result<GuideCondition, CommandError> {
-    let array = value
-        .as_array()
-        .ok_or_else(|| command_error("guide_invalid_format", "Expected condition to be an array"))?;
+    let array = value.as_array().ok_or_else(|| {
+        command_error("guide_invalid_format", "Expected condition to be an array")
+    })?;
     if array.len() != 2 {
         return Err(command_error(
             "guide_invalid_format",
@@ -948,14 +992,20 @@ fn parse_guide_condition(value: &serde_json::Value) -> Result<GuideCondition, Co
         ));
     }
 
-    let key = array[0]
-        .as_str()
-        .ok_or_else(|| command_error("guide_invalid_format", "Expected condition key to be a string"))?;
+    let key = array[0].as_str().ok_or_else(|| {
+        command_error(
+            "guide_invalid_format",
+            "Expected condition key to be a string",
+        )
+    })?;
 
     match key {
         "league-start" => {
             let value = array[1].as_str().ok_or_else(|| {
-                command_error("guide_invalid_format", "Expected league-start condition value")
+                command_error(
+                    "guide_invalid_format",
+                    "Expected league-start condition value",
+                )
             })?;
             let enabled = match value {
                 "yes" => true,
@@ -971,7 +1021,10 @@ fn parse_guide_condition(value: &serde_json::Value) -> Result<GuideCondition, Co
         }
         "bandit" => {
             let allowed = array[1].as_array().ok_or_else(|| {
-                command_error("guide_invalid_format", "Expected bandit condition to be an array")
+                command_error(
+                    "guide_invalid_format",
+                    "Expected bandit condition to be an array",
+                )
             })?;
             let allowed = allowed
                 .iter()
@@ -988,7 +1041,10 @@ fn parse_guide_condition(value: &serde_json::Value) -> Result<GuideCondition, Co
         }
         "optional-quests" => {
             let value = array[1].as_str().ok_or_else(|| {
-                command_error("guide_invalid_format", "Expected optional-quests condition value")
+                command_error(
+                    "guide_invalid_format",
+                    "Expected optional-quests condition value",
+                )
             })?;
             let enabled = match value {
                 "yes" => true,
@@ -1088,9 +1144,10 @@ pub(crate) fn current_page_dto(
 ) -> Result<LevelingGuidePageDto, CommandError> {
     loaded.position = clamp_position(&loaded.guide, loaded.position, settings);
 
-    let act = loaded.guide.get(loaded.position.act_index).ok_or_else(|| {
-        command_error("guide_position_invalid", "Act index out of bounds")
-    })?;
+    let act = loaded
+        .guide
+        .get(loaded.position.act_index)
+        .ok_or_else(|| command_error("guide_position_invalid", "Act index out of bounds"))?;
 
     let eligible = eligible_page_indices(act, settings);
     let page_count_in_act = eligible.len();
@@ -1099,11 +1156,12 @@ pub(crate) fn current_page_dto(
         .position(|index| *index == loaded.position.page_index)
         .unwrap_or(0);
 
-    let page = act.get(loaded.position.page_index).ok_or_else(|| {
-        command_error("guide_position_invalid", "Page index out of bounds")
-    })?;
+    let page = act
+        .get(loaded.position.page_index)
+        .ok_or_else(|| command_error("guide_position_invalid", "Page index out of bounds"))?;
 
-    let has_previous = previous_position(&loaded.guide, loaded.position, settings) != loaded.position;
+    let has_previous =
+        previous_position(&loaded.guide, loaded.position, settings) != loaded.position;
     let has_next = next_position(&loaded.guide, loaded.position, settings) != loaded.position;
 
     let lines = page

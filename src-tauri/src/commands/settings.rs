@@ -4,8 +4,8 @@ use tauri::State;
 
 use crate::error::CommandError;
 use crate::leveling_guide::LevelingGuideManager;
-use crate::persistence::store;
 use crate::persistence::settings::{BanditsChoice, LevelingGuideSettings};
+use crate::persistence::store;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -44,9 +44,14 @@ fn leveling_guide_settings_from_dto(dto: LevelingGuideSettingsDto) -> LevelingGu
 }
 
 #[tauri::command]
-pub fn settings_get_leveling_guide(app: tauri::AppHandle) -> Result<LevelingGuideSettingsDto, CommandError> {
-    let maybe_settings = store::get_optional::<LevelingGuideSettings>(&app, LevelingGuideSettings::STORE_KEY)?;
-    Ok(leveling_guide_settings_to_dto(maybe_settings.unwrap_or_default()))
+pub fn settings_get_leveling_guide(
+    app: tauri::AppHandle,
+) -> Result<LevelingGuideSettingsDto, CommandError> {
+    let maybe_settings =
+        store::get_optional::<LevelingGuideSettings>(&app, LevelingGuideSettings::STORE_KEY)?;
+    Ok(leveling_guide_settings_to_dto(
+        maybe_settings.unwrap_or_default(),
+    ))
 }
 
 #[tauri::command]
@@ -59,7 +64,10 @@ pub fn settings_set_leveling_guide(
     store::set_value(&app, LevelingGuideSettings::STORE_KEY, &persisted)?;
 
     if let Err(err) = manager.restart_log_watcher_if_configured(&app) {
-        eprintln!("Failed to restart log watcher after settings change: {:?}", err);
+        eprintln!(
+            "Failed to restart log watcher after settings change: {:?}",
+            err
+        );
     }
 
     Ok(())

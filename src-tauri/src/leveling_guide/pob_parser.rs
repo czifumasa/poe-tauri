@@ -83,9 +83,12 @@ fn decode_pob_to_xml(pob_code: &str) -> Result<String, CommandError> {
 
     let mut decoder = ZlibDecoder::new(&decoded[..]);
     let mut xml = String::new();
-    decoder
-        .read_to_string(&mut xml)
-        .map_err(|e| command_error("pob_decompress_failed", format!("Zlib decompress failed: {e}")))?;
+    decoder.read_to_string(&mut xml).map_err(|e| {
+        command_error(
+            "pob_decompress_failed",
+            format!("Zlib decompress failed: {e}"),
+        )
+    })?;
 
     Ok(xml)
 }
@@ -100,8 +103,7 @@ fn extract_pob_data(xml: &str) -> Result<PobImportData, CommandError> {
         ));
     }
 
-    let raw_class = extract_attribute(&xml_lower, "classname")
-        .unwrap_or_default();
+    let raw_class = extract_attribute(&xml_lower, "classname").unwrap_or_default();
     let class = resolve_base_class(&raw_class);
 
     let starters = starter_gems_for_class(&class);

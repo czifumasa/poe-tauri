@@ -38,7 +38,10 @@ pub(crate) struct GemDatabase {
     pub(crate) gems: HashMap<String, GemEntry>,
 }
 
-pub(crate) fn load_gem_database(app: &AppHandle, guide_path: &str) -> Result<GemDatabase, CommandError> {
+pub(crate) fn load_gem_database(
+    app: &AppHandle,
+    guide_path: &str,
+) -> Result<GemDatabase, CommandError> {
     let gems_path = resolve_gems_path(guide_path)
         .ok_or_else(|| command_error("gems_path_invalid", "Failed to resolve gems.json path"))?;
 
@@ -47,13 +50,17 @@ pub(crate) fn load_gem_database(app: &AppHandle, guide_path: &str) -> Result<Gem
     let raw: serde_json::Value = serde_json::from_str(&content)
         .map_err(|e| command_error("gems_parse_failed", e.to_string()))?;
 
-    let obj = raw
-        .as_object()
-        .ok_or_else(|| command_error("gems_parse_failed", "Expected gems.json root to be an object"))?;
+    let obj = raw.as_object().ok_or_else(|| {
+        command_error(
+            "gems_parse_failed",
+            "Expected gems.json root to be an object",
+        )
+    })?;
 
     let quests: HashMap<String, QuestMeta> = match obj.get("_quests") {
-        Some(val) => serde_json::from_value(val.clone())
-            .map_err(|e| command_error("gems_parse_failed", format!("Failed to parse _quests: {e}")))?,
+        Some(val) => serde_json::from_value(val.clone()).map_err(|e| {
+            command_error("gems_parse_failed", format!("Failed to parse _quests: {e}"))
+        })?,
         None => HashMap::new(),
     };
 
@@ -62,8 +69,12 @@ pub(crate) fn load_gem_database(app: &AppHandle, guide_path: &str) -> Result<Gem
         if key.starts_with('_') {
             continue;
         }
-        let entry: GemEntry = serde_json::from_value(value.clone())
-            .map_err(|e| command_error("gems_parse_failed", format!("Failed to parse gem '{key}': {e}")))?;
+        let entry: GemEntry = serde_json::from_value(value.clone()).map_err(|e| {
+            command_error(
+                "gems_parse_failed",
+                format!("Failed to parse gem '{key}': {e}"),
+            )
+        })?;
         gems.insert(key.clone(), entry);
     }
 

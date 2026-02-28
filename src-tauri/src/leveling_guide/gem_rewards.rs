@@ -157,9 +157,8 @@ pub(crate) fn inject_gem_rewards(
                         if has_quest_check {
                             let next_page = act.get(page_idx + 1);
                             if let Some(next) = next_page {
-                                let next_has_quest_check = page_lines(next)
-                                    .iter()
-                                    .any(|l| l.contains("quest-check"));
+                                let next_has_quest_check =
+                                    page_lines(next).iter().any(|l| l.contains("quest-check"));
                                 let same_condition =
                                     condition_matches(&page.condition, &next.condition);
                                 if next_has_quest_check && same_condition {
@@ -439,7 +438,8 @@ fn prune_empty_quest_lines(
 
         for quest in &quests_on_line {
             let quest_key = quest.to_ascii_lowercase();
-            let is_relevant = reward_available.contains(&quest_key) || vendor_available.contains(&quest_key);
+            let is_relevant =
+                reward_available.contains(&quest_key) || vendor_available.contains(&quest_key);
             if is_relevant {
                 relevant_count += 1;
             } else {

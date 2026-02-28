@@ -1,2 +1,2 @@
-pub mod store;
 pub mod settings;
+pub mod store;

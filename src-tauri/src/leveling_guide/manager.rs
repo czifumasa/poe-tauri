@@ -11,9 +11,14 @@ use super::gem_db::load_gem_database;
 use super::gem_rewards::{inject_gem_rewards, prune_gem_quest_lines};
 use super::io::read_guide_content;
 use super::log_watcher::{spawn_log_watcher, LogWatcherHandle};
-use super::parser::{clamp_position, current_page_dto, next_position, parse_guide_json, previous_position};
+use super::parser::{
+    clamp_position, current_page_dto, next_position, parse_guide_json, previous_position,
+};
 use super::pob_parser::PobImportData;
-use super::types::{GuidePosition, LevelingGuidePageDto, LoadedGuide, PersistedGuidePosition, PersistedLevelingGuideProgress};
+use super::types::{
+    GuidePosition, LevelingGuidePageDto, LoadedGuide, PersistedGuidePosition,
+    PersistedLevelingGuideProgress,
+};
 
 #[derive(Debug, Clone, serde::Deserialize)]
 struct AreaEntry {
@@ -32,9 +37,9 @@ fn load_hint_index(
         )
     })?;
 
-    let guide_dir = Path::new(guide_relative_path).parent().ok_or_else(|| {
-        command_error("hints_path_invalid", "Failed to resolve guide directory")
-    })?;
+    let guide_dir = Path::new(guide_relative_path)
+        .parent()
+        .ok_or_else(|| command_error("hints_path_invalid", "Failed to resolve guide directory"))?;
 
     let hints_relative_dir = guide_dir.join("img").join("hints");
 
@@ -107,7 +112,10 @@ fn resolve_areas_path(guide_path: &str) -> Option<String> {
     Some(areas_path.to_string_lossy().to_string())
 }
 
-fn load_area_name_by_id(app: &AppHandle, guide_path: &str) -> Result<HashMap<String, String>, CommandError> {
+fn load_area_name_by_id(
+    app: &AppHandle,
+    guide_path: &str,
+) -> Result<HashMap<String, String>, CommandError> {
     let areas_path = resolve_areas_path(guide_path)
         .ok_or_else(|| command_error("areas_path_invalid", "Failed to resolve areas.json path"))?;
 
@@ -159,10 +167,8 @@ impl Default for LevelingGuideManager {
 
 impl LevelingGuideManager {
     fn load_settings(app: &AppHandle) -> Result<LevelingGuideSettings, CommandError> {
-        let maybe_settings = store::get_optional::<LevelingGuideSettings>(
-            app,
-            LevelingGuideSettings::STORE_KEY,
-        )?;
+        let maybe_settings =
+            store::get_optional::<LevelingGuideSettings>(app, LevelingGuideSettings::STORE_KEY)?;
         Ok(maybe_settings.unwrap_or_default())
     }
 
@@ -300,7 +306,11 @@ impl LevelingGuideManager {
         current_page_dto(app, loaded, &settings)
     }
 
-    pub fn import_pob(&self, app: &AppHandle, pob_data: PobImportData) -> Result<LevelingGuidePageDto, CommandError> {
+    pub fn import_pob(
+        &self,
+        app: &AppHandle,
+        pob_data: PobImportData,
+    ) -> Result<LevelingGuidePageDto, CommandError> {
         let mut guard = self
             .loaded
             .lock()

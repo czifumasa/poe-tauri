@@ -1,8 +1,8 @@
-use tauri::Manager;
 use crate::error::{command_error, CommandError};
 use crate::persistence::store;
 use crate::window::identifiers::{OVERLAY_DEFAULT_MARGIN_PX, OVERLAY_WINDOW_LABEL};
 use crate::window::overlay_window::{ensure_always_on_top, ensure_overlay_window};
+use tauri::Manager;
 
 #[cfg(linux_bsd_target_os)]
 use gtk_layer_shell::{Edge, LayerShell};
@@ -35,7 +35,12 @@ fn get_overlay_monitor(window: &tauri::WebviewWindow) -> Result<tauri::Monitor, 
         .current_monitor()
         .map_err(|e| command_error("overlay_panel_window_get_monitor_failed", e.to_string()))?
         .or_else(|| window.primary_monitor().ok().flatten())
-        .ok_or_else(|| command_error("overlay_panel_window_get_monitor_failed", "no monitor available"))
+        .ok_or_else(|| {
+            command_error(
+                "overlay_panel_window_get_monitor_failed",
+                "no monitor available",
+            )
+        })
 }
 
 fn margins_to_absolute(
@@ -88,15 +93,23 @@ fn absolute_to_margins(
     Ok((left, bottom))
 }
 
-fn get_saved_overlay_position(app: &tauri::AppHandle) -> Result<Option<OverlayPosition>, CommandError> {
+fn get_saved_overlay_position(
+    app: &tauri::AppHandle,
+) -> Result<Option<OverlayPosition>, CommandError> {
     store::get_optional::<OverlayPosition>(app, OVERLAY_POSITION_STORE_KEY)
 }
 
-fn save_overlay_position(app: &tauri::AppHandle, position: &OverlayPosition) -> Result<(), CommandError> {
+fn save_overlay_position(
+    app: &tauri::AppHandle,
+    position: &OverlayPosition,
+) -> Result<(), CommandError> {
     store::set_value(app, OVERLAY_POSITION_STORE_KEY, position)
 }
 
-fn apply_overlay_position(app: &tauri::AppHandle, position: &OverlayPosition) -> Result<(), CommandError> {
+fn apply_overlay_position(
+    app: &tauri::AppHandle,
+    position: &OverlayPosition,
+) -> Result<(), CommandError> {
     let window = ensure_overlay_window(app)?;
 
     #[cfg(linux_bsd_target_os)]
@@ -116,11 +129,9 @@ fn apply_overlay_position(app: &tauri::AppHandle, position: &OverlayPosition) ->
             window
                 .run_on_main_thread(move || {
                     let result = (|| {
-                        let gtk_window = window_for_closure
-                            .gtk_window()
-                            .map_err(|e| {
-                                command_error("overlay_panel_window_gtk_window_failed", e.to_string())
-                            })?;
+                        let gtk_window = window_for_closure.gtk_window().map_err(|e| {
+                            command_error("overlay_panel_window_gtk_window_failed", e.to_string())
+                        })?;
                         gtk_window.set_layer_shell_margin(Edge::Left, left);
                         gtk_window.set_layer_shell_margin(Edge::Bottom, bottom);
                         Ok(())
@@ -128,11 +139,16 @@ fn apply_overlay_position(app: &tauri::AppHandle, position: &OverlayPosition) ->
 
                     let _ = sender.send(result);
                 })
-                .map_err(|e| command_error("overlay_panel_window_main_thread_failed", e.to_string()))?;
+                .map_err(|e| {
+                    command_error("overlay_panel_window_main_thread_failed", e.to_string())
+                })?;
 
-            receiver
-                .recv()
-                .map_err(|e| command_error("overlay_panel_window_main_thread_channel_failed", e.to_string()))??;
+            receiver.recv().map_err(|e| {
+                command_error(
+                    "overlay_panel_window_main_thread_channel_failed",
+                    e.to_string(),
+                )
+            })??;
 
             return Ok(());
         }
@@ -140,7 +156,9 @@ fn apply_overlay_position(app: &tauri::AppHandle, position: &OverlayPosition) ->
 
     let (x, y) = match position {
         OverlayPosition::Absolute { x, y } => (*x, *y),
-        OverlayPosition::LayerShellMargins { left, bottom } => margins_to_absolute(&window, *left, *bottom)?,
+        OverlayPosition::LayerShellMargins { left, bottom } => {
+            margins_to_absolute(&window, *left, *bottom)?
+        }
     };
 
     window
@@ -159,7 +177,6 @@ fn apply_saved_overlay_position_if_any(app: &tauri::AppHandle) -> Result<bool, C
     Ok(false)
 }
 
-
 #[tauri::command]
 pub fn show_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
     let overlay_window = ensure_overlay_window(&app)?;
@@ -169,9 +186,9 @@ pub fn show_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
     overlay_window
         .show()
         .map_err(|e| command_error("overlay_panel_window_show_failed", e.to_string()))?;
-    
+
     ensure_always_on_top(&overlay_window)?;
-    
+
     Ok(())
 }
 
@@ -222,14 +239,20 @@ pub fn overlay_get_position(app: tauri::AppHandle) -> Result<OverlayPosition, Co
 }
 
 #[tauri::command]
-pub fn overlay_set_position(app: tauri::AppHandle, position: OverlayPosition) -> Result<(), CommandError> {
+pub fn overlay_set_position(
+    app: tauri::AppHandle,
+    position: OverlayPosition,
+) -> Result<(), CommandError> {
     apply_overlay_position(&app, &position)?;
     save_overlay_position(&app, &position)?;
     Ok(())
 }
 
 #[tauri::command]
-pub fn overlay_apply_position(app: tauri::AppHandle, position: OverlayPosition) -> Result<(), CommandError> {
+pub fn overlay_apply_position(
+    app: tauri::AppHandle,
+    position: OverlayPosition,
+) -> Result<(), CommandError> {
     apply_overlay_position(&app, &position)?;
     Ok(())
 }
@@ -251,30 +274,34 @@ pub fn set_overlay_panel_size(
     )?;
 
     let old_state_for_x11: Option<(i32, i32, i32)>;
-    
+
     #[cfg(linux_bsd_target_os)]
     {
         let layer_shell_supported = gtk_layer_shell::is_supported();
-        
+
         old_state_for_x11 = if !layer_shell_supported {
             let saved_pos = get_saved_overlay_position(&app).ok().flatten();
-            let old_height = window.inner_size().ok()
+            let old_height = window
+                .inner_size()
+                .ok()
                 .and_then(|size| i32::try_from(size.height).ok());
-            
+
             if let (Some(pos), Some(h)) = (saved_pos, old_height) {
                 match pos {
                     OverlayPosition::Absolute { x, y } => Some((x, y, h)),
                     OverlayPosition::LayerShellMargins { left, bottom } => {
-                        margins_to_absolute(&window, left, bottom).ok().map(|(x, y)| (x, y, h))
+                        margins_to_absolute(&window, left, bottom)
+                            .ok()
+                            .map(|(x, y)| (x, y, h))
                     }
                 }
             } else {
                 window.inner_size().ok().and_then(|size| {
                     window.outer_position().ok().and_then(|pos| {
                         i32::try_from(pos.x).ok().and_then(|x| {
-                            i32::try_from(pos.y).ok().and_then(|y| {
-                                i32::try_from(size.height).ok().map(|h| (x, y, h))
-                            })
+                            i32::try_from(pos.y)
+                                .ok()
+                                .and_then(|y| i32::try_from(size.height).ok().map(|h| (x, y, h)))
                         })
                     })
                 })
@@ -282,7 +309,7 @@ pub fn set_overlay_panel_size(
         } else {
             None
         };
-        
+
         let width_i32 = i32::try_from(width)
             .map_err(|e| command_error("overlay_panel_window_width_overflow", e.to_string()))?;
         let height_i32 = i32::try_from(height)
@@ -293,14 +320,16 @@ pub fn set_overlay_panel_size(
         window
             .run_on_main_thread(move || {
                 let result = (|| {
-                    let gtk_window = window_for_closure
-                        .gtk_window()
-                        .map_err(|e| command_error("overlay_panel_window_gtk_window_failed", e.to_string()))?;
+                    let gtk_window = window_for_closure.gtk_window().map_err(|e| {
+                        command_error("overlay_panel_window_gtk_window_failed", e.to_string())
+                    })?;
                     gtk_window.set_size_request(width_i32, height_i32);
 
                     window_for_closure
                         .set_size(tauri::Size::Physical(tauri::PhysicalSize { width, height }))
-                        .map_err(|e| command_error("overlay_panel_window_set_size_failed", e.to_string()))?;
+                        .map_err(|e| {
+                            command_error("overlay_panel_window_set_size_failed", e.to_string())
+                        })?;
 
                     Ok(())
                 })();
@@ -308,9 +337,12 @@ pub fn set_overlay_panel_size(
             })
             .map_err(|e| command_error("overlay_panel_window_main_thread_failed", e.to_string()))?;
 
-        receiver
-            .recv()
-            .map_err(|e| command_error("overlay_panel_window_main_thread_channel_failed", e.to_string()))??;
+        receiver.recv().map_err(|e| {
+            command_error(
+                "overlay_panel_window_main_thread_channel_failed",
+                e.to_string(),
+            )
+        })??;
 
         if !layer_shell_supported {
             let has_saved_position = get_saved_overlay_position(&app)?.is_some();
@@ -319,23 +351,28 @@ pub fn set_overlay_panel_size(
                 let monitor_size = monitor.size();
                 let monitor_position = monitor.position();
 
-                let margin = i32::try_from(OVERLAY_DEFAULT_MARGIN_PX)
-                    .map_err(|e| command_error("overlay_panel_window_margin_overflow", e.to_string()))?;
-                let monitor_height = i32::try_from(monitor_size.height)
-                    .map_err(|e| command_error("overlay_panel_window_height_overflow", e.to_string()))?;
-                let new_height = i32::try_from(height)
-                    .map_err(|e| command_error("overlay_panel_window_height_overflow", e.to_string()))?;
+                let margin = i32::try_from(OVERLAY_DEFAULT_MARGIN_PX).map_err(|e| {
+                    command_error("overlay_panel_window_margin_overflow", e.to_string())
+                })?;
+                let monitor_height = i32::try_from(monitor_size.height).map_err(|e| {
+                    command_error("overlay_panel_window_height_overflow", e.to_string())
+                })?;
+                let new_height = i32::try_from(height).map_err(|e| {
+                    command_error("overlay_panel_window_height_overflow", e.to_string())
+                })?;
                 let y_in_monitor = (monitor_height - margin - new_height).max(0);
                 let x = monitor_position.x + margin;
                 let y = monitor_position.y + y_in_monitor;
 
                 window
                     .set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }))
-                    .map_err(|e| command_error("overlay_panel_window_set_position_failed", e.to_string()))?;
+                    .map_err(|e| {
+                        command_error("overlay_panel_window_set_position_failed", e.to_string())
+                    })?;
             }
         }
     }
-    
+
     #[cfg(not(linux_bsd_target_os))]
     {
         old_state_for_x11 = None;
@@ -350,33 +387,37 @@ pub fn set_overlay_panel_size(
         } else {
             let monitor = window
                 .current_monitor()
-                .map_err(|e| command_error("overlay_panel_window_get_monitor_failed", e.to_string()))?
-                .or_else(|| {
-                    window
-                        .primary_monitor()
-                        .ok()
-                        .flatten()
-                })
-                .ok_or_else(|| command_error("overlay_panel_window_get_monitor_failed", "no monitor available"))?;
+                .map_err(|e| {
+                    command_error("overlay_panel_window_get_monitor_failed", e.to_string())
+                })?
+                .or_else(|| window.primary_monitor().ok().flatten())
+                .ok_or_else(|| {
+                    command_error(
+                        "overlay_panel_window_get_monitor_failed",
+                        "no monitor available",
+                    )
+                })?;
 
             let monitor_size = monitor.size();
             let monitor_position = monitor.position();
-            let margin = i32::try_from(OVERLAY_DEFAULT_MARGIN_PX)
-                .map_err(|e| command_error("overlay_panel_window_margin_overflow", e.to_string()))?;
-            let monitor_height = i32::try_from(monitor_size.height)
-                .map_err(|e| command_error("overlay_panel_window_height_overflow", e.to_string()))?;
-            let new_height = i32::try_from(height)
-                .map_err(|e| command_error("overlay_panel_window_height_overflow", e.to_string()))?;
+            let margin = i32::try_from(OVERLAY_DEFAULT_MARGIN_PX).map_err(|e| {
+                command_error("overlay_panel_window_margin_overflow", e.to_string())
+            })?;
+            let monitor_height = i32::try_from(monitor_size.height).map_err(|e| {
+                command_error("overlay_panel_window_height_overflow", e.to_string())
+            })?;
+            let new_height = i32::try_from(height).map_err(|e| {
+                command_error("overlay_panel_window_height_overflow", e.to_string())
+            })?;
             let y_in_monitor = (monitor_height - margin - new_height).max(0);
             let x = monitor_position.x + margin;
             let y = monitor_position.y + y_in_monitor;
 
             window
-                .set_position(tauri::Position::Physical(tauri::PhysicalPosition {
-                    x,
-                    y,
-                }))
-                .map_err(|e| command_error("overlay_panel_window_set_position_failed", e.to_string()))?;
+                .set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }))
+                .map_err(|e| {
+                    command_error("overlay_panel_window_set_position_failed", e.to_string())
+                })?;
         }
 
         window
@@ -387,45 +428,48 @@ pub fn set_overlay_panel_size(
     #[cfg(linux_bsd_target_os)]
     {
         let layer_shell_supported = gtk_layer_shell::is_supported();
-        
+
         let (sender, receiver) = mpsc::channel::<Result<(), CommandError>>();
         let window_for_refresh = window.clone();
         window
             .run_on_main_thread(move || {
                 let result = (|| {
-                    let gtk_window = window_for_refresh
-                        .gtk_window()
-                        .map_err(|e| command_error("overlay_window_gtk_window_failed", e.to_string()))?;
-                    
+                    let gtk_window = window_for_refresh.gtk_window().map_err(|e| {
+                        command_error("overlay_window_gtk_window_failed", e.to_string())
+                    })?;
+
                     gtk_window.queue_draw();
-                    
-                    window_for_refresh.hide()
+
+                    window_for_refresh
+                        .hide()
                         .map_err(|e| command_error("overlay_window_hide_failed", e.to_string()))?;
-                    
+
                     std::thread::sleep(std::time::Duration::from_millis(1));
-                    
-                    window_for_refresh.show()
+
+                    window_for_refresh
+                        .show()
                         .map_err(|e| command_error("overlay_window_show_failed", e.to_string()))?;
-                    
+
                     Ok(())
                 })();
                 let _ = sender.send(result);
             })
             .map_err(|e| command_error("overlay_window_main_thread_failed", e.to_string()))?;
 
-        receiver
-            .recv()
-            .map_err(|e| command_error("overlay_window_main_thread_channel_failed", e.to_string()))??;
-        
+        receiver.recv().map_err(|e| {
+            command_error("overlay_window_main_thread_channel_failed", e.to_string())
+        })??;
+
         ensure_always_on_top(&window)?;
-        
+
         if !layer_shell_supported {
             if let Some((old_x, old_y, old_height)) = old_state_for_x11 {
-                let new_height = i32::try_from(height)
-                    .map_err(|e| command_error("overlay_panel_window_height_overflow", e.to_string()))?;
+                let new_height = i32::try_from(height).map_err(|e| {
+                    command_error("overlay_panel_window_height_overflow", e.to_string())
+                })?;
                 let height_delta = new_height - old_height;
                 let new_y = old_y - height_delta;
-                
+
                 let position_to_apply = OverlayPosition::Absolute { x: old_x, y: new_y };
                 apply_overlay_position(&app, &position_to_apply)?;
                 save_overlay_position(&app, &position_to_apply)?;

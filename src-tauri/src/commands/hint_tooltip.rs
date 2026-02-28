@@ -4,7 +4,9 @@ use tauri::{AppHandle, Emitter, Manager};
 
 use crate::error::{command_error, CommandError};
 use crate::persistence::store;
-use crate::window::hint_tooltip_window::{ensure_hint_tooltip_always_on_top, ensure_hint_tooltip_window};
+use crate::window::hint_tooltip_window::{
+    ensure_hint_tooltip_always_on_top, ensure_hint_tooltip_window,
+};
 use crate::window::identifiers::{OVERLAY_DEFAULT_MARGIN_PX, OVERLAY_WINDOW_LABEL};
 
 use crate::commands::overlay::{OverlayPanelSize, OverlayPosition};
@@ -67,7 +69,9 @@ fn load_saved_overlay_position(app: &AppHandle) -> Result<Option<OverlayPosition
     store::get_optional::<OverlayPosition>(app, OVERLAY_POSITION_STORE_KEY)
 }
 
-fn load_saved_overlay_panel_size(app: &AppHandle) -> Result<Option<OverlayPanelSize>, CommandError> {
+fn load_saved_overlay_panel_size(
+    app: &AppHandle,
+) -> Result<Option<OverlayPanelSize>, CommandError> {
     store::get_optional::<OverlayPanelSize>(app, OVERLAY_PANEL_SIZE_STORE_KEY)
 }
 
@@ -88,14 +92,16 @@ fn overlay_origin_physical(
             };
 
             let window_height = match load_saved_overlay_panel_size(app)? {
-                Some(size) => i32::try_from(size.height)
-                    .map_err(|e| command_error("hint_tooltip_overlay_height_overflow", e.to_string()))?,
+                Some(size) => i32::try_from(size.height).map_err(|e| {
+                    command_error("hint_tooltip_overlay_height_overflow", e.to_string())
+                })?,
                 None => {
-                    let outer_size = overlay
-                        .outer_size()
-                        .map_err(|e| command_error("hint_tooltip_overlay_size_failed", e.to_string()))?;
-                    i32::try_from(outer_size.height)
-                        .map_err(|e| command_error("hint_tooltip_overlay_height_overflow", e.to_string()))?
+                    let outer_size = overlay.outer_size().map_err(|e| {
+                        command_error("hint_tooltip_overlay_size_failed", e.to_string())
+                    })?;
+                    i32::try_from(outer_size.height).map_err(|e| {
+                        command_error("hint_tooltip_overlay_height_overflow", e.to_string())
+                    })?
                 }
             };
 
@@ -167,14 +173,17 @@ fn pick_tooltip_position(overlay: Rect, monitor: Rect) -> Option<(i32, i32)> {
     Some((x, y))
 }
 
-fn position_tooltip_window(
-    app: &AppHandle,
-) -> Result<(), CommandError> {
+fn position_tooltip_window(app: &AppHandle) -> Result<(), CommandError> {
     let tooltip = ensure_hint_tooltip_window(app)?;
 
     let overlay = app
         .get_webview_window(OVERLAY_WINDOW_LABEL)
-        .ok_or_else(|| command_error("hint_tooltip_overlay_missing", "overlay window not available"))?;
+        .ok_or_else(|| {
+            command_error(
+                "hint_tooltip_overlay_missing",
+                "overlay window not available",
+            )
+        })?;
 
     let monitor_rect = monitor_rect_for_window(&overlay)?;
     let overlay_origin = overlay_origin_physical(app, &overlay, monitor_rect)?;
@@ -183,18 +192,21 @@ fn position_tooltip_window(
         Some(size) => (
             i32::try_from(size.width)
                 .map_err(|e| command_error("hint_tooltip_overlay_width_overflow", e.to_string()))?,
-            i32::try_from(size.height)
-                .map_err(|e| command_error("hint_tooltip_overlay_height_overflow", e.to_string()))?,
+            i32::try_from(size.height).map_err(|e| {
+                command_error("hint_tooltip_overlay_height_overflow", e.to_string())
+            })?,
         ),
         None => {
             let overlay_size = overlay
                 .outer_size()
                 .map_err(|e| command_error("hint_tooltip_overlay_size_failed", e.to_string()))?;
             (
-                i32::try_from(overlay_size.width)
-                    .map_err(|e| command_error("hint_tooltip_overlay_width_overflow", e.to_string()))?,
-                i32::try_from(overlay_size.height)
-                    .map_err(|e| command_error("hint_tooltip_overlay_height_overflow", e.to_string()))?,
+                i32::try_from(overlay_size.width).map_err(|e| {
+                    command_error("hint_tooltip_overlay_width_overflow", e.to_string())
+                })?,
+                i32::try_from(overlay_size.height).map_err(|e| {
+                    command_error("hint_tooltip_overlay_height_overflow", e.to_string())
+                })?,
             )
         }
     };
@@ -236,9 +248,9 @@ fn position_tooltip_window(
             tooltip
                 .run_on_main_thread(move || {
                     let result = (|| {
-                        let gtk_window = tooltip_for_closure
-                            .gtk_window()
-                            .map_err(|e| command_error("hint_tooltip_window_gtk_window_failed", e.to_string()))?;
+                        let gtk_window = tooltip_for_closure.gtk_window().map_err(|e| {
+                            command_error("hint_tooltip_window_gtk_window_failed", e.to_string())
+                        })?;
 
                         gtk_window.set_layer_shell_margin(Edge::Left, left_margin);
                         gtk_window.set_layer_shell_margin(Edge::Top, top_margin);
@@ -247,11 +259,16 @@ fn position_tooltip_window(
                     })();
                     let _ = sender.send(result);
                 })
-                .map_err(|e| command_error("hint_tooltip_window_main_thread_failed", e.to_string()))?;
+                .map_err(|e| {
+                    command_error("hint_tooltip_window_main_thread_failed", e.to_string())
+                })?;
 
-            receiver
-                .recv()
-                .map_err(|e| command_error("hint_tooltip_window_main_thread_channel_failed", e.to_string()))??;
+            receiver.recv().map_err(|e| {
+                command_error(
+                    "hint_tooltip_window_main_thread_channel_failed",
+                    e.to_string(),
+                )
+            })??;
 
             return Ok(());
         }
@@ -305,7 +322,9 @@ pub fn hint_tooltip_get_last_content(_app: tauri::AppHandle) -> Option<HintToolt
 
 #[tauri::command]
 pub fn hint_tooltip_hide(app: tauri::AppHandle) -> Result<(), CommandError> {
-    if let Some(window) = app.get_webview_window(crate::window::identifiers::HINT_TOOLTIP_WINDOW_LABEL) {
+    if let Some(window) =
+        app.get_webview_window(crate::window::identifiers::HINT_TOOLTIP_WINDOW_LABEL)
+    {
         window
             .hide()
             .map_err(|e| command_error("hint_tooltip_hide_failed", e.to_string()))?;

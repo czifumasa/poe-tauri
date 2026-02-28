@@ -1,18 +1,20 @@
+use crate::window::identifiers::{
+    HINT_TOOLTIP_WINDOW_LABEL, MAIN_WINDOW_LABEL, OVERLAY_WINDOW_LABEL,
+};
 use std::sync::Arc;
 use tauri::Manager;
-use crate::window::identifiers::{HINT_TOOLTIP_WINDOW_LABEL, MAIN_WINDOW_LABEL, OVERLAY_WINDOW_LABEL};
 
-mod error;
-mod persistence;
-mod leveling_guide;
-mod window;
 mod commands;
+mod error;
+mod leveling_guide;
+mod persistence;
+mod window;
 
 use commands::common::*;
-use commands::overlay::*;
-use commands::leveling_guide::*;
-use commands::settings::*;
 use commands::hint_tooltip::*;
+use commands::leveling_guide::*;
+use commands::overlay::*;
+use commands::settings::*;
 use leveling_guide::LevelingGuideManager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -53,10 +55,13 @@ pub fn run() {
                 let close_handle = app_handle.clone();
                 main_window.on_window_event(move |event| {
                     if let tauri::WindowEvent::CloseRequested { .. } = event {
-                        if let Some(overlay) = close_handle.get_webview_window(OVERLAY_WINDOW_LABEL) {
+                        if let Some(overlay) = close_handle.get_webview_window(OVERLAY_WINDOW_LABEL)
+                        {
                             let _ = overlay.close();
                         }
-                        if let Some(tooltip) = close_handle.get_webview_window(HINT_TOOLTIP_WINDOW_LABEL) {
+                        if let Some(tooltip) =
+                            close_handle.get_webview_window(HINT_TOOLTIP_WINDOW_LABEL)
+                        {
                             let _ = tooltip.close();
                         }
                     }
@@ -72,4 +77,3 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-

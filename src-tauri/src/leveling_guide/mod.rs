@@ -1,6 +1,6 @@
-mod io;
 pub(crate) mod gem_db;
 pub(crate) mod gem_rewards;
+mod io;
 pub(crate) mod log_watcher;
 mod manager;
 mod parser;

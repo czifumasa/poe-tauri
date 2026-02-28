@@ -1,13 +1,11 @@
 use std::sync::Arc;
 
 use crate::error::{command_error, CommandError};
-use crate::leveling_guide::{LevelingGuideManager, LevelingGuidePageDto};
 use crate::leveling_guide::pob_parser::{self, PobImportData};
-use crate::leveling_guide::progress::{
-    load_leveling_guide_progress, save_leveling_guide_progress,
-};
-use tauri::Emitter;
+use crate::leveling_guide::progress::{load_leveling_guide_progress, save_leveling_guide_progress};
+use crate::leveling_guide::{LevelingGuideManager, LevelingGuidePageDto};
 use tauri::AppHandle;
+use tauri::Emitter;
 use tauri::State;
 
 const DEFAULT_GUIDE_RELATIVE_RESOURCE_PATH: &str =
@@ -31,7 +29,10 @@ fn ensure_loaded(app: &AppHandle, manager: &Arc<LevelingGuideManager>) -> Result
     Ok(())
 }
 
-fn persist_current_progress(app: &AppHandle, manager: &LevelingGuideManager) -> Result<(), CommandError> {
+fn persist_current_progress(
+    app: &AppHandle,
+    manager: &LevelingGuideManager,
+) -> Result<(), CommandError> {
     let progress = manager.get_current_progress()?;
     save_leveling_guide_progress(app, &progress)
 }

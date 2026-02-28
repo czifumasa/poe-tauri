@@ -104,11 +104,10 @@ fn poll_loop(
     log_path: &str,
     stop_flag: &AtomicBool,
 ) -> Result<(), String> {
-    let mut file = std::fs::File::open(log_path)
-        .map_err(|e| format!("Failed to open log file: {e}"))?;
+    let mut file =
+        std::fs::File::open(log_path).map_err(|e| format!("Failed to open log file: {e}"))?;
 
-    seek_to_end(&mut file)
-        .map_err(|e| format!("Failed to seek to end of log file: {e}"))?;
+    seek_to_end(&mut file).map_err(|e| format!("Failed to seek to end of log file: {e}"))?;
 
     while !stop_flag.load(Ordering::Relaxed) {
         std::thread::sleep(POLL_INTERVAL);

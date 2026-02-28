@@ -2,7 +2,10 @@ use crate::error::{command_error, CommandError};
 use tauri::AppHandle;
 use tauri::Manager;
 
-pub(crate) fn read_guide_content(app: &AppHandle, guide_path: &str) -> Result<String, CommandError> {
+pub(crate) fn read_guide_content(
+    app: &AppHandle,
+    guide_path: &str,
+) -> Result<String, CommandError> {
     if let Some(relative_resource_path) = guide_path.strip_prefix("resource:") {
         let resource_path = app
             .path()
