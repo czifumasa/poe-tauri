@@ -3,6 +3,13 @@
 	height: 100%;
 	min-height: 0;
 	overflow: hidden;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.guideContentOverlay * {
+	-webkit-user-select: none;
+	user-select: none;
 }
 
 .guideHeaderOverlay {
