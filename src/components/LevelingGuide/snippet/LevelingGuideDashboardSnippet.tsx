@@ -85,9 +85,10 @@ function PobImportSection(props: {
 		}
 	}, [pobInput, props]);
 
-	const statusLabel = props.pobClass !== null && props.pobGemCount !== null
-		? `PoB: ${props.pobClass} (${props.pobGemCount} gems)`
-		: 'No PoB imported';
+	const statusLabel =
+		props.pobClass !== null && props.pobGemCount !== null
+			? `PoB: ${props.pobClass} (${props.pobGemCount} gems)`
+			: 'No PoB imported';
 
 	return (
 		<div className="pobImportSection">
@@ -150,7 +151,7 @@ export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnipp
 						/>
 						Level recommendations
 					</label>
-						<label className="leaguestartToggle">
+					<label className="leaguestartToggle">
 						<span>Bandits</span>
 						<select
 							value={props.banditsChoice}
