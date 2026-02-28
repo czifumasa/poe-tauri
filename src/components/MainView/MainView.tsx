@@ -1,5 +1,10 @@
-import { JSX, type ReactNode } from 'react';
+import { JSX, type ReactNode, useCallback, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+
+import { TitleBar } from '../TitleBar/TitleBar.tsx';
+import { LeagueCard } from '../DashboardCards/LeagueCard.tsx';
+import { CharacterCard } from '../DashboardCards/CharacterCard.tsx';
+import { OverlaysCard } from '../DashboardCards/OverlaysCard.tsx';
 
 import './MainView.css';
 
@@ -8,40 +13,41 @@ interface MainViewProps {
 }
 
 export function MainView({ children }: MainViewProps): JSX.Element {
-	async function openOverlay(): Promise<void> {
+	const [overlaysVisible, setOverlaysVisible] = useState<boolean>(false);
+
+	const showAllOverlays = useCallback(async (): Promise<void> => {
 		await invoke('show_overlay');
-	}
+		setOverlaysVisible(true);
+	}, []);
 
-	async function hideOverlay(): Promise<void> {
+	const hideAllOverlays = useCallback(async (): Promise<void> => {
 		await invoke('hide_overlay');
-	}
+		setOverlaysVisible(false);
+	}, []);
 
-	async function resetSettings(): Promise<void> {
-		await invoke('settings_wipe');
-	}
+	const handleLeagueConfigure = useCallback((): void => {
+		// placeholder for league configuration
+	}, []);
+
+	const handleCharacterConfigure = useCallback((): void => {
+		// placeholder for character configuration
+	}, []);
 
 	return (
-		<main className="container">
-			<h1>Poe Tauri</h1>
+		<main className="mainViewContainer">
+			<TitleBar version="V0.1.0" />
 
-			<div className="row overlayControls">
-				<button type="button" onClick={() => void openOverlay()}>
-					Show Overlay
-				</button>
-				<button type="button" onClick={() => void hideOverlay()}>
-					Hide Overlay
-				</button>
-				<button type="button" onClick={() => void resetSettings()}>
-					Reset settings
-				</button>
+			<div className="mainViewTopRow">
+				<LeagueCard leagueName="Settlers" leagueDetail="Hardcore · SSF" onConfigure={handleLeagueConfigure} />
+				<CharacterCard characterName="Exile" characterDetail="Witch · Level 1" onConfigure={handleCharacterConfigure} />
+				<OverlaysCard allVisible={overlaysVisible} onShowAll={() => void showAllOverlays()} onHideAll={() => void hideAllOverlays()} />
 			</div>
 
-			<div className="dashboardGrid">
-				<section className="dashboardCard">
-					<h2>Leveling Guide</h2>
-					{children}
-				</section>
+			<div className="mainViewModulesDivider">
+				<span className="mainViewModulesDividerLabel">MODULES</span>
 			</div>
+
+			<div className="mainViewModulesGrid">{children}</div>
 		</main>
 	);
 }

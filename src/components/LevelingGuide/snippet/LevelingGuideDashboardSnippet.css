@@ -1,107 +1,41 @@
-.guideDashboardControls {
-	display: flex;
-	gap: 8px;
-	justify-content: center;
-}
-
-.guideDashboardSettings {
+.guideSnippetProgress {
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
-	align-items: center;
-}
-
-.leaguestartToggle {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	font-size: 13px;
-	color: #e0e0e0;
-}
-
-.leaguestartToggle select {
-	padding: 4px 6px;
-	font-size: 13px;
-}
-
-.guideContentCompact .guideHeader {
-	font-size: 14px;
-	padding-bottom: 6px;
-}
-
-.guideContentCompact .guideNavigation button {
-	padding: 6px 12px;
-	font-size: 13px;
-}
-
-.loadGuideButton {
-	padding: 8px 16px;
-	font-size: 14px;
-	cursor: pointer;
-}
-
-.clientLogPathRow {
-	display: flex;
-	align-items: center;
 	gap: 6px;
+}
+
+.guideSnippetProgressRow {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.guideSnippetActLabel {
 	font-size: 13px;
-	color: #e0e0e0;
+	color: #8a94a8;
 }
 
-.clientLogPathLabel {
-	white-space: nowrap;
-	font-weight: 600;
+.guideSnippetPageLabel {
+	font-size: 13px;
+	color: #8a94a8;
 }
 
-.clientLogPathValue {
+.guideSnippetProgressBar {
+	height: 4px;
+	border-radius: 2px;
+	background: rgba(255, 255, 255, 0.08);
 	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	max-width: 260px;
-	color: #a0a0a0;
+}
+
+.guideSnippetProgressFill {
+	height: 100%;
+	border-radius: 2px;
+	background: #4a9ec8;
+	min-width: 4px;
+	transition: width 0.3s ease;
+}
+
+.guideSnippetError {
 	font-size: 12px;
-}
-
-.clientLogPathButton {
-	padding: 2px 8px;
-	font-size: 12px;
-	cursor: pointer;
-	white-space: nowrap;
-}
-
-.pobImportSection {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-	width: 100%;
-}
-
-.pobImportStatus {
-	font-size: 12px;
-	color: #a0a0a0;
-}
-
-.pobImportRow {
-	display: flex;
-	gap: 6px;
-	align-items: center;
-}
-
-.pobImportInput {
-	flex: 1;
-	padding: 4px 6px;
-	font-size: 12px;
-	min-width: 0;
-}
-
-.pobImportButton {
-	padding: 4px 10px;
-	font-size: 12px;
-	cursor: pointer;
-	white-space: nowrap;
-}
-
-.pobImportError {
-	font-size: 11px;
-	color: #ff6666;
+	color: #f87171;
 }

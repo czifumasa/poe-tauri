@@ -1,12 +1,11 @@
 import { JSX, useCallback, useEffect, useMemo, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { open } from '@tauri-apps/plugin-dialog';
 import './App.css';
 import { MainView } from './components/MainView/MainView';
 import { OverlayPanel } from './components/OverlayPanel/OverlayPanel';
+import { ModuleSnippet } from './components/ModuleSnippet/ModuleSnippet.tsx';
 import type { LevelingGuidePageDto } from './types/Guide.ts';
-import type { BanditsChoice, LevelingGuideSettings } from './types/Settings.ts';
 import { HINT_TOOLTIP_VIEW_QUERY_VALUE, OVERLAY_VIEW_QUERY_VALUE } from './constants/WindowIdentifiers.ts';
 import { LevelingGuideOverlay } from './components/LevelingGuide/overlay/LevelingGuideOverlay.tsx';
 import { LevelingGuideDashboardSnippet } from './components/LevelingGuide/snippet/LevelingGuideDashboardSnippet.tsx';
@@ -98,19 +97,6 @@ function App(): JSX.Element {
 	const [currentPage, setCurrentPage] = useState<LevelingGuidePageDto | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
-	const [settings, setSettings] = useState<LevelingGuideSettings>({
-		leagueStart: true,
-		overlayPosition: null,
-		optionalQuests: true,
-		levelRecommendations: true,
-		banditsChoice: 'KillAll',
-		clientLogPath: null,
-		gemsEnabled: false,
-		pobCode: null,
-	});
-	const [pobClass, setPobClass] = useState<string | null>(null);
-	const [pobGemCount, setPobGemCount] = useState<number | null>(null);
-	const [settingsLoading, setSettingsLoading] = useState<boolean>(true);
 
 	useEffect((): (() => void) => {
 		let isDisposed = false;
@@ -133,12 +119,6 @@ function App(): JSX.Element {
 					}
 					setCurrentPage(loadedPage);
 				}
-
-				const status = await invoke<{ class: string; gemNames: string[] } | null>('leveling_guide_get_pob_status');
-				if (!isDisposed && status !== null) {
-					setPobClass(status.class);
-					setPobGemCount(status.gemNames.length);
-				}
 			} catch (err) {
 				if (isDisposed) {
 					return;
@@ -156,140 +136,6 @@ function App(): JSX.Element {
 		return (): void => {
 			isDisposed = true;
 		};
-	}, []);
-
-	useEffect((): (() => void) => {
-		let isDisposed = false;
-		setSettingsLoading(true);
-		void (async (): Promise<void> => {
-			try {
-				const persistedSettings = await invoke<LevelingGuideSettings>('settings_get_leveling_guide');
-				if (isDisposed) {
-					return;
-				}
-				setSettings(persistedSettings);
-			} catch (err) {
-				console.error('Failed to initialize leveling guide settings:', err);
-			} finally {
-				if (!isDisposed) {
-					setSettingsLoading(false);
-				}
-			}
-		})();
-		return (): void => {
-			isDisposed = true;
-		};
-	}, []);
-
-	const updateLeagueStart = useCallback(
-		async (nextValue: boolean): Promise<void> => {
-			const updatedSettings: LevelingGuideSettings = { ...settings, leagueStart: nextValue };
-			setSettings(updatedSettings);
-			try {
-				await invoke('settings_set_leveling_guide', { settings: updatedSettings });
-			} catch (err) {
-				console.error('Failed to persist leveling guide settings:', err);
-			}
-		},
-		[settings],
-	);
-
-	const updateOptionalQuests = useCallback(
-		async (nextValue: boolean): Promise<void> => {
-			const updatedSettings: LevelingGuideSettings = { ...settings, optionalQuests: nextValue };
-			setSettings(updatedSettings);
-			try {
-				await invoke('settings_set_leveling_guide', { settings: updatedSettings });
-			} catch (err) {
-				console.error('Failed to persist leveling guide settings:', err);
-			}
-		},
-		[settings],
-	);
-
-	const updateLevelRecommendations = useCallback(
-		async (nextValue: boolean): Promise<void> => {
-			const updatedSettings: LevelingGuideSettings = { ...settings, levelRecommendations: nextValue };
-			setSettings(updatedSettings);
-			try {
-				await invoke('settings_set_leveling_guide', { settings: updatedSettings });
-			} catch (err) {
-				console.error('Failed to persist leveling guide settings:', err);
-			}
-		},
-		[settings],
-	);
-
-	const updateBanditsChoice = useCallback(
-		async (nextValue: BanditsChoice): Promise<void> => {
-			const updatedSettings: LevelingGuideSettings = { ...settings, banditsChoice: nextValue };
-			setSettings(updatedSettings);
-			try {
-				await invoke('settings_set_leveling_guide', { settings: updatedSettings });
-			} catch (err) {
-				console.error('Failed to persist leveling guide settings:', err);
-			}
-		},
-		[settings],
-	);
-
-	const browseClientLogPath = useCallback(async (): Promise<void> => {
-		const selected = await open({
-			title: 'Select Client.txt',
-			multiple: false,
-			directory: false,
-			filters: [{ name: 'Log files', extensions: ['txt'] }],
-		});
-		if (selected === null) {
-			return;
-		}
-		const updatedSettings: LevelingGuideSettings = { ...settings, clientLogPath: selected };
-		setSettings(updatedSettings);
-		try {
-			await invoke('settings_set_leveling_guide', { settings: updatedSettings });
-		} catch (err) {
-			console.error('Failed to persist client log path:', err);
-		}
-	}, [settings]);
-
-	const clearClientLogPath = useCallback(async (): Promise<void> => {
-		const updatedSettings: LevelingGuideSettings = { ...settings, clientLogPath: null };
-		setSettings(updatedSettings);
-		try {
-			await invoke('settings_set_leveling_guide', { settings: updatedSettings });
-		} catch (err) {
-			console.error('Failed to clear client log path:', err);
-		}
-	}, [settings]);
-
-	const updateGemsEnabled = useCallback(
-		async (nextValue: boolean): Promise<void> => {
-			const updatedSettings: LevelingGuideSettings = { ...settings, gemsEnabled: nextValue };
-			setSettings(updatedSettings);
-			try {
-				await invoke('settings_set_leveling_guide', { settings: updatedSettings });
-				const page = await invoke<LevelingGuidePageDto>('leveling_guide_reapply_gems');
-				setCurrentPage(page);
-			} catch (err) {
-				console.error('Failed to toggle gems setting:', err);
-			}
-		},
-		[settings],
-	);
-
-	const importPob = useCallback(async (pobCode: string): Promise<void> => {
-		try {
-			const page = await invoke<LevelingGuidePageDto>('leveling_guide_import_pob', { pobCode });
-			setCurrentPage(page);
-			const status = await invoke<{ class: string; gemNames: string[] } | null>('leveling_guide_get_pob_status');
-			if (status !== null) {
-				setPobClass(status.class);
-				setPobGemCount(status.gemNames.length);
-			}
-		} catch (err) {
-			const errorMessage = formatInvokeError(err);
-			throw new Error(errorMessage);
-		}
 	}, []);
 
 	const loadGuide = useCallback(async (): Promise<void> => {
@@ -367,6 +213,14 @@ function App(): JSX.Element {
 		};
 	}, []);
 
+	const showOverlay = useCallback(async (): Promise<void> => {
+		await invoke('show_overlay');
+	}, []);
+
+	const openLevelingGuideSettings = useCallback((): void => {
+		// placeholder for opening settings dialog
+	}, []);
+
 	if (viewMode === 'overlay') {
 		const overlaySize = getOverlayLogicalSize(currentPage);
 		return (
@@ -385,26 +239,27 @@ function App(): JSX.Element {
 			<LevelingGuideDashboardSnippet
 				page={currentPage}
 				loading={loading}
-				settingsLoading={settingsLoading}
 				error={error}
-				leagueStart={settings.leagueStart}
-				onLeagueStartChange={updateLeagueStart}
-				optionalQuests={settings.optionalQuests}
-				onOptionalQuestsChange={updateOptionalQuests}
-				levelRecommendations={settings.levelRecommendations}
-				onLevelRecommendationsChange={updateLevelRecommendations}
-				banditsChoice={settings.banditsChoice}
-				onBanditsChoiceChange={updateBanditsChoice}
-				clientLogPath={settings.clientLogPath}
-				onClientLogPathBrowse={browseClientLogPath}
-				onClientLogPathClear={clearClientLogPath}
-				gemsEnabled={settings.gemsEnabled}
-				onGemsEnabledChange={updateGemsEnabled}
 				onLoadGuide={loadGuide}
 				onResetProgress={resetProgress}
-				onImportPob={importPob}
-				pobClass={pobClass}
-				pobGemCount={pobGemCount}
+				onShowOverlay={showOverlay}
+				onOpenSettings={openLevelingGuideSettings}
+			/>
+			<ModuleSnippet
+				title="Map Tracking"
+				description="Tracks completed maps and their content."
+				disabled
+				action={{ type: 'comingSoon' }}
+				onSettingsClick={() => {}}
+				settingsDisabled
+			/>
+			<ModuleSnippet
+				title="Build Planner"
+				description="Skill tree overlay with passive node suggestions"
+				disabled
+				action={{ type: 'comingSoon' }}
+				onSettingsClick={() => {}}
+				settingsDisabled
 			/>
 		</MainView>
 	);

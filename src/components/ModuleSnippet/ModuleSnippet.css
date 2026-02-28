@@ -1,0 +1,146 @@
+.moduleSnippet {
+	background: rgba(20, 27, 40, 0.7);
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	border-radius: 10px;
+	padding: 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+.moduleSnippet--active {
+	border-color: rgba(70, 130, 180, 0.4);
+}
+
+.moduleSnippet--disabled {
+	opacity: 0.5;
+}
+
+.moduleSnippetHeader {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.moduleSnippetTitle {
+	font-size: 15px;
+	font-weight: 600;
+	color: #e8eaf0;
+	white-space: nowrap;
+}
+
+.moduleSnippetShowButton {
+	padding: 3px 14px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	border-radius: 4px;
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	background: transparent;
+	color: #c0c8d8;
+	cursor: pointer;
+	box-shadow: none;
+	transition: border-color 0.2s, color 0.2s;
+}
+
+.moduleSnippetShowButton:hover {
+	border-color: rgba(255, 255, 255, 0.3);
+	color: #e8eaf0;
+}
+
+.moduleSnippetShowButton:disabled {
+	cursor: not-allowed;
+	opacity: 0.4;
+}
+
+.moduleSnippetDescription {
+	font-size: 13px;
+	color: #7a8494;
+	line-height: 1.45;
+}
+
+.moduleSnippetBody {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.moduleSnippetFooter {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: auto;
+	padding-top: 8px;
+}
+
+.moduleSnippetActionButton {
+	flex: 1;
+	padding: 8px 16px;
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.8px;
+	border-radius: 6px;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	background: transparent;
+	color: #6ec1e4;
+	cursor: pointer;
+	box-shadow: none;
+	transition: border-color 0.2s, background-color 0.2s;
+}
+
+.moduleSnippetActionButton:hover {
+	border-color: rgba(110, 193, 228, 0.4);
+	background: rgba(110, 193, 228, 0.06);
+}
+
+.moduleSnippetActionButton:disabled {
+	cursor: not-allowed;
+	opacity: 0.4;
+	color: #7a8494;
+}
+
+.moduleSnippetSettingsButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	padding: 0;
+	border-radius: 6px;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+	background: transparent;
+	color: #5a6474;
+	cursor: pointer;
+	box-shadow: none;
+	flex-shrink: 0;
+	transition: color 0.2s, border-color 0.2s;
+}
+
+.moduleSnippetSettingsButton:hover {
+	color: #8a94a4;
+	border-color: rgba(255, 255, 255, 0.15);
+}
+
+.moduleSnippetSettingsButton:disabled {
+	cursor: not-allowed;
+	opacity: 0.35;
+}
+
+.moduleSnippetComingSoonButton {
+	flex: 1;
+	padding: 8px 16px;
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.8px;
+	border-radius: 6px;
+	border: 1px solid rgba(255, 255, 255, 0.05);
+	background: transparent;
+	color: #4a5264;
+	cursor: default;
+	box-shadow: none;
+}
