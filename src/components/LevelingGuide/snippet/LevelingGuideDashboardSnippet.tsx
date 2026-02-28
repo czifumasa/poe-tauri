@@ -1,4 +1,4 @@
-import { JSX } from 'react';
+import { JSX, useCallback, useState } from 'react';
 import type { LevelingGuidePageDto } from '../../../types/Guide.ts';
 import type { BanditsChoice } from '../../../types/Settings.ts';
 
@@ -21,8 +21,13 @@ type LevelingGuideDashboardSnippetProps = {
 	clientLogPath: string | null;
 	onClientLogPathBrowse: () => Promise<void>;
 	onClientLogPathClear: () => Promise<void>;
+	gemsEnabled: boolean;
+	onGemsEnabledChange: (value: boolean) => Promise<void>;
 	onLoadGuide: () => Promise<void>;
 	onResetProgress: () => Promise<void>;
+	onImportPob: (pobCode: string) => Promise<void>;
+	pobClass: string | null;
+	pobGemCount: number | null;
 };
 
 function formatLogPathDisplay(path: string | null): string {
@@ -50,6 +55,63 @@ function getDashboardHeaderLabel(page: LevelingGuidePageDto): string {
 		return `${actLabel} - ${pageLabel} — ${page.targetArea}`;
 	}
 	return `${actLabel} - ${pageLabel}`;
+}
+
+function PobImportSection(props: {
+	onImportPob: (pobCode: string) => Promise<void>;
+	pobClass: string | null;
+	pobGemCount: number | null;
+	disabled: boolean;
+}): JSX.Element {
+	const [pobInput, setPobInput] = useState<string>('');
+	const [importing, setImporting] = useState<boolean>(false);
+	const [importError, setImportError] = useState<string | null>(null);
+
+	const handleImport = useCallback(async (): Promise<void> => {
+		const trimmed = pobInput.trim();
+		if (trimmed === '') {
+			return;
+		}
+		setImporting(true);
+		setImportError(null);
+		try {
+			await props.onImportPob(trimmed);
+			setPobInput('');
+		} catch (err) {
+			const message = err instanceof Error ? err.message : String(err);
+			setImportError(message);
+		} finally {
+			setImporting(false);
+		}
+	}, [pobInput, props]);
+
+	const statusLabel = props.pobClass !== null && props.pobGemCount !== null
+		? `PoB: ${props.pobClass} (${props.pobGemCount} gems)`
+		: 'No PoB imported';
+
+	return (
+		<div className="pobImportSection">
+			<div className="pobImportStatus">{statusLabel}</div>
+			<div className="pobImportRow">
+				<input
+					type="text"
+					className="pobImportInput"
+					placeholder="Paste PoB export code"
+					value={pobInput}
+					onChange={(event) => setPobInput(event.currentTarget.value)}
+					disabled={props.disabled || importing}
+				/>
+				<button
+					type="button"
+					className="pobImportButton"
+					onClick={() => void handleImport()}
+					disabled={props.disabled || importing || pobInput.trim() === ''}>
+					{importing ? 'Importing\u2026' : 'Import'}
+				</button>
+			</div>
+			{importError !== null && <div className="pobImportError">{importError}</div>}
+		</div>
+	);
 }
 
 export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnippetProps): JSX.Element {
@@ -129,6 +191,21 @@ export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnipp
 							</button>
 						)}
 					</div>
+					<label className="leaguestartToggle">
+						<input
+							type="checkbox"
+							checked={props.gemsEnabled}
+							onChange={(event) => void props.onGemsEnabledChange(event.currentTarget.checked)}
+							disabled={settingsLoading}
+						/>
+						Gems
+					</label>
+					<PobImportSection
+						onImportPob={props.onImportPob}
+						pobClass={props.pobClass}
+						pobGemCount={props.pobGemCount}
+						disabled={settingsLoading}
+					/>
 				</div>
 				<div className="guideDashboardControls">
 					<button type="button" className="loadGuideButton" onClick={() => void props.onLoadGuide()} disabled={loading}>
@@ -214,6 +291,21 @@ export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnipp
 						</button>
 					)}
 				</div>
+				<label className="leaguestartToggle">
+					<input
+						type="checkbox"
+						checked={props.gemsEnabled}
+						onChange={(event) => void props.onGemsEnabledChange(event.currentTarget.checked)}
+						disabled={settingsLoading}
+					/>
+					Gems
+				</label>
+				<PobImportSection
+					onImportPob={props.onImportPob}
+					pobClass={props.pobClass}
+					pobGemCount={props.pobGemCount}
+					disabled={settingsLoading}
+				/>
 			</div>
 			<div className="guideNavigation">
 				<button type="button" onClick={() => void props.onLoadGuide()} disabled={loading}>

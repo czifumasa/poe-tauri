@@ -12,4 +12,5 @@ export type LevelingGuideSettings = {
 	levelRecommendations: boolean;
 	banditsChoice: BanditsChoice;
 	clientLogPath: string | null;
+	gemsEnabled: boolean;
 };

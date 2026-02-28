@@ -2,6 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use super::gem_db::GemDatabase;
+use super::pob_parser::PobImportData;
+
 pub type GuideData = Vec<GuideAct>;
 pub type GuideAct = Vec<GuidePage>;
 
@@ -110,6 +113,7 @@ pub struct LevelingGuideLineDto {
 pub(crate) struct LoadedGuide {
     pub(crate) guide_path: String,
     pub(crate) guide: GuideData,
+    pub(crate) original_guide: GuideData,
     pub(crate) position: GuidePosition,
     pub(crate) icon_cache: HashMap<String, Option<String>>,
     pub(crate) area_name_by_id: HashMap<String, String>,
@@ -117,6 +121,8 @@ pub(crate) struct LoadedGuide {
     pub(crate) hint_image_path_by_key: HashMap<String, PathBuf>,
     pub(crate) hint_image_cache: HashMap<String, Option<String>>,
     pub(crate) target_area_id: Option<String>,
+    pub(crate) gem_db: Option<GemDatabase>,
+    pub(crate) pob_import_data: Option<PobImportData>,
 }
 
 #[derive(Debug, Clone, Serialize)]

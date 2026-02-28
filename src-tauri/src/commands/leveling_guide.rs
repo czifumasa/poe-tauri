@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::error::{command_error, CommandError};
 use crate::leveling_guide::{LevelingGuideManager, LevelingGuidePageDto};
+use crate::leveling_guide::pob_parser::{self, PobImportData};
 use crate::leveling_guide::progress::{
     load_leveling_guide_progress, save_leveling_guide_progress,
 };
@@ -103,6 +104,39 @@ pub fn leveling_guide_reset_progress(
 ) -> Result<LevelingGuidePageDto, CommandError> {
     ensure_loaded(&app, &manager)?;
     let page = manager.reset_progress(&app)?;
+    persist_current_progress(&app, &manager)?;
+    emit_page_updated(&app, &page)?;
+    Ok(page)
+}
+
+#[tauri::command]
+pub fn leveling_guide_import_pob(
+    app: tauri::AppHandle,
+    manager: State<'_, Arc<LevelingGuideManager>>,
+    pob_code: String,
+) -> Result<LevelingGuidePageDto, CommandError> {
+    ensure_loaded(&app, &manager)?;
+    let pob_data = pob_parser::parse_pob_export(&pob_code)?;
+    let page = manager.import_pob(&app, pob_data)?;
+    persist_current_progress(&app, &manager)?;
+    emit_page_updated(&app, &page)?;
+    Ok(page)
+}
+
+#[tauri::command]
+pub fn leveling_guide_get_pob_status(
+    manager: State<'_, Arc<LevelingGuideManager>>,
+) -> Result<Option<PobImportData>, CommandError> {
+    manager.get_pob_import_status()
+}
+
+#[tauri::command]
+pub fn leveling_guide_reapply_gems(
+    app: tauri::AppHandle,
+    manager: State<'_, Arc<LevelingGuideManager>>,
+) -> Result<LevelingGuidePageDto, CommandError> {
+    ensure_loaded(&app, &manager)?;
+    let page = manager.reapply_gems(&app)?;
     persist_current_progress(&app, &manager)?;
     emit_page_updated(&app, &page)?;
     Ok(page)

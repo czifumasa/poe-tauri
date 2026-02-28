@@ -16,6 +16,7 @@ pub struct LevelingGuideSettingsDto {
     pub level_recommendations: bool,
     pub bandits_choice: BanditsChoice,
     pub client_log_path: Option<String>,
+    pub gems_enabled: bool,
 }
 
 fn leveling_guide_settings_to_dto(settings: LevelingGuideSettings) -> LevelingGuideSettingsDto {
@@ -26,6 +27,7 @@ fn leveling_guide_settings_to_dto(settings: LevelingGuideSettings) -> LevelingGu
         level_recommendations: settings.level_recommendations,
         bandits_choice: settings.bandits_choice,
         client_log_path: settings.client_log_path,
+        gems_enabled: settings.gems_enabled,
     }
 }
 
@@ -37,6 +39,7 @@ fn leveling_guide_settings_from_dto(dto: LevelingGuideSettingsDto) -> LevelingGu
         level_recommendations: dto.level_recommendations,
         bandits_choice: dto.bandits_choice,
         client_log_path: dto.client_log_path,
+        gems_enabled: dto.gems_enabled,
     }
 }
 

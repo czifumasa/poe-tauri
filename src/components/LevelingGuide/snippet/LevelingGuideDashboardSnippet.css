@@ -68,3 +68,40 @@
 	cursor: pointer;
 	white-space: nowrap;
 }
+
+.pobImportSection {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: 100%;
+}
+
+.pobImportStatus {
+	font-size: 12px;
+	color: #a0a0a0;
+}
+
+.pobImportRow {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+
+.pobImportInput {
+	flex: 1;
+	padding: 4px 6px;
+	font-size: 12px;
+	min-width: 0;
+}
+
+.pobImportButton {
+	padding: 4px 10px;
+	font-size: 12px;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.pobImportError {
+	font-size: 11px;
+	color: #ff6666;
+}

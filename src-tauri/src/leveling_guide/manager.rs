@@ -7,9 +7,12 @@ use std::sync::{Arc, Mutex};
 use tauri::AppHandle;
 use tauri::Manager;
 
+use super::gem_db::load_gem_database;
+use super::gem_rewards::{inject_gem_rewards, prune_gem_quest_lines};
 use super::io::read_guide_content;
 use super::log_watcher::{spawn_log_watcher, LogWatcherHandle};
 use super::parser::{clamp_position, current_page_dto, next_position, parse_guide_json, previous_position};
+use super::pob_parser::PobImportData;
 use super::types::{GuidePosition, LevelingGuidePageDto, LoadedGuide, PersistedGuidePosition, PersistedLevelingGuideProgress};
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -123,6 +126,23 @@ fn load_area_name_by_id(app: &AppHandle, guide_path: &str) -> Result<HashMap<Str
     Ok(lookup)
 }
 
+fn reapply_gem_rewards_to_guide(loaded: &mut LoadedGuide, settings: &LevelingGuideSettings) {
+    loaded.guide = loaded.original_guide.clone();
+
+    let should_inject = settings.gems_enabled;
+    let has_pob = loaded.pob_import_data.is_some();
+    let has_gem_db = loaded.gem_db.is_some();
+
+    if should_inject && has_pob && has_gem_db {
+        let gem_db = loaded.gem_db.as_ref().unwrap();
+        let pob = loaded.pob_import_data.as_ref().unwrap();
+        inject_gem_rewards(&mut loaded.guide, gem_db, pob, settings.league_start);
+    } else if has_gem_db {
+        let gem_db = loaded.gem_db.as_ref().unwrap();
+        prune_gem_quest_lines(&mut loaded.guide, gem_db);
+    }
+}
+
 pub struct LevelingGuideManager {
     loaded: Mutex<Option<LoadedGuide>>,
     watcher_handle: Mutex<Option<LogWatcherHandle>>,
@@ -172,9 +192,13 @@ impl LevelingGuideManager {
 
         let (hint_keys, hint_image_path_by_key) = load_hint_index(app, &progress.guide_path)?;
 
+        let gem_db = load_gem_database(app, &progress.guide_path).ok();
+        let original_guide = guide.clone();
+
         let loaded = LoadedGuide {
             guide_path: progress.guide_path,
             guide,
+            original_guide,
             position,
             icon_cache: HashMap::new(),
             area_name_by_id,
@@ -182,6 +206,8 @@ impl LevelingGuideManager {
             hint_image_path_by_key,
             hint_image_cache: HashMap::new(),
             target_area_id: None,
+            gem_db,
+            pob_import_data: None,
         };
 
         let mut guard = self
@@ -194,6 +220,8 @@ impl LevelingGuideManager {
             .as_mut()
             .ok_or_else(|| command_error("guide_not_loaded", "Guide not loaded"))?;
 
+        reapply_gem_rewards_to_guide(current, &settings);
+        current.position = clamp_position(&current.guide, current.position, &settings);
         current_page_dto(app, current, &settings)
     }
 
@@ -270,6 +298,53 @@ impl LevelingGuideManager {
         let settings = Self::load_settings(app)?;
         loaded.position = previous_position(&loaded.guide, loaded.position, &settings);
         current_page_dto(app, loaded, &settings)
+    }
+
+    pub fn import_pob(&self, app: &AppHandle, pob_data: PobImportData) -> Result<LevelingGuidePageDto, CommandError> {
+        let mut guard = self
+            .loaded
+            .lock()
+            .map_err(|_| command_error("guide_state_poisoned", "Guide state poisoned"))?;
+
+        let loaded = guard
+            .as_mut()
+            .ok_or_else(|| command_error("guide_not_loaded", "Guide not loaded"))?;
+
+        loaded.pob_import_data = Some(pob_data);
+
+        let settings = Self::load_settings(app)?;
+        reapply_gem_rewards_to_guide(loaded, &settings);
+        loaded.position = clamp_position(&loaded.guide, loaded.position, &settings);
+        current_page_dto(app, loaded, &settings)
+    }
+
+    pub fn reapply_gems(&self, app: &AppHandle) -> Result<LevelingGuidePageDto, CommandError> {
+        let mut guard = self
+            .loaded
+            .lock()
+            .map_err(|_| command_error("guide_state_poisoned", "Guide state poisoned"))?;
+
+        let loaded = guard
+            .as_mut()
+            .ok_or_else(|| command_error("guide_not_loaded", "Guide not loaded"))?;
+
+        let settings = Self::load_settings(app)?;
+        reapply_gem_rewards_to_guide(loaded, &settings);
+        loaded.position = clamp_position(&loaded.guide, loaded.position, &settings);
+        current_page_dto(app, loaded, &settings)
+    }
+
+    pub fn get_pob_import_status(&self) -> Result<Option<PobImportData>, CommandError> {
+        let guard = self
+            .loaded
+            .lock()
+            .map_err(|_| command_error("guide_state_poisoned", "Guide state poisoned"))?;
+
+        let data = guard
+            .as_ref()
+            .and_then(|loaded| loaded.pob_import_data.clone());
+
+        Ok(data)
     }
 
     #[allow(dead_code)]

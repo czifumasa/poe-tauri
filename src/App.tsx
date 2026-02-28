@@ -105,7 +105,10 @@ function App(): JSX.Element {
 		levelRecommendations: true,
 		banditsChoice: 'KillAll',
 		clientLogPath: null,
+		gemsEnabled: false,
 	});
+	const [pobClass, setPobClass] = useState<string | null>(null);
+	const [pobGemCount, setPobGemCount] = useState<number | null>(null);
 	const [settingsLoading, setSettingsLoading] = useState<boolean>(true);
 
 	useEffect((): (() => void) => {
@@ -253,6 +256,36 @@ function App(): JSX.Element {
 		}
 	}, [settings]);
 
+	const updateGemsEnabled = useCallback(
+		async (nextValue: boolean): Promise<void> => {
+			const updatedSettings: LevelingGuideSettings = { ...settings, gemsEnabled: nextValue };
+			setSettings(updatedSettings);
+			try {
+				await invoke('settings_set_leveling_guide', { settings: updatedSettings });
+				const page = await invoke<LevelingGuidePageDto>('leveling_guide_reapply_gems');
+				setCurrentPage(page);
+			} catch (err) {
+				console.error('Failed to toggle gems setting:', err);
+			}
+		},
+		[settings],
+	);
+
+	const importPob = useCallback(async (pobCode: string): Promise<void> => {
+		try {
+			const page = await invoke<LevelingGuidePageDto>('leveling_guide_import_pob', { pobCode });
+			setCurrentPage(page);
+			const status = await invoke<{ class: string; gemNames: string[] } | null>('leveling_guide_get_pob_status');
+			if (status !== null) {
+				setPobClass(status.class);
+				setPobGemCount(status.gemNames.length);
+			}
+		} catch (err) {
+			const errorMessage = formatInvokeError(err);
+			throw new Error(errorMessage);
+		}
+	}, []);
+
 	const loadGuide = useCallback(async (): Promise<void> => {
 		setLoading(true);
 		setError(null);
@@ -359,8 +392,13 @@ function App(): JSX.Element {
 				clientLogPath={settings.clientLogPath}
 				onClientLogPathBrowse={browseClientLogPath}
 				onClientLogPathClear={clearClientLogPath}
+				gemsEnabled={settings.gemsEnabled}
+				onGemsEnabledChange={updateGemsEnabled}
 				onLoadGuide={loadGuide}
 				onResetProgress={resetProgress}
+				onImportPob={importPob}
+				pobClass={pobClass}
+				pobGemCount={pobGemCount}
 			/>
 		</MainView>
 	);
