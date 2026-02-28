@@ -4,6 +4,8 @@ use crate::error::{command_error, CommandError};
 use crate::leveling_guide::pob_parser::{self, PobImportData};
 use crate::leveling_guide::progress::{load_leveling_guide_progress, save_leveling_guide_progress};
 use crate::leveling_guide::{LevelingGuideManager, LevelingGuidePageDto};
+use crate::persistence::settings::LevelingGuideSettings;
+use crate::persistence::store;
 use tauri::AppHandle;
 use tauri::Emitter;
 use tauri::State;
@@ -119,6 +121,15 @@ pub fn leveling_guide_import_pob(
     ensure_loaded(&app, &manager)?;
     let pob_data = pob_parser::parse_pob_export(&pob_code)?;
     let page = manager.import_pob(&app, pob_data)?;
+
+    let mut settings = store::get_optional::<LevelingGuideSettings>(
+        &app,
+        LevelingGuideSettings::STORE_KEY,
+    )?
+    .unwrap_or_default();
+    settings.pob_code = Some(pob_code);
+    store::set_value(&app, LevelingGuideSettings::STORE_KEY, &settings)?;
+
     persist_current_progress(&app, &manager)?;
     emit_page_updated(&app, &page)?;
     Ok(page)

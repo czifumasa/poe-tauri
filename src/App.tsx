@@ -106,6 +106,7 @@ function App(): JSX.Element {
 		banditsChoice: 'KillAll',
 		clientLogPath: null,
 		gemsEnabled: false,
+		pobCode: null,
 	});
 	const [pobClass, setPobClass] = useState<string | null>(null);
 	const [pobGemCount, setPobGemCount] = useState<number | null>(null);
@@ -125,14 +126,19 @@ function App(): JSX.Element {
 
 				if (existingPage !== null) {
 					setCurrentPage(existingPage);
-					return;
+				} else {
+					const loadedPage = await invoke<LevelingGuidePageDto>('load_guide');
+					if (isDisposed) {
+						return;
+					}
+					setCurrentPage(loadedPage);
 				}
 
-				const loadedPage = await invoke<LevelingGuidePageDto>('load_guide');
-				if (isDisposed) {
-					return;
+				const status = await invoke<{ class: string; gemNames: string[] } | null>('leveling_guide_get_pob_status');
+				if (!isDisposed && status !== null) {
+					setPobClass(status.class);
+					setPobGemCount(status.gemNames.length);
 				}
-				setCurrentPage(loadedPage);
 			} catch (err) {
 				if (isDisposed) {
 					return;

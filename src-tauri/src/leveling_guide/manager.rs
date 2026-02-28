@@ -14,7 +14,7 @@ use super::log_watcher::{spawn_log_watcher, LogWatcherHandle};
 use super::parser::{
     clamp_position, current_page_dto, next_position, parse_guide_json, previous_position,
 };
-use super::pob_parser::PobImportData;
+use super::pob_parser::{parse_pob_export, PobImportData};
 use super::types::{
     GuidePosition, LevelingGuidePageDto, LoadedGuide, PersistedGuidePosition,
     PersistedLevelingGuideProgress,
@@ -201,6 +201,11 @@ impl LevelingGuideManager {
         let gem_db = load_gem_database(app, &progress.guide_path).ok();
         let original_guide = guide.clone();
 
+        let pob_import_data = settings
+            .pob_code
+            .as_deref()
+            .and_then(|code| parse_pob_export(code).ok());
+
         let loaded = LoadedGuide {
             guide_path: progress.guide_path,
             guide,
@@ -213,7 +218,7 @@ impl LevelingGuideManager {
             hint_image_cache: HashMap::new(),
             target_area_id: None,
             gem_db,
-            pob_import_data: None,
+            pob_import_data,
         };
 
         let mut guard = self
