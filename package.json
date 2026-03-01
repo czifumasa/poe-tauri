@@ -9,6 +9,7 @@
 		"preview": "vite preview",
 		"tauri": "tauri",
 		"tauri:dev": "WEBKIT_DISABLE_DMABUF_RENDERER=1 tauri dev",
+		"tauri:devWindows": "tauri dev",
 		"tauri:build": "tauri build",
 		"lint": "eslint . --fix",
 		"format": "prettier --write \"./**/*.{js,jsx,ts,tsx,css,md,json}\" --config ./.prettierrc",
