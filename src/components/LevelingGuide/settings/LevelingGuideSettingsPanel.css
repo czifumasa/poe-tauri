@@ -21,7 +21,9 @@
 	color: rgba(200, 169, 110, 0.7);
 	cursor: pointer;
 	box-shadow: none;
-	transition: border-color 0.2s, color 0.2s;
+	transition:
+		border-color 0.2s,
+		color 0.2s;
 }
 
 .settingsBackButton:hover {
@@ -126,7 +128,9 @@
 	cursor: pointer;
 	box-shadow: none;
 	white-space: nowrap;
-	transition: border-color 0.2s, color 0.2s;
+	transition:
+		border-color 0.2s,
+		color 0.2s;
 }
 
 .settingsClientLogButton:hover {
@@ -187,7 +191,9 @@
 	cursor: pointer;
 	box-shadow: none;
 	white-space: nowrap;
-	transition: border-color 0.2s, background-color 0.2s;
+	transition:
+		border-color 0.2s,
+		background-color 0.2s;
 }
 
 .settingsPobButton:hover {

@@ -36,7 +36,7 @@ export function MainView({ children, settingsContent }: MainViewProps): JSX.Elem
 
 	return (
 		<main className="mainViewContainer">
-			<TitleBar version="V0.1.0" />
+			<TitleBar version="v0.1.1" />
 
 			{settingsContent !== undefined ? (
 				<div className="mainViewSettingsArea">{settingsContent}</div>
@@ -44,8 +44,16 @@ export function MainView({ children, settingsContent }: MainViewProps): JSX.Elem
 				<>
 					<div className="mainViewTopRow">
 						<LeagueCard leagueName="Settlers" leagueDetail="Hardcore · SSF" onConfigure={handleLeagueConfigure} />
-						<CharacterCard characterName="Exile" characterDetail="Witch · Level 1" onConfigure={handleCharacterConfigure} />
-						<OverlaysCard allVisible={overlaysVisible} onShowAll={() => void showAllOverlays()} onHideAll={() => void hideAllOverlays()} />
+						<CharacterCard
+							characterName="Exile"
+							characterDetail="Witch · Level 1"
+							onConfigure={handleCharacterConfigure}
+						/>
+						<OverlaysCard
+							allVisible={overlaysVisible}
+							onShowAll={() => void showAllOverlays()}
+							onHideAll={() => void hideAllOverlays()}
+						/>
 					</div>
 
 					<div className="mainViewModulesDivider">

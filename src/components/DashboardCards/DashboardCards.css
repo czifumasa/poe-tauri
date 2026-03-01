@@ -48,7 +48,9 @@
 	color: rgba(212, 175, 55, 0.85);
 	cursor: pointer;
 	box-shadow: none;
-	transition: border-color 0.2s, color 0.2s;
+	transition:
+		border-color 0.2s,
+		color 0.2s;
 }
 
 .dashboardCardConfigureButton:hover {
@@ -104,7 +106,9 @@
 	border-radius: 6px;
 	cursor: pointer;
 	box-shadow: none;
-	transition: border-color 0.2s, background-color 0.2s;
+	transition:
+		border-color 0.2s,
+		background-color 0.2s;
 }
 
 .overlaysShowAllButton {

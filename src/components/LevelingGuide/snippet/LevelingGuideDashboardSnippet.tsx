@@ -55,8 +55,7 @@ export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnipp
 					? { type: 'primary', label: 'RESET', onClick: () => void props.onResetProgress(), disabled: loading }
 					: { type: 'primary', label: 'LOAD DEFAULT GUIDE', onClick: () => void props.onLoadGuide(), disabled: loading }
 			}
-			onSettingsClick={props.onOpenSettings}
-		>
+			onSettingsClick={props.onOpenSettings}>
 			{isLoaded && <GuideLoadedBody page={page} />}
 			{props.error !== null && <div className="guideSnippetError">{props.error}</div>}
 		</ModuleSnippet>

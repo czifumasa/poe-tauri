@@ -9,7 +9,9 @@ interface OverlaysCardProps {
 }
 
 export function OverlaysCard({ allVisible, onShowAll, onHideAll }: OverlaysCardProps): JSX.Element {
-	const dotClass = allVisible ? 'overlaysStatusDot overlaysStatusDot--visible' : 'overlaysStatusDot overlaysStatusDot--hidden';
+	const dotClass = allVisible
+		? 'overlaysStatusDot overlaysStatusDot--visible'
+		: 'overlaysStatusDot overlaysStatusDot--hidden';
 	const statusText = allVisible ? 'All Visible' : 'Hidden';
 
 	return (
