@@ -1,148 +1,147 @@
 .guideContentOverlay {
-	gap: 0;
-	height: 100%;
-	min-height: 0;
-	overflow: hidden;
-	-webkit-user-select: none;
-	user-select: none;
+    gap: 0;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .guideContentOverlay * {
-	-webkit-user-select: none;
-	user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .guideHeaderOverlay {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	font-size: 11px;
-	line-height: 1;
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
-	color: rgba(255, 255, 255, 0.78);
-	border-bottom: 1px solid rgba(200, 169, 110, 0.14);
-	padding: 3px 8px;
-	background: #0f0d00;
-	border-top-left-radius: 8px;
-	border-top-right-radius: 8px;
-	height: 36px;
-	box-sizing: border-box;
-	flex: 0 0 36px;
-	min-height: 36px;
-	max-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.78);
+    border-bottom: 1px solid rgba(200, 169, 110, 0.14);
+    padding: 3px 8px;
+    background: #0f0d00;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    height: 36px;
+    box-sizing: border-box;
+    flex: 0 0 36px;
+    min-height: 36px;
+    max-height: 36px;
 }
 
 .guideHeaderOverlay .guideHeaderLeft {
-	display: flex;
-	align-items: center;
-	height: 100%;
-	font-weight: 700;
-	color: rgba(212, 175, 55, 0.95);
-	text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    height: 100%;
+    font-weight: 700;
+    color: rgba(212, 175, 55, 0.95);
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
 }
 
 .guideHeaderOverlay .guideHeaderRight {
-	display: flex;
-	align-items: center;
-	height: 100%;
-	font-weight: 600;
-	color: #383838;
-	letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    font-weight: 600;
+    color: #383838;
+    letter-spacing: 0.05em;
 }
 
 .guideContentOverlay .guideStep {
-	font-size: 11px;
-	letter-spacing: 0.03em;
-	padding: 2px 8px;
-	text-transform: uppercase;
-	height: 24px;
-	box-sizing: border-box;
-	display: flex;
-	align-items: center;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    text-transform: uppercase;
+    height: 24px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .guideStep.guideStepHint {
-	color: #979797;
-	font-size: 10px;
-	letter-spacing: 0.06em;
-	padding: 0 8px 0 18px;
-	margin-left: 4px;
+    color: #979797;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    padding: 0 8px 0 18px;
+    margin-left: 4px;
 }
 
 .guideHintText {
-	cursor: help;
-	text-decoration: underline;
-	text-underline-offset: 2px;
-	margin-right: 4px;
+    cursor: help;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    margin-right: 4px;
 }
 
 .guideHintTooltip {
-	position: fixed;
-	z-index: 9999;
-	background: rgba(10, 10, 10, 0.96);
-	border: 1px solid rgba(200, 169, 110, 0.25);
-	border-radius: 6px;
-	padding: 6px;
-	max-width: 280px;
-	max-height: 220px;
-	pointer-events: none;
-	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
+    position: fixed;
+    z-index: 9999;
+    background: rgba(10, 10, 10, 0.96);
+    border: 1px solid rgba(200, 169, 110, 0.25);
+    border-radius: 6px;
+    padding: 6px;
+    max-width: 280px;
+    max-height: 220px;
+    pointer-events: none;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
 }
 
 .guideHintTooltipImage {
-	display: block;
-	max-width: 100%;
-	max-height: 220px;
-	object-fit: contain;
+    display: block;
+    max-width: 100%;
+    max-height: 220px;
+    object-fit: contain;
 }
 
 .guideContentOverlay .guideNavigation {
-	margin-top: 0;
-	border-top: 1px solid #141414;
-	background: #060606;
-	padding: 4px 8px;
-	border-bottom-left-radius: 8px;
-	border-bottom-right-radius: 8px;
-	height: 36px;
-	box-sizing: border-box;
-	flex: 0 0 36px;
-	min-height: 36px;
-	max-height: 36px;
+    margin-top: 0;
+    border-top: 1px solid #141414;
+    background: #060606;
+    padding: 4px 8px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    height: 36px;
+    box-sizing: border-box;
+    flex: 0 0 36px;
+    min-height: 36px;
+    max-height: 36px;
 }
 
 .guideNavButton {
-	flex: 0 0 auto;
-	min-width: 96px;
-	background: none;
-	border: 1px solid #222;
-	box-shadow: none;
-	color: #555;
-	padding: 2px 8px;
-	border-radius: 3px;
-	text-transform: uppercase;
-	letter-spacing: 0.08em;
-	font-size: 10px;
-	transition:
-		border-color 0.15s ease,
-		background-color 0.15s ease,
-		color 0.15s ease,
-		opacity 0.15s ease;
+    flex: 0 0 auto;
+    min-width: 96px;
+    background: none;
+    border: 1px solid #222;
+    box-shadow: none;
+    color: #555;
+    padding: 2px 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 10px;
+    transition: border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .guideNavButton:hover:not(:disabled) {
-	border-color: rgba(200, 169, 110, 0.35);
-	color: rgba(200, 169, 110, 0.85);
+    border-color: rgba(200, 169, 110, 0.35);
+    color: rgba(200, 169, 110, 0.85);
 }
 
 .guideNavButton:active:not(:disabled) {
-	background: rgba(26, 26, 26, 0.98);
+    background: rgba(26, 26, 26, 0.98);
 }
 
 .guideNavButton:disabled {
-	opacity: 0.35;
-	cursor: not-allowed;
+    opacity: 0.35;
+    cursor: not-allowed;
 }

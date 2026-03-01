@@ -13,7 +13,7 @@
 	left: 0;
 	width: 340px;
 	border-radius: 8px;
-	font-family: ui-serif, 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+	font-family: inherit;
 	background: linear-gradient(180deg, #161616 0%, #090909 100%);
 	padding: 0;
 	pointer-events: auto;
