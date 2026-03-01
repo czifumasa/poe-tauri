@@ -92,13 +92,14 @@
 .overlaysButtonRow {
 	display: flex;
 	gap: 8px;
-	margin-top: 8px;
+	margin-top: auto;
+	padding-top: 8px;
 }
 
 .overlaysShowAllButton,
 .overlaysHideAllButton {
 	flex: 1;
-	padding: 7px 14px;
+	padding: 7px;
 	font-size: 11px;
 	font-weight: 600;
 	text-transform: uppercase;
