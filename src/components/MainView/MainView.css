@@ -2,8 +2,8 @@
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
-	min-height: 100vh;
-	padding-bottom: 24px;
+	height: 100vh;
+	overflow: hidden;
 }
 
 .mainViewTopRow {
@@ -40,4 +40,11 @@
 	grid-template-columns: repeat(3, 1fr);
 	gap: 12px;
 	padding: 0 24px;
+}
+
+.mainViewSettingsArea {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding: 0 24px 24px;
 }

@@ -10,9 +10,10 @@ import './MainView.css';
 
 interface MainViewProps {
 	children: ReactNode;
+	settingsContent?: ReactNode;
 }
 
-export function MainView({ children }: MainViewProps): JSX.Element {
+export function MainView({ children, settingsContent }: MainViewProps): JSX.Element {
 	const [overlaysVisible, setOverlaysVisible] = useState<boolean>(false);
 
 	const showAllOverlays = useCallback(async (): Promise<void> => {
@@ -37,17 +38,23 @@ export function MainView({ children }: MainViewProps): JSX.Element {
 		<main className="mainViewContainer">
 			<TitleBar version="V0.1.0" />
 
-			<div className="mainViewTopRow">
-				<LeagueCard leagueName="Settlers" leagueDetail="Hardcore · SSF" onConfigure={handleLeagueConfigure} />
-				<CharacterCard characterName="Exile" characterDetail="Witch · Level 1" onConfigure={handleCharacterConfigure} />
-				<OverlaysCard allVisible={overlaysVisible} onShowAll={() => void showAllOverlays()} onHideAll={() => void hideAllOverlays()} />
-			</div>
+			{settingsContent !== undefined ? (
+				<div className="mainViewSettingsArea">{settingsContent}</div>
+			) : (
+				<>
+					<div className="mainViewTopRow">
+						<LeagueCard leagueName="Settlers" leagueDetail="Hardcore · SSF" onConfigure={handleLeagueConfigure} />
+						<CharacterCard characterName="Exile" characterDetail="Witch · Level 1" onConfigure={handleCharacterConfigure} />
+						<OverlaysCard allVisible={overlaysVisible} onShowAll={() => void showAllOverlays()} onHideAll={() => void hideAllOverlays()} />
+					</div>
 
-			<div className="mainViewModulesDivider">
-				<span className="mainViewModulesDividerLabel">MODULES</span>
-			</div>
+					<div className="mainViewModulesDivider">
+						<span className="mainViewModulesDividerLabel">MODULES</span>
+					</div>
 
-			<div className="mainViewModulesGrid">{children}</div>
+					<div className="mainViewModulesGrid">{children}</div>
+				</>
+			)}
 		</main>
 	);
 }
