@@ -31,3 +31,7 @@ flate2 = "1"
 gtk = "0.18"
 gtk-layer-shell = { version = "0.8", features = ["v0_5", "v0_6"] }
 
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation"] }
+raw-window-handle = "0.6"
+

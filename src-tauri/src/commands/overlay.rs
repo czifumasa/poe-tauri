@@ -273,6 +273,7 @@ pub fn set_overlay_panel_size(
         &OverlayPanelSize { width, height },
     )?;
 
+    #[cfg(linux_bsd_target_os)]
     let old_state_for_x11: Option<(i32, i32, i32)>;
 
     #[cfg(linux_bsd_target_os)]
@@ -373,12 +374,7 @@ pub fn set_overlay_panel_size(
         }
     }
 
-    #[cfg(not(linux_bsd_target_os))]
-    {
-        old_state_for_x11 = None;
-    }
-
-    #[cfg(not(linux_bsd_target_os))]
+    #[cfg(not(any(linux_bsd_target_os, windows_target_os)))]
     {
         let has_saved_position = get_saved_overlay_position(&app)?.is_some();
 
@@ -423,6 +419,52 @@ pub fn set_overlay_panel_size(
         window
             .set_size(tauri::Size::Physical(tauri::PhysicalSize { width, height }))
             .map_err(|e| command_error("overlay_panel_window_set_size_failed", e.to_string()))?;
+    }
+
+    #[cfg(windows_target_os)]
+    {
+        let width_i32 = i32::try_from(width)
+            .map_err(|e| command_error("overlay_panel_window_width_overflow", e.to_string()))?;
+        let new_height_i32 = i32::try_from(height)
+            .map_err(|e| command_error("overlay_panel_window_height_overflow", e.to_string()))?;
+
+        let saved_pos = get_saved_overlay_position(&app)?;
+
+        let (target_x, target_y) = if let Some(pos) = &saved_pos {
+            let old_height = window
+                .inner_size()
+                .ok()
+                .and_then(|s| i32::try_from(s.height).ok())
+                .unwrap_or(new_height_i32);
+            let height_delta = new_height_i32 - old_height;
+
+            match pos {
+                OverlayPosition::Absolute { x, y } => (*x, *y - height_delta),
+                OverlayPosition::LayerShellMargins { left, bottom } => {
+                    let (abs_x, abs_y) = margins_to_absolute(&window, *left, *bottom)?;
+                    (abs_x, abs_y - height_delta)
+                }
+            }
+        } else {
+            let monitor = get_overlay_monitor(&window)?;
+            let monitor_size = monitor.size();
+            let monitor_position = monitor.position();
+            let margin = i32::try_from(OVERLAY_DEFAULT_MARGIN_PX)
+                .map_err(|e| command_error("overlay_panel_window_margin_overflow", e.to_string()))?;
+            let monitor_height = i32::try_from(monitor_size.height)
+                .map_err(|e| command_error("overlay_panel_window_height_overflow", e.to_string()))?;
+            let y_in_monitor = (monitor_height - margin - new_height_i32).max(0);
+            (monitor_position.x + margin, monitor_position.y + y_in_monitor)
+        };
+
+        crate::window::win32::set_position_and_size(
+            &window, target_x, target_y, width_i32, new_height_i32,
+        )?;
+
+        let new_position = OverlayPosition::Absolute { x: target_x, y: target_y };
+        save_overlay_position(&app, &new_position)?;
+
+        ensure_always_on_top(&window)?;
     }
 
     #[cfg(linux_bsd_target_os)]

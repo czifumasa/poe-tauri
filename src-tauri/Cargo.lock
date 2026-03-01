@@ -2640,6 +2640,7 @@ dependencies = [
  "flate2",
  "gtk",
  "gtk-layer-shell",
+ "raw-window-handle",
  "serde",
  "serde_json",
  "tauri",
@@ -2647,6 +2648,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-opener",
  "tauri-plugin-store",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
