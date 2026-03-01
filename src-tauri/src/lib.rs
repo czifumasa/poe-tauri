@@ -51,6 +51,9 @@ pub fn run() {
             hint_tooltip_get_last_content
         ])
         .setup(move |app| {
+            #[cfg(linux_bsd_target_os)]
+            window::layer_shell_support::init_on_main_thread();
+
             let app_handle = app.handle().clone();
             if let Some(main_window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
                 let close_handle = app_handle.clone();

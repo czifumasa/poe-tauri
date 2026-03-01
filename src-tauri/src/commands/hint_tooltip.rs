@@ -7,7 +7,10 @@ use crate::persistence::store;
 use crate::window::hint_tooltip_window::{
     ensure_hint_tooltip_always_on_top, ensure_hint_tooltip_window,
 };
-use crate::window::identifiers::{OVERLAY_DEFAULT_MARGIN_PX, OVERLAY_WINDOW_LABEL};
+use crate::window::identifiers::OVERLAY_WINDOW_LABEL;
+
+#[cfg(linux_bsd_target_os)]
+use crate::window::identifiers::OVERLAY_DEFAULT_MARGIN_PX;
 
 use crate::commands::overlay::{OverlayPanelSize, OverlayPosition};
 
@@ -26,6 +29,7 @@ const TOOLTIP_WIDTH_PX: u32 = 360;
 const TOOLTIP_HEIGHT_PX: u32 = 260;
 const TOOLTIP_GAP_PX: i32 = 6;
 
+#[cfg(linux_bsd_target_os)]
 const OVERLAY_POSITION_STORE_KEY: &str = "overlay_position";
 const OVERLAY_PANEL_SIZE_STORE_KEY: &str = "overlay_panel_size";
 
@@ -61,10 +65,12 @@ fn clamp_i32(value: i32, min: i32, max: i32) -> i32 {
     value.max(min).min(max)
 }
 
+#[cfg(linux_bsd_target_os)]
 fn monitor_height(monitor: Rect) -> i32 {
     monitor.bottom - monitor.top
 }
 
+#[cfg(linux_bsd_target_os)]
 fn load_saved_overlay_position(app: &AppHandle) -> Result<Option<OverlayPosition>, CommandError> {
     store::get_optional::<OverlayPosition>(app, OVERLAY_POSITION_STORE_KEY)
 }
@@ -76,13 +82,15 @@ fn load_saved_overlay_panel_size(
 }
 
 fn overlay_origin_physical(
-    app: &AppHandle,
+    #[cfg(linux_bsd_target_os)] app: &AppHandle,
+    #[cfg(not(linux_bsd_target_os))] _app: &AppHandle,
     overlay: &tauri::WebviewWindow,
-    monitor: Rect,
+    #[cfg(linux_bsd_target_os)] monitor: Rect,
+    #[cfg(not(linux_bsd_target_os))] _monitor: Rect,
 ) -> Result<(i32, i32), CommandError> {
     #[cfg(linux_bsd_target_os)]
     {
-        if gtk_layer_shell::is_supported() {
+        if crate::window::layer_shell_support::is_supported() {
             let saved = load_saved_overlay_position(app)?;
             let (left, bottom) = match saved {
                 Some(OverlayPosition::LayerShellMargins { left, bottom }) => (left, bottom),
@@ -234,7 +242,7 @@ fn position_tooltip_window(app: &AppHandle) -> Result<(), CommandError> {
 
     #[cfg(linux_bsd_target_os)]
     {
-        if gtk_layer_shell::is_supported() {
+        if crate::window::layer_shell_support::is_supported() {
             let left_margin = (x - monitor_rect.left).max(0);
             let top_margin = (y - monitor_rect.top).max(0);
 
@@ -285,17 +293,17 @@ fn position_tooltip_window(app: &AppHandle) -> Result<(), CommandError> {
         return Ok(());
     }
 
-    #[cfg(not(any(linux_bsd_target_os, windows_target_os)))]
+    #[allow(unreachable_code)]
     {
         tooltip
             .set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }))
             .map_err(|e| command_error("hint_tooltip_set_position_failed", e.to_string()))?;
-    }
 
-    Ok(())
+        Ok(())
+    }
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn hint_tooltip_show(
     app: tauri::AppHandle,
     args: HintTooltipShowArgs,
@@ -326,7 +334,7 @@ pub fn hint_tooltip_show(
     Ok(())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn hint_tooltip_get_last_content(_app: tauri::AppHandle) -> Option<HintTooltipContentPayload> {
     last_tooltip_content()
         .lock()
@@ -334,7 +342,7 @@ pub fn hint_tooltip_get_last_content(_app: tauri::AppHandle) -> Option<HintToolt
         .and_then(|guard| guard.clone())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn hint_tooltip_hide(app: tauri::AppHandle) -> Result<(), CommandError> {
     if let Some(window) =
         app.get_webview_window(crate::window::identifiers::HINT_TOOLTIP_WINDOW_LABEL)

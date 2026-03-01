@@ -46,7 +46,7 @@ fn leveling_guide_settings_from_dto(dto: LevelingGuideSettingsDto) -> LevelingGu
     }
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn settings_get_leveling_guide(
     app: tauri::AppHandle,
 ) -> Result<LevelingGuideSettingsDto, CommandError> {
@@ -57,7 +57,7 @@ pub fn settings_get_leveling_guide(
     ))
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn settings_set_leveling_guide(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
@@ -76,7 +76,7 @@ pub fn settings_set_leveling_guide(
     Ok(())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn settings_wipe(app: tauri::AppHandle) -> Result<(), CommandError> {
     store::wipe(&app)
 }

@@ -58,7 +58,7 @@ fn configure_hint_tooltip_layer_shell(window: &tauri::WebviewWindow) -> Result<b
     window
         .run_on_main_thread(move || {
             let result = (|| {
-                if !gtk_layer_shell::is_supported() {
+                if !crate::window::layer_shell_support::is_supported() {
                     return Ok(false);
                 }
 
@@ -109,7 +109,7 @@ pub fn ensure_hint_tooltip_always_on_top(
 
     #[cfg(linux_bsd_target_os)]
     {
-        if !gtk_layer_shell::is_supported() {
+        if !crate::window::layer_shell_support::is_supported() {
             configure_x11_hint_tooltip_hints(window)?;
         }
     }

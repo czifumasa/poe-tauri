@@ -70,6 +70,7 @@ fn margins_to_absolute(
     Ok((x, y))
 }
 
+#[cfg(linux_bsd_target_os)]
 fn absolute_to_margins(
     window: &tauri::WebviewWindow,
     x: i32,
@@ -114,7 +115,7 @@ fn apply_overlay_position(
 
     #[cfg(linux_bsd_target_os)]
     {
-        let is_layer_shell_supported = gtk_layer_shell::is_supported();
+        let is_layer_shell_supported = crate::window::layer_shell_support::is_supported();
         if is_layer_shell_supported {
             let (left, bottom) = match position {
                 OverlayPosition::LayerShellMargins { left, bottom } => (*left, *bottom),
@@ -177,7 +178,7 @@ fn apply_saved_overlay_position_if_any(app: &tauri::AppHandle) -> Result<bool, C
     Ok(false)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn show_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
     let overlay_window = ensure_overlay_window(&app)?;
 
@@ -192,7 +193,7 @@ pub fn show_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
     Ok(())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn hide_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
     if let Some(window) = app.get_webview_window(OVERLAY_WINDOW_LABEL) {
         window
@@ -202,7 +203,7 @@ pub fn hide_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
     Ok(())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn overlay_is_visible(app: tauri::AppHandle) -> Result<bool, CommandError> {
     let Some(window) = app.get_webview_window(OVERLAY_WINDOW_LABEL) else {
         return Ok(false);
@@ -213,13 +214,13 @@ pub fn overlay_is_visible(app: tauri::AppHandle) -> Result<bool, CommandError> {
         .map_err(|e| command_error("overlay_panel_window_get_visibility_failed", e.to_string()))
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn overlay_get_position(app: tauri::AppHandle) -> Result<OverlayPosition, CommandError> {
     let window = ensure_overlay_window(&app)?;
 
     #[cfg(linux_bsd_target_os)]
     {
-        if gtk_layer_shell::is_supported() {
+        if crate::window::layer_shell_support::is_supported() {
             let saved = get_saved_overlay_position(&app)?;
             if let Some(position) = saved {
                 let (left, bottom) = match position {
@@ -249,7 +250,7 @@ pub fn overlay_get_position(app: tauri::AppHandle) -> Result<OverlayPosition, Co
     })
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn overlay_set_position(
     app: tauri::AppHandle,
     position: OverlayPosition,
@@ -259,7 +260,7 @@ pub fn overlay_set_position(
     Ok(())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn overlay_apply_position(
     app: tauri::AppHandle,
     position: OverlayPosition,
@@ -268,7 +269,7 @@ pub fn overlay_apply_position(
     Ok(())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn set_overlay_panel_size(
     app: tauri::AppHandle,
     width: u32,
@@ -289,7 +290,7 @@ pub fn set_overlay_panel_size(
 
     #[cfg(linux_bsd_target_os)]
     {
-        let layer_shell_supported = gtk_layer_shell::is_supported();
+        let layer_shell_supported = crate::window::layer_shell_support::is_supported();
 
         old_state_for_x11 = if !layer_shell_supported {
             let saved_pos = get_saved_overlay_position(&app).ok().flatten();
@@ -480,7 +481,7 @@ pub fn set_overlay_panel_size(
 
     #[cfg(linux_bsd_target_os)]
     {
-        let layer_shell_supported = gtk_layer_shell::is_supported();
+        let layer_shell_supported = crate::window::layer_shell_support::is_supported();
 
         let (sender, receiver) = mpsc::channel::<Result<(), CommandError>>();
         let window_for_refresh = window.clone();

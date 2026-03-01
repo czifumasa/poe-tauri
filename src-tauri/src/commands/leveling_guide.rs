@@ -45,7 +45,7 @@ fn start_log_watcher_if_configured(app: &AppHandle, manager: &Arc<LevelingGuideM
     }
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn load_guide(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
@@ -63,7 +63,7 @@ pub fn load_guide(
     Ok(page)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn leveling_guide_get_current_page(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
@@ -76,7 +76,7 @@ pub fn leveling_guide_get_current_page(
     Ok(Some(page))
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn leveling_guide_next_page(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
@@ -88,7 +88,7 @@ pub fn leveling_guide_next_page(
     Ok(page)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn leveling_guide_previous_page(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
@@ -100,7 +100,7 @@ pub fn leveling_guide_previous_page(
     Ok(page)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn leveling_guide_reset_progress(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
@@ -112,7 +112,7 @@ pub fn leveling_guide_reset_progress(
     Ok(page)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn leveling_guide_import_pob(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
@@ -135,14 +135,14 @@ pub fn leveling_guide_import_pob(
     Ok(page)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn leveling_guide_get_pob_status(
     manager: State<'_, Arc<LevelingGuideManager>>,
 ) -> Result<Option<PobImportData>, CommandError> {
     manager.get_pob_import_status()
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn leveling_guide_reapply_gems(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
