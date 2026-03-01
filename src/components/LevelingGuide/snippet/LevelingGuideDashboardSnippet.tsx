@@ -53,7 +53,11 @@ export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnipp
 			title="Leveling Guide"
 			description={DESCRIPTION}
 			active={isLoaded}
-			showButton={isLoaded ? { label: overlayToggleLabel, onClick: () => void handleOverlayToggle(), disabled: loading } : undefined}
+			showButton={
+				isLoaded
+					? { label: overlayToggleLabel, onClick: () => void handleOverlayToggle(), disabled: loading }
+					: undefined
+			}
 			action={
 				isLoaded
 					? { type: 'primary', label: 'RESET', onClick: () => void props.onResetProgress(), disabled: loading }

@@ -22,7 +22,6 @@ export function MainView({
 	onShowAllOverlays,
 	onHideAllOverlays,
 }: MainViewProps): JSX.Element {
-
 	const handleLeagueConfigure = useCallback((): void => {
 		// placeholder for league configuration
 	}, []);
@@ -46,11 +45,7 @@ export function MainView({
 							characterDetail="Witch · Level 1"
 							onConfigure={handleCharacterConfigure}
 						/>
-						<OverlaysCard
-							allVisible={overlaysVisible}
-							onShowAll={onShowAllOverlays}
-							onHideAll={onHideAllOverlays}
-						/>
+						<OverlaysCard allVisible={overlaysVisible} onShowAll={onShowAllOverlays} onHideAll={onHideAllOverlays} />
 					</div>
 
 					<div className="mainViewModulesDivider">

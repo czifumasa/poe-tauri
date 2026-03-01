@@ -16,5 +16,4 @@ This project is inspired by, and builds on ideas from, the following community t
 ## How to use
 
 Run the app, load the default leveling guide, import your pob and click on show overlay. Keep it open while Path of
-Exile is running. 
-
+Exile is running.
