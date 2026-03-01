@@ -101,6 +101,7 @@ function App(): JSX.Element {
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
 	const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+	const [overlayVisible, setOverlayVisible] = useState<boolean>(false);
 	const [settings, setSettings] = useState<LevelingGuideSettings>({
 		leagueStart: true,
 		overlayPosition: null,
@@ -372,6 +373,29 @@ function App(): JSX.Element {
 
 	const showOverlay = useCallback(async (): Promise<void> => {
 		await invoke('show_overlay');
+		setOverlayVisible(true);
+	}, []);
+
+	const hideOverlay = useCallback(async (): Promise<void> => {
+		await invoke('hide_overlay');
+		setOverlayVisible(false);
+	}, []);
+
+	useEffect((): (() => void) => {
+		let isDisposed = false;
+		void (async (): Promise<void> => {
+			try {
+				const visible = await invoke<boolean>('overlay_is_visible');
+				if (!isDisposed) {
+					setOverlayVisible(visible);
+				}
+			} catch (err) {
+				console.error('Failed to query overlay visibility:', err);
+			}
+		})();
+		return (): void => {
+			isDisposed = true;
+		};
 	}, []);
 
 	const openLevelingGuideSettings = useCallback((): void => {
@@ -419,14 +443,20 @@ function App(): JSX.Element {
 	) : undefined;
 
 	return (
-		<MainView settingsContent={settingsContent}>
+		<MainView
+			settingsContent={settingsContent}
+			overlaysVisible={overlayVisible}
+			onShowAllOverlays={showOverlay}
+			onHideAllOverlays={hideOverlay}>
 			<LevelingGuideDashboardSnippet
 				page={currentPage}
+				overlayVisible={overlayVisible}
 				loading={loading}
 				error={error}
 				onLoadGuide={loadGuide}
 				onResetProgress={resetProgress}
 				onShowOverlay={showOverlay}
+				onHideOverlay={hideOverlay}
 				onOpenSettings={openLevelingGuideSettings}
 			/>
 			<ModuleSnippet

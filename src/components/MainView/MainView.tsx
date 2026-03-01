@@ -1,5 +1,4 @@
-import { JSX, type ReactNode, useCallback, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { JSX, type ReactNode, useCallback } from 'react';
 
 import { TitleBar } from '../TitleBar/TitleBar.tsx';
 import { LeagueCard } from '../DashboardCards/LeagueCard.tsx';
@@ -11,20 +10,18 @@ import './MainView.css';
 interface MainViewProps {
 	children: ReactNode;
 	settingsContent?: ReactNode;
+	overlaysVisible: boolean;
+	onShowAllOverlays: () => Promise<void>;
+	onHideAllOverlays: () => Promise<void>;
 }
 
-export function MainView({ children, settingsContent }: MainViewProps): JSX.Element {
-	const [overlaysVisible, setOverlaysVisible] = useState<boolean>(false);
-
-	const showAllOverlays = useCallback(async (): Promise<void> => {
-		await invoke('show_overlay');
-		setOverlaysVisible(true);
-	}, []);
-
-	const hideAllOverlays = useCallback(async (): Promise<void> => {
-		await invoke('hide_overlay');
-		setOverlaysVisible(false);
-	}, []);
+export function MainView({
+	children,
+	settingsContent,
+	overlaysVisible,
+	onShowAllOverlays,
+	onHideAllOverlays,
+}: MainViewProps): JSX.Element {
 
 	const handleLeagueConfigure = useCallback((): void => {
 		// placeholder for league configuration
@@ -51,8 +48,8 @@ export function MainView({ children, settingsContent }: MainViewProps): JSX.Elem
 						/>
 						<OverlaysCard
 							allVisible={overlaysVisible}
-							onShowAll={() => void showAllOverlays()}
-							onHideAll={() => void hideAllOverlays()}
+							onShowAll={onShowAllOverlays}
+							onHideAll={onHideAllOverlays}
 						/>
 					</div>
 

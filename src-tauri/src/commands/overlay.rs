@@ -203,6 +203,17 @@ pub fn hide_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
 }
 
 #[tauri::command]
+pub fn overlay_is_visible(app: tauri::AppHandle) -> Result<bool, CommandError> {
+    let Some(window) = app.get_webview_window(OVERLAY_WINDOW_LABEL) else {
+        return Ok(false);
+    };
+
+    window
+        .is_visible()
+        .map_err(|e| command_error("overlay_panel_window_get_visibility_failed", e.to_string()))
+}
+
+#[tauri::command]
 pub fn overlay_get_position(app: tauri::AppHandle) -> Result<OverlayPosition, CommandError> {
     let window = ensure_overlay_window(&app)?;
 

@@ -11,7 +11,7 @@ interface ModuleSnippetProps {
 	description: string;
 	active?: boolean;
 	disabled?: boolean;
-	showButton?: { onClick: () => void; disabled?: boolean };
+	showButton?: { label: string; onClick: () => void; disabled?: boolean };
 	action: ModuleSnippetAction;
 	onSettingsClick?: () => void;
 	settingsDisabled?: boolean;
@@ -70,7 +70,7 @@ export function ModuleSnippet(props: ModuleSnippetProps): JSX.Element {
 						className="moduleSnippetShowButton"
 						onClick={props.showButton.onClick}
 						disabled={props.showButton.disabled}>
-						SHOW
+						{props.showButton.label}
 					</button>
 				)}
 			</div>

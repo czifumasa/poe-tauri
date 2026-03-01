@@ -6,11 +6,13 @@ import './LevelingGuideDashboardSnippet.css';
 
 type LevelingGuideDashboardSnippetProps = {
 	page: LevelingGuidePageDto | null;
+	overlayVisible: boolean;
 	loading: boolean;
 	error: string | null;
 	onLoadGuide: () => Promise<void>;
 	onResetProgress: () => Promise<void>;
 	onShowOverlay: () => Promise<void>;
+	onHideOverlay: () => Promise<void>;
 	onOpenSettings: () => void;
 };
 
@@ -43,13 +45,15 @@ function GuideLoadedBody({ page }: { page: LevelingGuidePageDto }): JSX.Element 
 export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnippetProps): JSX.Element {
 	const { page, loading } = props;
 	const isLoaded = page !== null;
+	const overlayToggleLabel = props.overlayVisible ? 'HIDE' : 'SHOW';
+	const handleOverlayToggle = props.overlayVisible ? props.onHideOverlay : props.onShowOverlay;
 
 	return (
 		<ModuleSnippet
 			title="Leveling Guide"
 			description={DESCRIPTION}
 			active={isLoaded}
-			showButton={isLoaded ? { onClick: () => void props.onShowOverlay() } : undefined}
+			showButton={isLoaded ? { label: overlayToggleLabel, onClick: () => void handleOverlayToggle(), disabled: loading } : undefined}
 			action={
 				isLoaded
 					? { type: 'primary', label: 'RESET', onClick: () => void props.onResetProgress(), disabled: loading }

@@ -41,6 +41,7 @@ pub fn run() {
             settings_wipe,
             show_overlay,
             hide_overlay,
+            overlay_is_visible,
             overlay_get_position,
             overlay_set_position,
             overlay_apply_position,
