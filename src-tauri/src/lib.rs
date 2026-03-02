@@ -16,6 +16,7 @@ use commands::common::*;
 use commands::hint_tooltip::*;
 use commands::leveling_guide::*;
 use commands::overlay::*;
+use commands::pob_settings::*;
 use commands::settings::*;
 use leveling_guide::LevelingGuideManager;
 
@@ -96,7 +97,11 @@ pub fn run() {
             set_overlay_panel_size,
             hint_tooltip_show,
             hint_tooltip_hide,
-            hint_tooltip_get_last_content
+            hint_tooltip_get_last_content,
+            pob_settings_get,
+            pob_settings_add_slot,
+            pob_settings_remove_slot,
+            pob_settings_set_current_slot
         ])
         .setup(move |app| {
             #[cfg(linux_bsd_target_os)]

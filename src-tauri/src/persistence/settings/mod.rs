@@ -40,8 +40,6 @@ pub struct LevelingGuideSettings {
     pub client_log_path: Option<String>,
     #[serde(default)]
     pub gems_enabled: bool,
-    #[serde(default)]
-    pub pob_code: Option<String>,
 }
 
 impl Default for LevelingGuideSettings {
@@ -54,11 +52,38 @@ impl Default for LevelingGuideSettings {
             bandits_choice: BanditsChoice::KillAll,
             client_log_path: None,
             gems_enabled: false,
-            pob_code: None,
         }
     }
 }
 
 impl LevelingGuideSettings {
     pub const STORE_KEY: &'static str = "leveling_guide_settings";
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PobSlot {
+    pub pob_code: String,
+    pub class: String,
+    pub gem_count: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PobSettings {
+    #[serde(default)]
+    pub slots: Vec<PobSlot>,
+    #[serde(default)]
+    pub current_slot_index: Option<usize>,
+}
+
+impl Default for PobSettings {
+    fn default() -> Self {
+        Self {
+            slots: Vec::new(),
+            current_slot_index: None,
+        }
+    }
+}
+
+impl PobSettings {
+    pub const STORE_KEY: &'static str = "pob_settings";
 }

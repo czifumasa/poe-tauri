@@ -1,4 +1,4 @@
-import { JSX, useCallback, useState } from 'react';
+import { JSX } from 'react';
 import type { BanditsChoice } from '../../../types/Settings.ts';
 
 import './LevelingGuideSettingsPanel.css';
@@ -27,9 +27,6 @@ type LevelingGuideSettingsPanelProps = {
 	onClientLogPathClear: () => Promise<void>;
 	gemsEnabled: boolean;
 	onGemsEnabledChange: (value: boolean) => Promise<void>;
-	onImportPob: (pobCode: string) => Promise<void>;
-	pobClass: string | null;
-	pobGemCount: number | null;
 	onBack: () => void;
 };
 
@@ -42,64 +39,6 @@ function formatLogPathDisplay(path: string | null): string {
 		return path;
 	}
 	return `…${path.slice(-maxLength)}`;
-}
-
-function PobImportSection(props: {
-	onImportPob: (pobCode: string) => Promise<void>;
-	pobClass: string | null;
-	pobGemCount: number | null;
-	disabled: boolean;
-}): JSX.Element {
-	const [pobInput, setPobInput] = useState<string>('');
-	const [importing, setImporting] = useState<boolean>(false);
-	const [importError, setImportError] = useState<string | null>(null);
-
-	const handleImport = useCallback(async (): Promise<void> => {
-		const trimmed = pobInput.trim();
-		if (trimmed === '') {
-			return;
-		}
-		setImporting(true);
-		setImportError(null);
-		try {
-			await props.onImportPob(trimmed);
-			setPobInput('');
-		} catch (err) {
-			const message = err instanceof Error ? err.message : String(err);
-			setImportError(message);
-		} finally {
-			setImporting(false);
-		}
-	}, [pobInput, props]);
-
-	const statusLabel =
-		props.pobClass !== null && props.pobGemCount !== null
-			? `PoB: ${props.pobClass} (${props.pobGemCount} gems)`
-			: 'No PoB imported';
-
-	return (
-		<div className="settingsPobSection">
-			<div className="settingsPobStatus">{statusLabel}</div>
-			<div className="settingsPobRow">
-				<input
-					type="text"
-					className="settingsPobInput"
-					placeholder="Paste PoB export code"
-					value={pobInput}
-					onChange={(event) => setPobInput(event.currentTarget.value)}
-					disabled={props.disabled || importing}
-				/>
-				<button
-					type="button"
-					className="settingsPobButton"
-					onClick={() => void handleImport()}
-					disabled={props.disabled || importing || pobInput.trim() === ''}>
-					{importing ? 'Importing\u2026' : 'Import'}
-				</button>
-			</div>
-			{importError !== null && <div className="settingsPobError">{importError}</div>}
-		</div>
-	);
 }
 
 export function LevelingGuideSettingsPanel(props: LevelingGuideSettingsPanelProps): JSX.Element {
@@ -202,16 +141,6 @@ export function LevelingGuideSettingsPanel(props: LevelingGuideSettingsPanelProp
 						</button>
 					)}
 				</div>
-			</div>
-
-			<div className="settingsGroup">
-				<div className="settingsGroupTitle">Path of Building</div>
-				<PobImportSection
-					onImportPob={props.onImportPob}
-					pobClass={props.pobClass}
-					pobGemCount={props.pobGemCount}
-					disabled={settingsLoading}
-				/>
 			</div>
 		</div>
 	);

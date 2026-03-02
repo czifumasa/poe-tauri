@@ -1,5 +1,5 @@
 use crate::error::{command_error, CommandError};
-use crate::persistence::settings::LevelingGuideSettings;
+use crate::persistence::settings::{LevelingGuideSettings, PobSettings};
 use crate::persistence::store;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -201,10 +201,13 @@ impl LevelingGuideManager {
         let gem_db = load_gem_database(app, &progress.guide_path).ok();
         let original_guide = guide.clone();
 
-        let pob_import_data = settings
-            .pob_code
-            .as_deref()
-            .and_then(|code| parse_pob_export(code).ok());
+        let pob_settings =
+            store::get_optional::<PobSettings>(app, PobSettings::STORE_KEY)?
+                .unwrap_or_default();
+        let pob_import_data = pob_settings
+            .current_slot_index
+            .and_then(|idx| pob_settings.slots.get(idx))
+            .and_then(|slot| parse_pob_export(&slot.pob_code).ok());
 
         let loaded = LoadedGuide {
             guide_path: progress.guide_path,

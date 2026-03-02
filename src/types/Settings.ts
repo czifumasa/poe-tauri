@@ -13,5 +13,15 @@ export type LevelingGuideSettings = {
 	banditsChoice: BanditsChoice;
 	clientLogPath: string | null;
 	gemsEnabled: boolean;
-	pobCode: string | null;
+};
+
+export type PobSlot = {
+	pobCode: string;
+	class: string;
+	gemCount: number;
+};
+
+export type PobSettings = {
+	slots: PobSlot[];
+	currentSlotIndex: number | null;
 };

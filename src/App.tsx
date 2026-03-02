@@ -7,14 +7,18 @@ import { MainView } from './components/MainView/MainView';
 import { OverlayPanel } from './components/OverlayPanel/OverlayPanel';
 import { ModuleSnippet } from './components/ModuleSnippet/ModuleSnippet.tsx';
 import type { LevelingGuidePageDto } from './types/Guide.ts';
-import type { BanditsChoice, LevelingGuideSettings } from './types/Settings.ts';
+import type { BanditsChoice, LevelingGuideSettings, PobSettings } from './types/Settings.ts';
 import { HINT_TOOLTIP_VIEW_QUERY_VALUE, OVERLAY_VIEW_QUERY_VALUE } from './constants/WindowIdentifiers.ts';
 import { LevelingGuideOverlay } from './components/LevelingGuide/overlay/LevelingGuideOverlay.tsx';
 import { LevelingGuideDashboardSnippet } from './components/LevelingGuide/snippet/LevelingGuideDashboardSnippet.tsx';
 import { LevelingGuideSettingsPanel } from './components/LevelingGuide/settings/LevelingGuideSettingsPanel.tsx';
 import { HintTooltipView } from './components/HintTooltip/HintTooltipView.tsx';
+import { PobImportDashboardSnippet } from './components/PobImport/snippet/PobImportDashboardSnippet.tsx';
+import { PobImportSettingsPanel } from './components/PobImport/settings/PobImportSettingsPanel.tsx';
 
 type ViewMode = 'main' | 'overlay' | 'hintTooltip';
+
+type SettingsPanel = 'levelingGuide' | 'pobImport';
 
 function formatInvokeError(error: unknown): string {
 	if (error instanceof Error) {
@@ -100,7 +104,7 @@ function App(): JSX.Element {
 	const [currentPage, setCurrentPage] = useState<LevelingGuidePageDto | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
-	const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+	const [openSettingsPanel, setOpenSettingsPanel] = useState<SettingsPanel | null>(null);
 	const [overlayVisible, setOverlayVisible] = useState<boolean>(false);
 	const [settings, setSettings] = useState<LevelingGuideSettings>({
 		leagueStart: true,
@@ -110,27 +114,32 @@ function App(): JSX.Element {
 		banditsChoice: 'KillAll',
 		clientLogPath: null,
 		gemsEnabled: false,
-		pobCode: null,
 	});
 	const [settingsLoading, setSettingsLoading] = useState<boolean>(true);
-	const [pobClass, setPobClass] = useState<string | null>(null);
-	const [pobGemCount, setPobGemCount] = useState<number | null>(null);
+	const [pobSettings, setPobSettings] = useState<PobSettings>({ slots: [], currentSlotIndex: null });
+	const [pobSettingsLoading, setPobSettingsLoading] = useState<boolean>(true);
 
 	useEffect((): (() => void) => {
 		let isDisposed = false;
 		setSettingsLoading(true);
+		setPobSettingsLoading(true);
 		void (async (): Promise<void> => {
 			try {
-				const persistedSettings = await invoke<LevelingGuideSettings>('settings_get_leveling_guide');
+				const [persistedSettings, persistedPobSettings] = await Promise.all([
+					invoke<LevelingGuideSettings>('settings_get_leveling_guide'),
+					invoke<PobSettings>('pob_settings_get'),
+				]);
 				if (isDisposed) {
 					return;
 				}
 				setSettings(persistedSettings);
+				setPobSettings(persistedPobSettings);
 			} catch (err) {
-				console.error('Failed to initialize leveling guide settings:', err);
+				console.error('Failed to initialize settings:', err);
 			} finally {
 				if (!isDisposed) {
 					setSettingsLoading(false);
+					setPobSettingsLoading(false);
 				}
 			}
 		})();
@@ -159,12 +168,6 @@ function App(): JSX.Element {
 						return;
 					}
 					setCurrentPage(loadedPage);
-				}
-
-				const status = await invoke<{ class: string; gemNames: string[] } | null>('leveling_guide_get_pob_status');
-				if (!isDisposed && status !== null) {
-					setPobClass(status.class);
-					setPobGemCount(status.gemNames.length);
 				}
 			} catch (err) {
 				if (isDisposed) {
@@ -356,18 +359,31 @@ function App(): JSX.Element {
 		[settings],
 	);
 
-	const importPob = useCallback(async (pobCode: string): Promise<void> => {
+	const addPobSlot = useCallback(async (pobCode: string): Promise<void> => {
 		try {
-			const page = await invoke<LevelingGuidePageDto>('leveling_guide_import_pob', { pobCode });
-			setCurrentPage(page);
-			const status = await invoke<{ class: string; gemNames: string[] } | null>('leveling_guide_get_pob_status');
-			if (status !== null) {
-				setPobClass(status.class);
-				setPobGemCount(status.gemNames.length);
-			}
+			const updated = await invoke<PobSettings>('pob_settings_add_slot', { pobCode });
+			setPobSettings(updated);
 		} catch (err) {
 			const errorMessage = formatInvokeError(err);
 			throw new Error(errorMessage);
+		}
+	}, []);
+
+	const removePobSlot = useCallback(async (slotIndex: number): Promise<void> => {
+		try {
+			const updated = await invoke<PobSettings>('pob_settings_remove_slot', { slotIndex });
+			setPobSettings(updated);
+		} catch (err) {
+			console.error('Failed to remove PoB slot:', err);
+		}
+	}, []);
+
+	const setCurrentPobSlot = useCallback(async (slotIndex: number): Promise<void> => {
+		try {
+			const updated = await invoke<PobSettings>('pob_settings_set_current_slot', { slotIndex });
+			setPobSettings(updated);
+		} catch (err) {
+			console.error('Failed to set current PoB slot:', err);
 		}
 	}, []);
 
@@ -408,11 +424,15 @@ function App(): JSX.Element {
 	}, []);
 
 	const openLevelingGuideSettings = useCallback((): void => {
-		setSettingsOpen(true);
+		setOpenSettingsPanel('levelingGuide');
 	}, []);
 
-	const closeLevelingGuideSettings = useCallback((): void => {
-		setSettingsOpen(false);
+	const openPobImportSettings = useCallback((): void => {
+		setOpenSettingsPanel('pobImport');
+	}, []);
+
+	const closeSettingsPanel = useCallback((): void => {
+		setOpenSettingsPanel(null);
 	}, []);
 
 	if (viewMode === 'overlay') {
@@ -428,28 +448,42 @@ function App(): JSX.Element {
 		return <HintTooltipView />;
 	}
 
-	const settingsContent = settingsOpen ? (
-		<LevelingGuideSettingsPanel
-			settingsLoading={settingsLoading}
-			leagueStart={settings.leagueStart}
-			onLeagueStartChange={updateLeagueStart}
-			optionalQuests={settings.optionalQuests}
-			onOptionalQuestsChange={updateOptionalQuests}
-			levelRecommendations={settings.levelRecommendations}
-			onLevelRecommendationsChange={updateLevelRecommendations}
-			banditsChoice={settings.banditsChoice}
-			onBanditsChoiceChange={updateBanditsChoice}
-			clientLogPath={settings.clientLogPath}
-			onClientLogPathBrowse={browseClientLogPath}
-			onClientLogPathClear={clearClientLogPath}
-			gemsEnabled={settings.gemsEnabled}
-			onGemsEnabledChange={updateGemsEnabled}
-			onImportPob={importPob}
-			pobClass={pobClass}
-			pobGemCount={pobGemCount}
-			onBack={closeLevelingGuideSettings}
-		/>
-	) : undefined;
+	const settingsContent = ((): JSX.Element | undefined => {
+		if (openSettingsPanel === 'levelingGuide') {
+			return (
+				<LevelingGuideSettingsPanel
+					settingsLoading={settingsLoading}
+					leagueStart={settings.leagueStart}
+					onLeagueStartChange={updateLeagueStart}
+					optionalQuests={settings.optionalQuests}
+					onOptionalQuestsChange={updateOptionalQuests}
+					levelRecommendations={settings.levelRecommendations}
+					onLevelRecommendationsChange={updateLevelRecommendations}
+					banditsChoice={settings.banditsChoice}
+					onBanditsChoiceChange={updateBanditsChoice}
+					clientLogPath={settings.clientLogPath}
+					onClientLogPathBrowse={browseClientLogPath}
+					onClientLogPathClear={clearClientLogPath}
+					gemsEnabled={settings.gemsEnabled}
+					onGemsEnabledChange={updateGemsEnabled}
+					onBack={closeSettingsPanel}
+				/>
+			);
+		}
+		if (openSettingsPanel === 'pobImport') {
+			return (
+				<PobImportSettingsPanel
+					pobSettings={pobSettings}
+					loading={pobSettingsLoading}
+					onAddSlot={addPobSlot}
+					onRemoveSlot={removePobSlot}
+					onSetCurrentSlot={setCurrentPobSlot}
+					onBack={closeSettingsPanel}
+				/>
+			);
+		}
+		return undefined;
+	})();
 
 	return (
 		<MainView
@@ -469,17 +503,10 @@ function App(): JSX.Element {
 				onHideOverlay={hideOverlay}
 				onOpenSettings={openLevelingGuideSettings}
 			/>
+			<PobImportDashboardSnippet pobSettings={pobSettings} onOpenSettings={openPobImportSettings} />
 			<ModuleSnippet
 				title="Map Tracking"
 				description="Tracks completed maps and their content."
-				disabled
-				action={{ type: 'comingSoon' }}
-				onSettingsClick={() => {}}
-				settingsDisabled
-			/>
-			<ModuleSnippet
-				title="Build Planner"
-				description="Skill tree overlay with passive node suggestions"
 				disabled
 				action={{ type: 'comingSoon' }}
 				onSettingsClick={() => {}}
