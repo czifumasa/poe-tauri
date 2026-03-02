@@ -1,7 +1,6 @@
-import { JSX, type ReactNode, useCallback } from 'react';
+import { JSX, type ReactNode } from 'react';
 
 import { TitleBar } from '../TitleBar/TitleBar.tsx';
-import { CharacterCard } from '../DashboardCards/CharacterCard.tsx';
 import { OverlaysCard } from '../DashboardCards/OverlaysCard.tsx';
 
 import './MainView.css';
@@ -42,10 +41,6 @@ export function MainView({
 	onHideAllOverlays,
 	onOpenSettings,
 }: MainViewProps): JSX.Element {
-	const handleCharacterSync = useCallback((): void => {
-		// placeholder for character sync
-	}, []);
-
 	return (
 		<main className="mainViewContainer">
 			<TitleBar versionLabel={versionLabel} />
@@ -55,13 +50,6 @@ export function MainView({
 			) : (
 				<>
 					<div className="mainViewTopRow">
-						<CharacterCard
-							leagueName="Settlers"
-							leagueDetail="Hardcore · SSF"
-							characterName="Exile"
-							characterDetail="Witch · Level 1"
-							onSync={handleCharacterSync}
-						/>
 						<OverlaysCard allVisible={overlaysVisible} onShowAll={onShowAllOverlays} onHideAll={onHideAllOverlays} />
 					</div>
 
