@@ -435,6 +435,8 @@ pub fn set_overlay_panel_size(
 
     #[cfg(windows_target_os)]
     {
+        let width_i32 = i32::try_from(width)
+            .map_err(|e| command_error("overlay_panel_window_width_overflow", e.to_string()))?;
         let new_height_i32 = i32::try_from(height)
             .map_err(|e| command_error("overlay_panel_window_height_overflow", e.to_string()))?;
 
@@ -467,11 +469,9 @@ pub fn set_overlay_panel_size(
             (monitor_position.x + margin, monitor_position.y + y_in_monitor)
         };
 
-        window
-            .set_size(tauri::Size::Physical(tauri::PhysicalSize { width, height }))
-            .map_err(|e| command_error("overlay_panel_window_set_size_failed", e.to_string()))?;
-
-        crate::window::win32::set_position(&window, target_x, target_y)?;
+        crate::window::win32::set_position_and_size(
+            &window, target_x, target_y, width_i32, new_height_i32,
+        )?;
 
         let new_position = OverlayPosition::Absolute { x: target_x, y: target_y };
         save_overlay_position(&app, &new_position)?;

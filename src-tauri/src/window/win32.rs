@@ -85,20 +85,6 @@ pub fn set_topmost(window: &tauri::WebviewWindow) -> Result<(), CommandError> {
     Ok(())
 }
 
-pub fn set_position(
-    window: &tauri::WebviewWindow,
-    x: i32,
-    y: i32,
-) -> Result<(), CommandError> {
-    let hwnd = extract_hwnd(window)?;
-
-    unsafe {
-        SetWindowPos(hwnd, HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_FRAMECHANGED);
-    }
-
-    Ok(())
-}
-
 pub fn set_position_and_size(
     window: &tauri::WebviewWindow,
     x: i32,
