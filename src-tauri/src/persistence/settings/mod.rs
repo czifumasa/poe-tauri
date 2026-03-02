@@ -51,7 +51,7 @@ impl Default for LevelingGuideSettings {
             level_recommendations: true,
             bandits_choice: BanditsChoice::KillAll,
             client_log_path: None,
-            gems_enabled: false,
+            gems_enabled: true,
         }
     }
 }
