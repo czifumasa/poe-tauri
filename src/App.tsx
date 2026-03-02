@@ -1,6 +1,7 @@
 import { JSX, useCallback, useEffect, useMemo, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import { getVersion } from '@tauri-apps/api/app';
 import { open } from '@tauri-apps/plugin-dialog';
 import './App.css';
 import { MainView } from './components/MainView/MainView';
@@ -103,6 +104,7 @@ function App(): JSX.Element {
 	const [currentPage, setCurrentPage] = useState<LevelingGuidePageDto | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
+	const [appVersion, setAppVersion] = useState<string | null>(null);
 	const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab | null>(null);
 	const [overlayVisible, setOverlayVisible] = useState<boolean>(false);
 	const [settings, setSettings] = useState<LevelingGuideSettings>({
@@ -118,6 +120,26 @@ function App(): JSX.Element {
 	const [pobSettings, setPobSettings] = useState<PobSettings>({ slots: [], currentSlotIndex: null });
 	const [pobSettingsLoading, setPobSettingsLoading] = useState<boolean>(true);
 	const [resetEpoch, setResetEpoch] = useState<number>(0);
+
+	useEffect((): (() => void) => {
+		let isDisposed = false;
+		void (async (): Promise<void> => {
+			try {
+				const version = await getVersion();
+				if (!isDisposed) {
+					setAppVersion(`v${version}`);
+				}
+			} catch (err) {
+				console.error('Failed to read app version:', err);
+				if (!isDisposed) {
+					setAppVersion(null);
+				}
+			}
+		})();
+		return (): void => {
+			isDisposed = true;
+		};
+	}, []);
 
 	useEffect((): (() => void) => {
 		let isDisposed = false;
@@ -502,6 +524,7 @@ function App(): JSX.Element {
 
 	return (
 		<MainView
+			versionLabel={appVersion}
 			settingsContent={settingsContent}
 			overlaysVisible={overlayVisible}
 			onShowAllOverlays={showOverlay}

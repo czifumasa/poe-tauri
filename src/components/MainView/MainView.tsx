@@ -8,6 +8,7 @@ import { OverlaysCard } from '../DashboardCards/OverlaysCard.tsx';
 import './MainView.css';
 
 interface MainViewProps {
+	versionLabel: string | null;
 	children: ReactNode;
 	settingsContent?: ReactNode;
 	overlaysVisible: boolean;
@@ -34,6 +35,7 @@ function SettingsGearIcon(): JSX.Element {
 }
 
 export function MainView({
+	versionLabel,
 	children,
 	settingsContent,
 	overlaysVisible,
@@ -51,7 +53,7 @@ export function MainView({
 
 	return (
 		<main className="mainViewContainer">
-			<TitleBar version="v0.1.1" />
+			<TitleBar versionLabel={versionLabel} />
 
 			{settingsContent !== undefined ? (
 				<div className="mainViewSettingsArea">{settingsContent}</div>

@@ -3,10 +3,10 @@ import { JSX } from 'react';
 import './TitleBar.css';
 
 interface TitleBarProps {
-	version: string;
+	versionLabel: string | null;
 }
 
-export function TitleBar({ version }: TitleBarProps): JSX.Element {
+export function TitleBar({ versionLabel }: TitleBarProps): JSX.Element {
 	return (
 		<header className="titleBar">
 			<img className="titleBarIcon" src="/icon.png" alt="POE Tauri" />
@@ -15,7 +15,7 @@ export function TitleBar({ version }: TitleBarProps): JSX.Element {
 				<span className="titleBarSubtitle">Overlay Dashboard</span>
 			</div>
 			<div className="titleBarSpacer" />
-			<span className="titleBarVersion">{version}</span>
+			{versionLabel !== null ? <span className="titleBarVersion">{versionLabel}</span> : null}
 		</header>
 	);
 }

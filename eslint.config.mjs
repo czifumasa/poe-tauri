@@ -16,11 +16,11 @@ const compat = new FlatCompat({
 
 export default [
 	{
-		ignores: ['dist/**', 'node_modules/**', 'python/**', 'src-tauri/target/**'],
+		ignores: ['dist/**', 'node_modules/**', 'python/**', 'src-tauri/target/**', 'scripts/**'],
 	},
 	...compat.extends('eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:prettier/recommended'),
 	{
-		files: ['**/*.{js,jsx,ts,tsx,mjs,cjs}'],
+		files: ['**/*.{js,jsx,ts,tsx,cjs}'],
 
 		plugins: {
 			'@typescript-eslint': typescriptEslint,
