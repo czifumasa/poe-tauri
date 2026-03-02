@@ -136,6 +136,7 @@ pub fn ensure_hint_tooltip_window(
     )
     .transparent(true)
     .decorations(false)
+    .shadow(false)
     .always_on_top(true)
     .visible_on_all_workspaces(true)
     .skip_taskbar(true)

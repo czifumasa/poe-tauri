@@ -135,6 +135,7 @@ pub fn ensure_overlay_window(app: &tauri::AppHandle) -> Result<tauri::WebviewWin
     )
     .transparent(true)
     .decorations(false)
+    .shadow(false)
     .always_on_top(true)
     .visible_on_all_workspaces(true)
     .skip_taskbar(true)
