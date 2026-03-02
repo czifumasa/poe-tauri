@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::error::{command_error, CommandError};
 use crate::leveling_guide::pob_parser::{self, PobImportData};
-use crate::leveling_guide::progress::{load_leveling_guide_progress, save_leveling_guide_progress};
+use crate::leveling_guide::progress::{has_persisted_leveling_guide_progress, load_leveling_guide_progress, save_leveling_guide_progress};
 use crate::leveling_guide::{LevelingGuideManager, LevelingGuidePageDto};
 use crate::persistence::settings::{PobSettings, PobSlot};
 use crate::persistence::store;
@@ -61,6 +61,13 @@ pub fn load_guide(
     start_log_watcher_if_configured(&app, &manager);
     emit_page_updated(&app, &page)?;
     Ok(page)
+}
+
+#[tauri::command(async)]
+pub fn leveling_guide_has_persisted_progress(
+    app: tauri::AppHandle,
+) -> Result<bool, CommandError> {
+    has_persisted_leveling_guide_progress(&app)
 }
 
 #[tauri::command(async)]

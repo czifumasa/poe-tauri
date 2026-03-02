@@ -20,6 +20,14 @@ pub(crate) fn load_leveling_guide_progress(
     Ok(progress)
 }
 
+pub(crate) fn has_persisted_leveling_guide_progress(
+    app: &AppHandle,
+) -> Result<bool, CommandError> {
+    let maybe_progress =
+        store::get_optional::<PersistedLevelingGuideProgress>(app, LEVELING_GUIDE_PROGRESS_KEY)?;
+    Ok(maybe_progress.is_some())
+}
+
 pub(crate) fn save_leveling_guide_progress(
     app: &AppHandle,
     progress: &PersistedLevelingGuideProgress,

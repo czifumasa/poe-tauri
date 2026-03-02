@@ -184,6 +184,20 @@ function App(): JSX.Element {
 
 				if (existingPage !== null) {
 					setCurrentPage(existingPage);
+					return;
+				}
+
+				const hasPersistedProgress = await invoke<boolean>('leveling_guide_has_persisted_progress');
+				if (isDisposed) {
+					return;
+				}
+
+				if (hasPersistedProgress) {
+					const restoredPage = await invoke<LevelingGuidePageDto>('load_guide');
+					if (isDisposed) {
+						return;
+					}
+					setCurrentPage(restoredPage);
 				}
 			} catch (err) {
 				if (isDisposed) {
