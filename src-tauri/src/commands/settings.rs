@@ -1,11 +1,13 @@
 use std::sync::Arc;
 
-use tauri::State;
+use tauri::{Emitter, State};
 
-use crate::error::CommandError;
+use crate::error::{command_error, CommandError};
 use crate::leveling_guide::LevelingGuideManager;
 use crate::persistence::settings::LevelingGuideSettings;
 use crate::persistence::store;
+
+const LEVELING_GUIDE_CLEARED_EVENT: &str = "leveling_guide_cleared";
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -79,5 +81,8 @@ pub fn settings_wipe(
     manager: State<'_, Arc<LevelingGuideManager>>,
 ) -> Result<(), CommandError> {
     manager.unload()?;
-    store::wipe(&app)
+    store::wipe(&app)?;
+    app.emit(LEVELING_GUIDE_CLEARED_EVENT, ())
+        .map_err(|e| command_error("leveling_guide_cleared_emit_failed", e.to_string()))?;
+    Ok(())
 }

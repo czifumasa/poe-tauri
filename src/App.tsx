@@ -256,16 +256,27 @@ function App(): JSX.Element {
 
 	useEffect((): (() => void) => {
 		let isDisposed = false;
-		let unlisten: (() => void) | null = null;
+		let unlistenPageUpdated: (() => void) | null = null;
+		let unlistenCleared: (() => void) | null = null;
 
 		void (async (): Promise<void> => {
 			try {
-				unlisten = await listen<LevelingGuidePageDto>('leveling_guide_page_updated', (event) => {
-					if (isDisposed) {
-						return;
-					}
-					setCurrentPage(event.payload);
-				});
+				const [pageUpdatedUnsub, clearedUnsub] = await Promise.all([
+					listen<LevelingGuidePageDto>('leveling_guide_page_updated', (event) => {
+						if (isDisposed) {
+							return;
+						}
+						setCurrentPage(event.payload);
+					}),
+					listen<void>('leveling_guide_cleared', () => {
+						if (isDisposed) {
+							return;
+						}
+						setCurrentPage(null);
+					}),
+				]);
+				unlistenPageUpdated = pageUpdatedUnsub;
+				unlistenCleared = clearedUnsub;
 			} catch (err) {
 				console.error('Failed to listen for leveling guide updates:', err);
 			}
@@ -273,8 +284,11 @@ function App(): JSX.Element {
 
 		return (): void => {
 			isDisposed = true;
-			if (unlisten !== null) {
-				unlisten();
+			if (unlistenPageUpdated !== null) {
+				unlistenPageUpdated();
+			}
+			if (unlistenCleared !== null) {
+				unlistenCleared();
 			}
 		};
 	}, []);

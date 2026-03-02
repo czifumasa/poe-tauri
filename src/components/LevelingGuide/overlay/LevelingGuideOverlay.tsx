@@ -66,83 +66,6 @@ export function LevelingGuideOverlay(props: LevelingGuideOverlayProps): JSX.Elem
 	const pendingPositionRef = useRef<OverlayPositionDto | null>(null);
 	const isApplyingRef = useRef<boolean>(false);
 
-	if (page === null) {
-		return (
-			<div className="guideNotLoaded">
-				<div className="overlayMessage">Guide is not initialized.</div>
-				{props.error && <div className="overlayError">{props.error}</div>}
-				{loading && <div className="overlayLoading">Loading guide...</div>}
-			</div>
-		);
-	}
-
-	const renderSpan = (span: LevelingGuideSpanDto, key: string): JSX.Element => {
-		if (span.type === 'image') {
-			return <img key={key} className="guideInlineImage" src={span.dataUri} alt={span.key} />;
-		}
-
-		const style = span.color ? { color: span.color } : undefined;
-		if (span.hint) {
-			const hint = span.hint;
-			const handleEnter = (): void => {
-				void invoke('hint_tooltip_show', {
-					args: {
-						key: hint.key,
-						dataUri: hint.dataUri,
-					},
-				}).catch((err: unknown) => {
-					console.error('Failed to show hint tooltip:', err);
-				});
-			};
-
-			const handleLeave = (): void => {
-				void invoke('hint_tooltip_hide').catch((err: unknown) => {
-					console.error('Failed to hide hint tooltip:', err);
-				});
-			};
-
-			return (
-				<span
-					key={key}
-					className="guideHintText"
-					style={style}
-					onPointerEnter={handleEnter}
-					onPointerLeave={handleLeave}>
-					{span.text}
-				</span>
-			);
-		}
-
-		if (span.color) {
-			return (
-				<span key={key} style={style}>
-					{span.text}
-				</span>
-			);
-		}
-		return <Fragment key={key}>{span.text}</Fragment>;
-	};
-
-	const renderLine = (line: LevelingGuideLineDto, lineIndex: number): JSX.Element => {
-		const lineClassName = line.isHint ? 'guideStep guideStepHint' : 'guideStep';
-		return (
-			<div key={lineIndex} className={lineClassName}>
-				<span>
-					{!line.isHint && '• '}
-					{line.spans.map((span, spanIndex) => renderSpan(span, `${lineIndex}-${spanIndex}`))}
-				</span>
-			</div>
-		);
-	};
-
-	const handlePrevious = (): void => {
-		void onNavigate('previous');
-	};
-
-	const handleNext = (): void => {
-		void onNavigate('next');
-	};
-
 	const scheduleApply = (): void => {
 		if (animationFrameIdRef.current !== null) {
 			return;
@@ -251,6 +174,93 @@ export function LevelingGuideOverlay(props: LevelingGuideOverlayProps): JSX.Elem
 		void invoke('overlay_set_position', { position: finalPosition }).catch((err: unknown) => {
 			console.error('Failed to persist overlay position:', err);
 		});
+	};
+
+	if (page === null) {
+		return (
+			<div className="guideContent guideContentOverlay">
+				<div
+					className="guideHeader guideHeaderOverlay"
+					onPointerDown={handleHeaderPointerDown}
+					onPointerMove={handleHeaderPointerMove}
+					onPointerUp={endDragging}
+					onPointerCancel={endDragging}
+					style={{ touchAction: 'none', cursor: 'move' }}
+				/>
+				<div className="guideSteps">
+					<div className="overlayMessage">Guide is not initialized.</div>
+					{props.error && <div className="overlayError">{props.error}</div>}
+					{loading && <div className="overlayLoading">Loading guide...</div>}
+				</div>
+			</div>
+		);
+	}
+
+	const renderSpan = (span: LevelingGuideSpanDto, key: string): JSX.Element => {
+		if (span.type === 'image') {
+			return <img key={key} className="guideInlineImage" src={span.dataUri} alt={span.key} />;
+		}
+
+		const style = span.color ? { color: span.color } : undefined;
+		if (span.hint) {
+			const hint = span.hint;
+			const handleEnter = (): void => {
+				void invoke('hint_tooltip_show', {
+					args: {
+						key: hint.key,
+						dataUri: hint.dataUri,
+					},
+				}).catch((err: unknown) => {
+					console.error('Failed to show hint tooltip:', err);
+				});
+			};
+
+			const handleLeave = (): void => {
+				void invoke('hint_tooltip_hide').catch((err: unknown) => {
+					console.error('Failed to hide hint tooltip:', err);
+				});
+			};
+
+			return (
+				<span
+					key={key}
+					className="guideHintText"
+					style={style}
+					onPointerEnter={handleEnter}
+					onPointerLeave={handleLeave}>
+					{span.text}
+				</span>
+			);
+		}
+
+		if (span.color) {
+			return (
+				<span key={key} style={style}>
+					{span.text}
+				</span>
+			);
+		}
+		return <Fragment key={key}>{span.text}</Fragment>;
+	};
+
+	const renderLine = (line: LevelingGuideLineDto, lineIndex: number): JSX.Element => {
+		const lineClassName = line.isHint ? 'guideStep guideStepHint' : 'guideStep';
+		return (
+			<div key={lineIndex} className={lineClassName}>
+				<span>
+					{!line.isHint && '• '}
+					{line.spans.map((span, spanIndex) => renderSpan(span, `${lineIndex}-${spanIndex}`))}
+				</span>
+			</div>
+		);
+	};
+
+	const handlePrevious = (): void => {
+		void onNavigate('previous');
+	};
+
+	const handleNext = (): void => {
+		void onNavigate('next');
 	};
 
 	return (
