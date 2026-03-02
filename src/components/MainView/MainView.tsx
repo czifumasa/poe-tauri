@@ -57,10 +57,7 @@ export function MainView({
 					<div className="mainViewModulesGrid">{children}</div>
 
 					<div className="mainViewFooter">
-						<button
-							type="button"
-							className="mainViewWipeButton"
-							onClick={() => void onWipeSettings()}>
+						<button type="button" className="mainViewWipeButton" onClick={() => void onWipeSettings()}>
 							Reset All Settings
 						</button>
 					</div>
