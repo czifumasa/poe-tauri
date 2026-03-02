@@ -77,7 +77,7 @@ export function ModuleSnippet(props: ModuleSnippetProps): JSX.Element {
 
 			<div className="moduleSnippetDescription">{props.description}</div>
 
-			{props.children !== undefined && <div className="moduleSnippetBody">{props.children}</div>}
+			<div className="moduleSnippetBody">{props.children}</div>
 
 			<div className="moduleSnippetFooter">
 				{renderFooterAction(props.action)}

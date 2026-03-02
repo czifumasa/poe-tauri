@@ -74,6 +74,10 @@ pub fn settings_set_leveling_guide(
 }
 
 #[tauri::command(async)]
-pub fn settings_wipe(app: tauri::AppHandle) -> Result<(), CommandError> {
+pub fn settings_wipe(
+    app: tauri::AppHandle,
+    manager: State<'_, Arc<LevelingGuideManager>>,
+) -> Result<(), CommandError> {
+    manager.unload()?;
     store::wipe(&app)
 }

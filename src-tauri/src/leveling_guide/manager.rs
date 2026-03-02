@@ -180,6 +180,16 @@ impl LevelingGuideManager {
         Ok(guard.is_some())
     }
 
+    pub fn unload(&self) -> Result<(), CommandError> {
+        self.stop_log_watcher();
+        let mut guard = self
+            .loaded
+            .lock()
+            .map_err(|_| command_error("guide_state_poisoned", "Guide state poisoned"))?;
+        *guard = None;
+        Ok(())
+    }
+
     pub fn load(
         &self,
         app: &AppHandle,

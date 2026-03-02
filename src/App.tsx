@@ -118,6 +118,7 @@ function App(): JSX.Element {
 	const [settingsLoading, setSettingsLoading] = useState<boolean>(true);
 	const [pobSettings, setPobSettings] = useState<PobSettings>({ slots: [], currentSlotIndex: null });
 	const [pobSettingsLoading, setPobSettingsLoading] = useState<boolean>(true);
+	const [resetEpoch, setResetEpoch] = useState<number>(0);
 
 	useEffect((): (() => void) => {
 		let isDisposed = false;
@@ -146,7 +147,7 @@ function App(): JSX.Element {
 		return (): void => {
 			isDisposed = true;
 		};
-	}, []);
+	}, [resetEpoch]);
 
 	useEffect((): (() => void) => {
 		let isDisposed = false;
@@ -162,12 +163,6 @@ function App(): JSX.Element {
 
 				if (existingPage !== null) {
 					setCurrentPage(existingPage);
-				} else {
-					const loadedPage = await invoke<LevelingGuidePageDto>('load_guide');
-					if (isDisposed) {
-						return;
-					}
-					setCurrentPage(loadedPage);
 				}
 			} catch (err) {
 				if (isDisposed) {
@@ -186,7 +181,7 @@ function App(): JSX.Element {
 		return (): void => {
 			isDisposed = true;
 		};
-	}, []);
+	}, [resetEpoch]);
 
 	const loadGuide = useCallback(async (): Promise<void> => {
 		setLoading(true);
@@ -412,16 +407,33 @@ function App(): JSX.Element {
 		return (): void => {
 			isDisposed = true;
 		};
-	}, []);
+	}, [resetEpoch]);
 
 	const wipeSettings = useCallback(async (): Promise<void> => {
 		try {
+			if (overlayVisible) {
+				await invoke('hide_overlay');
+			}
 			await invoke('settings_wipe');
-			window.location.reload();
+			setCurrentPage(null);
+			setError(null);
+			setOpenSettingsPanel(null);
+			setOverlayVisible(false);
+			setSettings({
+				leagueStart: true,
+				overlayPosition: null,
+				optionalQuests: true,
+				levelRecommendations: true,
+				banditsChoice: 'KillAll',
+				clientLogPath: null,
+				gemsEnabled: false,
+			});
+			setPobSettings({ slots: [], currentSlotIndex: null });
+			setResetEpoch((prev) => prev + 1);
 		} catch (err) {
 			console.error('Failed to wipe settings:', err);
 		}
-	}, []);
+	}, [overlayVisible]);
 
 	const openLevelingGuideSettings = useCallback((): void => {
 		setOpenSettingsPanel('levelingGuide');
