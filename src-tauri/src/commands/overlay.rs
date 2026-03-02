@@ -279,6 +279,9 @@ pub fn set_overlay_panel_size(
     let width = width.max(1);
     let height = height.max(1);
 
+    let old_panel_size =
+        store::get_optional::<OverlayPanelSize>(&app, OVERLAY_PANEL_SIZE_STORE_KEY)?;
+
     store::set_value(
         &app,
         OVERLAY_PANEL_SIZE_STORE_KEY,
@@ -435,20 +438,17 @@ pub fn set_overlay_panel_size(
 
     #[cfg(windows_target_os)]
     {
-        let width_i32 = i32::try_from(width)
-            .map_err(|e| command_error("overlay_panel_window_width_overflow", e.to_string()))?;
         let new_height_i32 = i32::try_from(height)
             .map_err(|e| command_error("overlay_panel_window_height_overflow", e.to_string()))?;
 
         let saved_pos = get_saved_overlay_position(&app)?;
 
         let (target_x, target_y) = if let Some(pos) = &saved_pos {
-            let old_height = window
-                .inner_size()
-                .ok()
+            let old_client_height = old_panel_size
+                .as_ref()
                 .and_then(|s| i32::try_from(s.height).ok())
                 .unwrap_or(new_height_i32);
-            let height_delta = new_height_i32 - old_height;
+            let height_delta = new_height_i32 - old_client_height;
 
             match pos {
                 OverlayPosition::Absolute { x, y } => (*x, *y - height_delta),
@@ -469,9 +469,11 @@ pub fn set_overlay_panel_size(
             (monitor_position.x + margin, monitor_position.y + y_in_monitor)
         };
 
-        crate::window::win32::set_position_and_size(
-            &window, target_x, target_y, width_i32, new_height_i32,
-        )?;
+        window
+            .set_size(tauri::Size::Physical(tauri::PhysicalSize { width, height }))
+            .map_err(|e| command_error("overlay_panel_window_set_size_failed", e.to_string()))?;
+
+        crate::window::win32::set_position_topmost(&window, target_x, target_y)?;
 
         let new_position = OverlayPosition::Absolute { x: target_x, y: target_y };
         save_overlay_position(&app, &new_position)?;

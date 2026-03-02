@@ -284,12 +284,7 @@ fn position_tooltip_window(app: &AppHandle) -> Result<(), CommandError> {
 
     #[cfg(windows_target_os)]
     {
-        let width_i32 = i32::try_from(width)
-            .map_err(|e| command_error("hint_tooltip_width_overflow", e.to_string()))?;
-        let height_i32 = i32::try_from(height)
-            .map_err(|e| command_error("hint_tooltip_height_overflow", e.to_string()))?;
-
-        crate::window::win32::set_position_and_size(&tooltip, x, y, width_i32, height_i32)?;
+        crate::window::win32::set_position_topmost(&tooltip, x, y)?;
         return Ok(());
     }
 

@@ -398,6 +398,15 @@ function App(): JSX.Element {
 		};
 	}, []);
 
+	const wipeSettings = useCallback(async (): Promise<void> => {
+		try {
+			await invoke('settings_wipe');
+			window.location.reload();
+		} catch (err) {
+			console.error('Failed to wipe settings:', err);
+		}
+	}, []);
+
 	const openLevelingGuideSettings = useCallback((): void => {
 		setSettingsOpen(true);
 	}, []);
@@ -447,7 +456,8 @@ function App(): JSX.Element {
 			settingsContent={settingsContent}
 			overlaysVisible={overlayVisible}
 			onShowAllOverlays={showOverlay}
-			onHideAllOverlays={hideOverlay}>
+			onHideAllOverlays={hideOverlay}
+			onWipeSettings={wipeSettings}>
 			<LevelingGuideDashboardSnippet
 				page={currentPage}
 				overlayVisible={overlayVisible}

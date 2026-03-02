@@ -1,10 +1,9 @@
 use crate::error::{command_error, CommandError};
 
-use windows_sys::Win32::Foundation::{HWND, RECT};
+use windows_sys::Win32::Foundation::HWND;
 use windows_sys::Win32::UI::WindowsAndMessaging::{
-    AdjustWindowRectEx, GetWindowLongPtrW, SetWindowLongPtrW, SetWindowPos, GWL_EXSTYLE,
-    GWL_STYLE, HWND_TOPMOST, SWP_FRAMECHANGED, SWP_NOMOVE, SWP_NOSIZE, WS_EX_NOACTIVATE,
-    WS_EX_TOOLWINDOW,
+    GetWindowLongPtrW, SetWindowLongPtrW, SetWindowPos, GWL_EXSTYLE, HWND_TOPMOST,
+    SWP_FRAMECHANGED, SWP_NOMOVE, SWP_NOSIZE, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
 };
 
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
@@ -85,30 +84,12 @@ pub fn set_topmost(window: &tauri::WebviewWindow) -> Result<(), CommandError> {
     Ok(())
 }
 
-pub fn set_position_and_size(
+pub fn set_position_topmost(
     window: &tauri::WebviewWindow,
     x: i32,
     y: i32,
-    client_width: i32,
-    client_height: i32,
 ) -> Result<(), CommandError> {
     let hwnd = extract_hwnd(window)?;
-
-    let (outer_width, outer_height) = unsafe {
-        let style = GetWindowLongPtrW(hwnd, GWL_STYLE) as u32;
-        let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32;
-
-        let mut rect = RECT {
-            left: 0,
-            top: 0,
-            right: client_width,
-            bottom: client_height,
-        };
-
-        AdjustWindowRectEx(&mut rect, style, 0, ex_style);
-
-        (rect.right - rect.left, rect.bottom - rect.top)
-    };
 
     unsafe {
         SetWindowPos(
@@ -116,9 +97,9 @@ pub fn set_position_and_size(
             HWND_TOPMOST,
             x,
             y,
-            outer_width,
-            outer_height,
-            SWP_FRAMECHANGED,
+            0,
+            0,
+            SWP_NOSIZE | SWP_FRAMECHANGED,
         );
     }
 

@@ -13,6 +13,7 @@ interface MainViewProps {
 	overlaysVisible: boolean;
 	onShowAllOverlays: () => Promise<void>;
 	onHideAllOverlays: () => Promise<void>;
+	onWipeSettings: () => Promise<void>;
 }
 
 export function MainView({
@@ -21,6 +22,7 @@ export function MainView({
 	overlaysVisible,
 	onShowAllOverlays,
 	onHideAllOverlays,
+	onWipeSettings,
 }: MainViewProps): JSX.Element {
 	const handleLeagueConfigure = useCallback((): void => {
 		// placeholder for league configuration
@@ -53,6 +55,15 @@ export function MainView({
 					</div>
 
 					<div className="mainViewModulesGrid">{children}</div>
+
+					<div className="mainViewFooter">
+						<button
+							type="button"
+							className="mainViewWipeButton"
+							onClick={() => void onWipeSettings()}>
+							Reset All Settings
+						</button>
+					</div>
 				</>
 			)}
 		</main>

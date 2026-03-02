@@ -42,6 +42,34 @@
 	padding: 0 24px;
 }
 
+.mainViewFooter {
+	display: flex;
+	justify-content: center;
+	padding: 12px 24px 24px;
+}
+
+.mainViewWipeButton {
+	padding: 8px 20px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.8px;
+	border-radius: 6px;
+	border: 1px solid rgba(248, 113, 113, 0.3);
+	background: transparent;
+	color: #f87171;
+	cursor: pointer;
+	box-shadow: none;
+	transition:
+		border-color 0.2s,
+		background-color 0.2s;
+}
+
+.mainViewWipeButton:hover {
+	background: rgba(248, 113, 113, 0.08);
+	border-color: rgba(248, 113, 113, 0.45);
+}
+
 .mainViewSettingsArea {
 	flex: 1;
 	min-height: 0;
