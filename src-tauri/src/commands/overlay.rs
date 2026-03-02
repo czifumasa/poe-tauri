@@ -279,9 +279,6 @@ pub fn set_overlay_panel_size(
     let width = width.max(1);
     let height = height.max(1);
 
-    let old_panel_size =
-        store::get_optional::<OverlayPanelSize>(&app, OVERLAY_PANEL_SIZE_STORE_KEY)?;
-
     store::set_value(
         &app,
         OVERLAY_PANEL_SIZE_STORE_KEY,
@@ -461,12 +458,17 @@ pub fn set_overlay_panel_size(
             let monitor = get_overlay_monitor(&window)?;
             let monitor_size = monitor.size();
             let monitor_position = monitor.position();
-            let margin = i32::try_from(OVERLAY_DEFAULT_MARGIN_PX)
-                .map_err(|e| command_error("overlay_panel_window_margin_overflow", e.to_string()))?;
-            let monitor_height = i32::try_from(monitor_size.height)
-                .map_err(|e| command_error("overlay_panel_window_height_overflow", e.to_string()))?;
+            let margin = i32::try_from(OVERLAY_DEFAULT_MARGIN_PX).map_err(|e| {
+                command_error("overlay_panel_window_margin_overflow", e.to_string())
+            })?;
+            let monitor_height = i32::try_from(monitor_size.height).map_err(|e| {
+                command_error("overlay_panel_window_height_overflow", e.to_string())
+            })?;
             let y_in_monitor = (monitor_height - margin - new_height_i32).max(0);
-            (monitor_position.x + margin, monitor_position.y + y_in_monitor)
+            (
+                monitor_position.x + margin,
+                monitor_position.y + y_in_monitor,
+            )
         };
 
         window
@@ -475,7 +477,10 @@ pub fn set_overlay_panel_size(
 
         crate::window::win32::set_position_topmost(&window, target_x, target_y)?;
 
-        let new_position = OverlayPosition::Absolute { x: target_x, y: target_y };
+        let new_position = OverlayPosition::Absolute {
+            x: target_x,
+            y: target_y,
+        };
         save_overlay_position(&app, &new_position)?;
 
         ensure_always_on_top(&window)?;

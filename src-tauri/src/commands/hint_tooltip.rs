@@ -15,6 +15,9 @@ use crate::window::identifiers::OVERLAY_DEFAULT_MARGIN_PX;
 use crate::commands::overlay::OverlayPanelSize;
 
 #[cfg(linux_bsd_target_os)]
+use crate::commands::overlay::OverlayPosition;
+
+#[cfg(linux_bsd_target_os)]
 use gtk::prelude::WidgetExt;
 
 #[cfg(linux_bsd_target_os)]
