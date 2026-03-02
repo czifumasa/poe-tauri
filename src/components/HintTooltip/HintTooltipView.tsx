@@ -1,4 +1,4 @@
-import { JSX, useEffect, useState } from 'react';
+import { JSX, useEffect, useLayoutEffect, useState } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { HINT_TOOLTIP_VIEW_QUERY_VALUE } from '../../constants/WindowIdentifiers.ts';
@@ -11,7 +11,14 @@ type HintTooltipContentPayload = {
 export function HintTooltipView(): JSX.Element {
 	const [content, setContent] = useState<HintTooltipContentPayload | null>(null);
 
-	useEffect((): (() => void) => {
+	const resetThenSetContent = (next: HintTooltipContentPayload): void => {
+		setContent(null);
+		requestAnimationFrame(() => {
+			setContent(next);
+		});
+	};
+
+	useLayoutEffect((): (() => void) => {
 		document.documentElement.dataset.view = HINT_TOOLTIP_VIEW_QUERY_VALUE;
 		return (): void => {
 			delete document.documentElement.dataset.view;
@@ -21,6 +28,7 @@ export function HintTooltipView(): JSX.Element {
 	useEffect((): (() => void) => {
 		let isDisposed = false;
 		let unlisten: (() => void) | null = null;
+		let unlistenClear: (() => void) | null = null;
 
 		void (async (): Promise<void> => {
 			try {
@@ -28,12 +36,19 @@ export function HintTooltipView(): JSX.Element {
 					if (isDisposed) {
 						return;
 					}
-					setContent(event.payload);
+					resetThenSetContent(event.payload);
+				});
+
+				unlistenClear = await listen('hint_tooltip_clear', () => {
+					if (isDisposed) {
+						return;
+					}
+					setContent(null);
 				});
 
 				const last = await invoke<HintTooltipContentPayload | null>('hint_tooltip_get_last_content');
 				if (!isDisposed && last !== null) {
-					setContent(last);
+					resetThenSetContent(last);
 				}
 			} catch (err) {
 				console.error('Failed to listen for hint tooltip updates:', err);
@@ -44,6 +59,9 @@ export function HintTooltipView(): JSX.Element {
 			isDisposed = true;
 			if (unlisten !== null) {
 				unlisten();
+			}
+			if (unlistenClear !== null) {
+				unlistenClear();
 			}
 		};
 	}, []);
@@ -61,11 +79,12 @@ export function HintTooltipView(): JSX.Element {
 			}}>
 			{content && (
 				<img
+					key={content.key}
 					src={content.dataUri}
 					alt={content.key}
 					style={{
-						maxWidth: '100%',
-						maxHeight: '100%',
+						width: '100%',
+						height: '100%',
 						display: 'block',
 						objectFit: 'contain',
 					}}

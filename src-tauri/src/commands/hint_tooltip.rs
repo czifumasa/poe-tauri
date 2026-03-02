@@ -27,6 +27,7 @@ use gtk_layer_shell::{Edge, LayerShell};
 use std::sync::mpsc;
 
 const HINT_TOOLTIP_CONTENT_EVENT: &str = "hint_tooltip_content";
+const HINT_TOOLTIP_CLEAR_EVENT: &str = "hint_tooltip_clear";
 
 const TOOLTIP_WIDTH_PX: u32 = 360;
 const TOOLTIP_HEIGHT_PX: u32 = 260;
@@ -326,6 +327,10 @@ pub fn hint_tooltip_show(
     ensure_hint_tooltip_always_on_top(&window)?;
 
     window
+        .emit(HINT_TOOLTIP_CLEAR_EVENT, ())
+        .map_err(|e| command_error("hint_tooltip_emit_clear_failed", e.to_string()))?;
+
+    window
         .emit(HINT_TOOLTIP_CONTENT_EVENT, payload)
         .map_err(|e| command_error("hint_tooltip_emit_failed", e.to_string()))?;
 
@@ -345,6 +350,14 @@ pub fn hint_tooltip_hide(app: tauri::AppHandle) -> Result<(), CommandError> {
     if let Some(window) =
         app.get_webview_window(crate::window::identifiers::HINT_TOOLTIP_WINDOW_LABEL)
     {
+        if let Ok(mut guard) = last_tooltip_content().lock() {
+            *guard = None;
+        }
+
+        window
+            .emit(HINT_TOOLTIP_CLEAR_EVENT, ())
+            .map_err(|e| command_error("hint_tooltip_emit_clear_failed", e.to_string()))?;
+
         window
             .hide()
             .map_err(|e| command_error("hint_tooltip_hide_failed", e.to_string()))?;
