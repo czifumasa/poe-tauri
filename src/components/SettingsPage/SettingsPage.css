@@ -1,0 +1,179 @@
+.settingsPage {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.settingsPageHeader {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.settingsPageBackButton {
+	padding: 4px 14px;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.5px;
+	border-radius: 4px;
+	border: 1px solid rgba(200, 169, 110, 0.25);
+	background: transparent;
+	color: rgba(200, 169, 110, 0.7);
+	cursor: pointer;
+	box-shadow: none;
+	transition:
+		border-color 0.2s,
+		color 0.2s;
+}
+
+.settingsPageBackButton:hover {
+	border-color: rgba(200, 169, 110, 0.45);
+	color: rgba(212, 175, 55, 0.95);
+}
+
+.settingsPageTitle {
+	font-size: 15px;
+	font-weight: 600;
+	color: rgba(255, 255, 255, 0.78);
+}
+
+.settingsPageTabs {
+	display: flex;
+	border-bottom: 1px solid rgba(200, 169, 110, 0.1);
+}
+
+.settingsPageTab {
+	padding: 8px 16px;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 0.4px;
+	border: none;
+	border-bottom: 2px solid transparent;
+	border-radius: 0;
+	background: transparent;
+	color: rgba(200, 169, 110, 0.4);
+	cursor: pointer;
+	transition:
+		color 0.2s,
+		border-color 0.2s;
+	margin-bottom: -1px;
+}
+
+.settingsPageTab:hover:not(.settingsPageTab--active) {
+	color: rgba(200, 169, 110, 0.7);
+}
+
+.settingsPageTab--active,
+.settingsPageTab--active:hover {
+	color: rgba(212, 175, 55, 0.95);
+	border-bottom-color: rgba(212, 175, 55, 0.85);
+	cursor: default;
+}
+
+.settingsPageContent {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.settingsPageResetSection {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.settingsPageResetGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.settingsPageResetButton {
+	align-self: flex-start;
+	padding: 8px 20px;
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.8px;
+	border-radius: 6px;
+	border: 1px solid rgba(248, 113, 113, 0.3);
+	background: transparent;
+	color: #f87171;
+	cursor: pointer;
+	box-shadow: none;
+	transition:
+		border-color 0.2s,
+		background-color 0.2s,
+		opacity 0.2s;
+}
+
+.settingsPageResetButton:hover:not(:disabled) {
+	background: rgba(248, 113, 113, 0.08);
+	border-color: rgba(248, 113, 113, 0.45);
+}
+
+.settingsPageResetButton:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+.settingsPageResetConfirm {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 12px;
+	border-radius: 6px;
+	border: 1px solid rgba(248, 113, 113, 0.2);
+	background: rgba(248, 113, 113, 0.04);
+}
+
+.settingsPageResetWarning {
+	font-size: 12px;
+	color: rgba(248, 113, 113, 0.85);
+	line-height: 1.5;
+}
+
+.settingsPageResetConfirmActions {
+	display: flex;
+	gap: 8px;
+}
+
+.settingsPageResetConfirmButton {
+	padding: 6px 16px;
+	font-size: 12px;
+	font-weight: 600;
+	border-radius: 4px;
+	border: 1px solid rgba(248, 113, 113, 0.45);
+	background: rgba(248, 113, 113, 0.12);
+	color: #f87171;
+	cursor: pointer;
+	box-shadow: none;
+	transition:
+		border-color 0.2s,
+		background-color 0.2s;
+}
+
+.settingsPageResetConfirmButton:hover {
+	background: rgba(248, 113, 113, 0.2);
+	border-color: rgba(248, 113, 113, 0.6);
+}
+
+.settingsPageResetCancelButton {
+	padding: 6px 16px;
+	font-size: 12px;
+	font-weight: 600;
+	border-radius: 4px;
+	border: 1px solid rgba(200, 169, 110, 0.2);
+	background: transparent;
+	color: rgba(200, 169, 110, 0.7);
+	cursor: pointer;
+	box-shadow: none;
+	transition:
+		border-color 0.2s,
+		color 0.2s;
+}
+
+.settingsPageResetCancelButton:hover {
+	border-color: rgba(200, 169, 110, 0.4);
+	color: rgba(200, 169, 110, 0.9);
+}

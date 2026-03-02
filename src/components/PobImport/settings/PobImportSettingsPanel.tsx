@@ -9,7 +9,6 @@ type PobImportSettingsPanelProps = {
 	onAddSlot: (pobCode: string) => Promise<void>;
 	onRemoveSlot: (slotIndex: number) => Promise<void>;
 	onSetCurrentSlot: (slotIndex: number) => Promise<void>;
-	onBack: () => void;
 };
 
 function PobImportForm(props: { onAddSlot: (pobCode: string) => Promise<void>; disabled: boolean }): JSX.Element {
@@ -66,13 +65,6 @@ export function PobImportSettingsPanel(props: PobImportSettingsPanelProps): JSX.
 
 	return (
 		<div className="pobSettingsPanel">
-			<div className="pobSettingsPanelHeader">
-				<button type="button" className="pobSettingsBackButton" onClick={props.onBack}>
-					← Back
-				</button>
-				<span className="pobSettingsPanelTitle">Path of Building Import</span>
-			</div>
-
 			<PobImportForm onAddSlot={props.onAddSlot} disabled={loading} />
 
 			<div className="pobSettingsGroup">

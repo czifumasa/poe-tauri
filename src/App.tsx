@@ -15,10 +15,9 @@ import { LevelingGuideSettingsPanel } from './components/LevelingGuide/settings/
 import { HintTooltipView } from './components/HintTooltip/HintTooltipView.tsx';
 import { PobImportDashboardSnippet } from './components/PobImport/snippet/PobImportDashboardSnippet.tsx';
 import { PobImportSettingsPanel } from './components/PobImport/settings/PobImportSettingsPanel.tsx';
+import { SettingsPage, type SettingsTab } from './components/SettingsPage/SettingsPage.tsx';
 
 type ViewMode = 'main' | 'overlay' | 'hintTooltip';
-
-type SettingsPanel = 'levelingGuide' | 'pobImport';
 
 function formatInvokeError(error: unknown): string {
 	if (error instanceof Error) {
@@ -104,7 +103,7 @@ function App(): JSX.Element {
 	const [currentPage, setCurrentPage] = useState<LevelingGuidePageDto | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
-	const [openSettingsPanel, setOpenSettingsPanel] = useState<SettingsPanel | null>(null);
+	const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab | null>(null);
 	const [overlayVisible, setOverlayVisible] = useState<boolean>(false);
 	const [settings, setSettings] = useState<LevelingGuideSettings>({
 		leagueStart: true,
@@ -417,7 +416,7 @@ function App(): JSX.Element {
 			await invoke('settings_wipe');
 			setCurrentPage(null);
 			setError(null);
-			setOpenSettingsPanel(null);
+			setActiveSettingsTab(null);
 			setOverlayVisible(false);
 			setSettings({
 				leagueStart: true,
@@ -435,17 +434,21 @@ function App(): JSX.Element {
 		}
 	}, [overlayVisible]);
 
-	const openLevelingGuideSettings = useCallback((): void => {
-		setOpenSettingsPanel('levelingGuide');
+	const openSettings = useCallback((tab: SettingsTab = 'global'): void => {
+		setActiveSettingsTab(tab);
 	}, []);
+
+	const closeSettings = useCallback((): void => {
+		setActiveSettingsTab(null);
+	}, []);
+
+	const openLevelingGuideSettings = useCallback((): void => {
+		openSettings('levelingGuide');
+	}, [openSettings]);
 
 	const openPobImportSettings = useCallback((): void => {
-		setOpenSettingsPanel('pobImport');
-	}, []);
-
-	const closeSettingsPanel = useCallback((): void => {
-		setOpenSettingsPanel(null);
-	}, []);
+		openSettings('pobImport');
+	}, [openSettings]);
 
 	if (viewMode === 'overlay') {
 		const overlaySize = getOverlayLogicalSize(currentPage);
@@ -460,42 +463,42 @@ function App(): JSX.Element {
 		return <HintTooltipView />;
 	}
 
-	const settingsContent = ((): JSX.Element | undefined => {
-		if (openSettingsPanel === 'levelingGuide') {
-			return (
-				<LevelingGuideSettingsPanel
-					settingsLoading={settingsLoading}
-					leagueStart={settings.leagueStart}
-					onLeagueStartChange={updateLeagueStart}
-					optionalQuests={settings.optionalQuests}
-					onOptionalQuestsChange={updateOptionalQuests}
-					levelRecommendations={settings.levelRecommendations}
-					onLevelRecommendationsChange={updateLevelRecommendations}
-					banditsChoice={settings.banditsChoice}
-					onBanditsChoiceChange={updateBanditsChoice}
-					clientLogPath={settings.clientLogPath}
-					onClientLogPathBrowse={browseClientLogPath}
-					onClientLogPathClear={clearClientLogPath}
-					gemsEnabled={settings.gemsEnabled}
-					onGemsEnabledChange={updateGemsEnabled}
-					onBack={closeSettingsPanel}
-				/>
-			);
-		}
-		if (openSettingsPanel === 'pobImport') {
-			return (
-				<PobImportSettingsPanel
-					pobSettings={pobSettings}
-					loading={pobSettingsLoading}
-					onAddSlot={addPobSlot}
-					onRemoveSlot={removePobSlot}
-					onSetCurrentSlot={setCurrentPobSlot}
-					onBack={closeSettingsPanel}
-				/>
-			);
-		}
-		return undefined;
-	})();
+	const settingsContent =
+		activeSettingsTab !== null ? (
+			<SettingsPage
+				activeTab={activeSettingsTab}
+				onTabChange={setActiveSettingsTab}
+				onBack={closeSettings}
+				onResetAppData={wipeSettings}
+				levelingGuideContent={
+					<LevelingGuideSettingsPanel
+						settingsLoading={settingsLoading}
+						leagueStart={settings.leagueStart}
+						onLeagueStartChange={updateLeagueStart}
+						optionalQuests={settings.optionalQuests}
+						onOptionalQuestsChange={updateOptionalQuests}
+						levelRecommendations={settings.levelRecommendations}
+						onLevelRecommendationsChange={updateLevelRecommendations}
+						banditsChoice={settings.banditsChoice}
+						onBanditsChoiceChange={updateBanditsChoice}
+						clientLogPath={settings.clientLogPath}
+						onClientLogPathBrowse={browseClientLogPath}
+						onClientLogPathClear={clearClientLogPath}
+						gemsEnabled={settings.gemsEnabled}
+						onGemsEnabledChange={updateGemsEnabled}
+					/>
+				}
+				pobImportContent={
+					<PobImportSettingsPanel
+						pobSettings={pobSettings}
+						loading={pobSettingsLoading}
+						onAddSlot={addPobSlot}
+						onRemoveSlot={removePobSlot}
+						onSetCurrentSlot={setCurrentPobSlot}
+					/>
+				}
+			/>
+		) : undefined;
 
 	return (
 		<MainView
@@ -503,7 +506,7 @@ function App(): JSX.Element {
 			overlaysVisible={overlayVisible}
 			onShowAllOverlays={showOverlay}
 			onHideAllOverlays={hideOverlay}
-			onWipeSettings={wipeSettings}>
+			onOpenSettings={() => openSettings('global')}>
 			<LevelingGuideDashboardSnippet
 				page={currentPage}
 				overlayVisible={overlayVisible}

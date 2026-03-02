@@ -27,7 +27,6 @@ type LevelingGuideSettingsPanelProps = {
 	onClientLogPathClear: () => Promise<void>;
 	gemsEnabled: boolean;
 	onGemsEnabledChange: (value: boolean) => Promise<void>;
-	onBack: () => void;
 };
 
 function formatLogPathDisplay(path: string | null): string {
@@ -46,13 +45,6 @@ export function LevelingGuideSettingsPanel(props: LevelingGuideSettingsPanelProp
 
 	return (
 		<div className="settingsPanel">
-			<div className="settingsPanelHeader">
-				<button type="button" className="settingsBackButton" onClick={props.onBack}>
-					← Back
-				</button>
-				<span className="settingsPanelTitle">Leveling Guide Settings</span>
-			</div>
-
 			<div className="settingsGroup">
 				<div className="settingsGroupTitle">Guide Options</div>
 
