@@ -23,7 +23,6 @@
 .overlayPanelBorder {
 	position: relative;
 	border: 1px solid rgba(200, 169, 110, 0.42);
-	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.8);
 	box-sizing: border-box;
 	border-radius: 8px;
 	overflow: hidden;
