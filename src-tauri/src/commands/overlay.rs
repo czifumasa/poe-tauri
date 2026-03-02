@@ -261,6 +261,20 @@ pub fn overlay_set_position(
 }
 
 #[tauri::command(async)]
+pub fn overlay_reset_to_default_position(app: tauri::AppHandle) -> Result<(), CommandError> {
+    if app.get_webview_window(OVERLAY_WINDOW_LABEL).is_none() {
+        return Ok(());
+    }
+
+    let default_position = OverlayPosition::LayerShellMargins {
+        left: OVERLAY_DEFAULT_MARGIN_PX,
+        bottom: OVERLAY_DEFAULT_MARGIN_PX,
+    };
+    apply_overlay_position(&app, &default_position)?;
+    Ok(())
+}
+
+#[tauri::command(async)]
 pub fn overlay_apply_position(
     app: tauri::AppHandle,
     position: OverlayPosition,

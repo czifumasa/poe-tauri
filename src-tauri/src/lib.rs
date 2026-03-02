@@ -94,6 +94,7 @@ pub fn run() {
             overlay_is_visible,
             overlay_get_position,
             overlay_set_position,
+            overlay_reset_to_default_position,
             overlay_apply_position,
             set_overlay_panel_size,
             hint_tooltip_show,

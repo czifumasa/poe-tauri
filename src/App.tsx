@@ -463,6 +463,7 @@ function App(): JSX.Element {
 			if (overlayVisible) {
 				await invoke('hide_overlay');
 			}
+			await invoke('overlay_reset_to_default_position');
 			await invoke('settings_wipe');
 			setCurrentPage(null);
 			setError(null);
