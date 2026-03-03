@@ -131,21 +131,14 @@ fn position_tooltip_window(app: &AppHandle) -> Result<(), CommandError> {
     let height = TOOLTIP_HEIGHT_PX;
 
     if backend.uses_layer_shell_margins() {
-        let left_margin = (x - monitor_rect.left).max(0);
-        let top_margin = (y - monitor_rect.top).max(0);
-
-        let width_i32 = i32::try_from(width)
-            .map_err(|e| command_error("hint_tooltip_width_overflow", e.to_string()))?;
         let height_i32 = i32::try_from(height)
             .map_err(|e| command_error("hint_tooltip_height_overflow", e.to_string()))?;
 
-        return backend.set_tooltip_layer_shell_margins(
-            &tooltip,
-            left_margin,
-            top_margin,
-            width_i32,
-            height_i32,
-        );
+        let left_margin = (x - monitor_rect.left).max(0);
+        let bottom_margin = (monitor_rect.bottom - y - height_i32).max(0);
+
+        backend.set_size_with_gtk_refresh(&tooltip, width, height)?;
+        return backend.set_layer_shell_margins(&tooltip, left_margin, bottom_margin);
     }
 
     tooltip

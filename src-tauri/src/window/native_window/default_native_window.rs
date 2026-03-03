@@ -48,17 +48,6 @@ impl NativeWindow for DefaultBackend {
         Ok(())
     }
 
-    fn set_tooltip_layer_shell_margins(
-        &self,
-        _window: &tauri::WebviewWindow,
-        _left: i32,
-        _top: i32,
-        _width: i32,
-        _height: i32,
-    ) -> Result<(), CommandError> {
-        Ok(())
-    }
-
     fn set_size_with_gtk_refresh(
         &self,
         window: &tauri::WebviewWindow,

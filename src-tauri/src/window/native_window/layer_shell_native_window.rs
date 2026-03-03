@@ -129,27 +129,6 @@ impl NativeWindow for LayerShellBackend {
         })
     }
 
-    fn set_tooltip_layer_shell_margins(
-        &self,
-        window: &tauri::WebviewWindow,
-        left: i32,
-        top: i32,
-        width: i32,
-        height: i32,
-    ) -> Result<(), CommandError> {
-        run_on_main_thread(window, move |w| {
-            let gtk_window = w
-                .gtk_window()
-                .map_err(|e| command_error("layer_shell_gtk_window_failed", e.to_string()))?;
-
-            gtk_window.set_layer_shell_margin(Edge::Left, left);
-            gtk_window.set_layer_shell_margin(Edge::Top, top);
-            gtk_window.set_size_request(width, height);
-
-            Ok(())
-        })
-    }
-
     fn set_size_with_gtk_refresh(
         &self,
         window: &tauri::WebviewWindow,

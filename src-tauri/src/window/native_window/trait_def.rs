@@ -44,15 +44,6 @@ pub trait NativeWindow: Send + Sync {
         bottom: i32,
     ) -> Result<(), CommandError>;
 
-    fn set_tooltip_layer_shell_margins(
-        &self,
-        window: &tauri::WebviewWindow,
-        left: i32,
-        top: i32,
-        width: i32,
-        height: i32,
-    ) -> Result<(), CommandError>;
-
     fn set_size_with_gtk_refresh(
         &self,
         window: &tauri::WebviewWindow,
