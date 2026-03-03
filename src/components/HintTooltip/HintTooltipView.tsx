@@ -1,7 +1,6 @@
-import { JSX, useEffect, useLayoutEffect, useState } from 'react';
+import { JSX, useEffect, useState } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
-import { HINT_TOOLTIP_VIEW_QUERY_VALUE } from '../../constants/WindowIdentifiers.ts';
 
 type HintTooltipContentPayload = {
 	key: string;
@@ -17,13 +16,6 @@ export function HintTooltipView(): JSX.Element {
 			setContent(next);
 		});
 	};
-
-	useLayoutEffect((): (() => void) => {
-		document.documentElement.dataset.view = HINT_TOOLTIP_VIEW_QUERY_VALUE;
-		return (): void => {
-			delete document.documentElement.dataset.view;
-		};
-	}, []);
 
 	useEffect((): (() => void) => {
 		let isDisposed = false;
