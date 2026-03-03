@@ -2,7 +2,7 @@ use std::sync::{Mutex, OnceLock};
 
 use crate::error::{command_error, CommandError};
 use crate::persistence::store;
-use crate::window::identifiers::{OVERLAY_DEFAULT_MARGIN_PX, OVERLAY_WINDOW_LABEL};
+use crate::window::identifiers::{OVERLAY_DEFAULT_MARGIN_BOTTOM_PX, OVERLAY_DEFAULT_MARGIN_LEFT_PX, OVERLAY_WINDOW_LABEL};
 use crate::window::overlay_window::{ensure_always_on_top, ensure_overlay_window};
 use tauri::Manager;
 
@@ -230,8 +230,8 @@ pub fn show_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
     let applied = apply_saved_overlay_position_if_any(&app)?;
     if !applied {
         let default_pos = OverlayPosition::LayerShellMargins {
-            left: OVERLAY_DEFAULT_MARGIN_PX,
-            bottom: OVERLAY_DEFAULT_MARGIN_PX,
+            left: OVERLAY_DEFAULT_MARGIN_LEFT_PX,
+            bottom: OVERLAY_DEFAULT_MARGIN_BOTTOM_PX,
         };
         let size = overlay_window.outer_size().unwrap_or(tauri::PhysicalSize { width: 0, height: 0 });
         let w = i32::try_from(size.width).unwrap_or(0);
@@ -286,8 +286,8 @@ pub fn overlay_get_position(app: tauri::AppHandle) -> Result<OverlayPosition, Co
         }
 
         return Ok(OverlayPosition::LayerShellMargins {
-            left: OVERLAY_DEFAULT_MARGIN_PX,
-            bottom: OVERLAY_DEFAULT_MARGIN_PX,
+            left: OVERLAY_DEFAULT_MARGIN_LEFT_PX,
+            bottom: OVERLAY_DEFAULT_MARGIN_BOTTOM_PX,
         });
     }
 
@@ -312,8 +312,8 @@ pub fn overlay_reset_to_default_position(app: tauri::AppHandle) -> Result<(), Co
     }
 
     let default_position = OverlayPosition::LayerShellMargins {
-        left: OVERLAY_DEFAULT_MARGIN_PX,
-        bottom: OVERLAY_DEFAULT_MARGIN_PX,
+        left: OVERLAY_DEFAULT_MARGIN_LEFT_PX,
+        bottom: OVERLAY_DEFAULT_MARGIN_BOTTOM_PX,
     };
     apply_overlay_position(&app, &default_position)?;
     Ok(())
@@ -336,13 +336,16 @@ fn compute_default_absolute_position(
     let monitor_size = monitor.size();
     let monitor_position = monitor.position();
 
-    let margin = i32::try_from(OVERLAY_DEFAULT_MARGIN_PX)
+    let left_margin = i32::try_from(OVERLAY_DEFAULT_MARGIN_LEFT_PX)
         .map_err(|e| command_error("overlay_panel_window_margin_overflow", e.to_string()))?;
+    let bottom_margin = i32::try_from(OVERLAY_DEFAULT_MARGIN_BOTTOM_PX)
+        .map_err(|e| command_error("overlay_panel_window_margin_overflow", e.to_string()))?;
+
     let monitor_height = i32::try_from(monitor_size.height)
         .map_err(|e| command_error("overlay_panel_window_height_overflow", e.to_string()))?;
 
-    let y_in_monitor = (monitor_height - margin - new_height).max(0);
-    let x = monitor_position.x + margin;
+    let y_in_monitor = (monitor_height - bottom_margin - new_height).max(0);
+    let x = monitor_position.x + left_margin;
     let y = monitor_position.y + y_in_monitor;
     Ok((x, y))
 }
@@ -376,8 +379,8 @@ pub fn set_overlay_panel_size(
 
         let saved_pos = get_saved_overlay_position(&app)?;
         let position = saved_pos.unwrap_or(OverlayPosition::LayerShellMargins {
-            left: OVERLAY_DEFAULT_MARGIN_PX,
-            bottom: OVERLAY_DEFAULT_MARGIN_PX,
+            left: OVERLAY_DEFAULT_MARGIN_LEFT_PX,
+            bottom: OVERLAY_DEFAULT_MARGIN_BOTTOM_PX,
         });
         let w_i32 = i32::try_from(width).unwrap_or(0);
         let h_i32 = i32::try_from(height).unwrap_or(0);

@@ -1,9 +1,7 @@
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 
 use crate::error::{command_error, CommandError};
-use crate::window::identifiers::{
-    OVERLAY_DEFAULT_MARGIN_PX, OVERLAY_VIEW_QUERY_VALUE, OVERLAY_WINDOW_LABEL,
-};
+use crate::window::identifiers::{OVERLAY_DEFAULT_MARGIN_BOTTOM_PX, OVERLAY_DEFAULT_MARGIN_LEFT_PX, OVERLAY_VIEW_QUERY_VALUE, OVERLAY_WINDOW_LABEL};
 use crate::window::native_window::LayerShellConfig;
 
 const OVERLAY_LAYER_SHELL_CONFIG: LayerShellConfig = LayerShellConfig {
@@ -13,8 +11,8 @@ const OVERLAY_LAYER_SHELL_CONFIG: LayerShellConfig = LayerShellConfig {
     anchor_bottom: true,
     anchor_top: false,
     anchor_right: false,
-    default_margin_left: OVERLAY_DEFAULT_MARGIN_PX,
-    default_margin_bottom: OVERLAY_DEFAULT_MARGIN_PX,
+    default_margin_left: OVERLAY_DEFAULT_MARGIN_LEFT_PX,
+    default_margin_bottom: OVERLAY_DEFAULT_MARGIN_BOTTOM_PX,
     default_margin_top: 0,
     default_margin_right: 0,
 };
