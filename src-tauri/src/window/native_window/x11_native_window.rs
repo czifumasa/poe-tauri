@@ -37,6 +37,20 @@ impl NativeWindow for X11Backend {
         apply_x11_window_hints(window)
     }
 
+    fn get_position(
+        &self,
+        window: &tauri::WebviewWindow,
+    ) -> Result<(i32, i32), CommandError> {
+        run_on_main_thread(window, |w| {
+            let gtk_window = w
+                .gtk_window()
+                .map_err(|e| command_error("x11_gtk_window_failed", e.to_string()))?;
+
+            let (x, y) = gtk_window.position();
+            Ok((x, y))
+        })
+    }
+
     fn set_size_with_gtk_refresh(
         &self,
         window: &tauri::WebviewWindow,

@@ -16,7 +16,7 @@ pub struct OverlayPanelSize {
     pub height: u32,
 }
 
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum OverlayPosition {
     Absolute { x: i32, y: i32 },
@@ -347,36 +347,6 @@ fn compute_default_absolute_position(
     Ok((x, y))
 }
 
-fn capture_old_position_state(
-    window: &tauri::WebviewWindow,
-    saved_pos: Option<&OverlayPosition>,
-) -> Option<(i32, i32, i32)> {
-    let old_height = window
-        .inner_size()
-        .ok()
-        .and_then(|size| i32::try_from(size.height).ok());
-
-    if let (Some(pos), Some(h)) = (saved_pos, old_height) {
-        match pos {
-            OverlayPosition::Absolute { x, y } => Some((*x, *y, h)),
-            OverlayPosition::LayerShellMargins { left, bottom } => {
-                margins_to_absolute(window, *left, *bottom)
-                    .ok()
-                    .map(|(x, y)| (x, y, h))
-            }
-        }
-    } else {
-        window.inner_size().ok().and_then(|size| {
-            window.outer_position().ok().and_then(|pos| {
-                let x = i32::try_from(pos.x).ok()?;
-                let y = i32::try_from(pos.y).ok()?;
-                let h = i32::try_from(size.height).ok()?;
-                Some((x, y, h))
-            })
-        })
-    }
-}
-
 #[tauri::command(async)]
 pub fn set_overlay_panel_size(
     app: tauri::AppHandle,
@@ -388,7 +358,7 @@ pub fn set_overlay_panel_size(
     let width = width.max(1);
     let height = height.max(1);
 
-    let _old_panel_size =
+    let old_panel_size =
         store::get_optional::<OverlayPanelSize>(&app, OVERLAY_PANEL_SIZE_STORE_KEY)?;
 
     store::set_value(
@@ -417,23 +387,33 @@ pub fn set_overlay_panel_size(
     }
 
     let saved_pos = get_saved_overlay_position(&app)?;
-    let old_state = capture_old_position_state(&window, saved_pos.as_ref());
 
     backend.set_size_with_gtk_refresh(&window, width, height)?;
 
-    if let Some(old_state) = old_state {
-        let (old_x, old_y, old_height) = old_state;
-        let height_delta = new_height_i32 - old_height;
-        let new_y = old_y - height_delta;
+    match (&saved_pos, &old_panel_size) {
+        (Some(pos), Some(old_size)) => {
+            let old_height_i32 = i32::try_from(old_size.height).unwrap_or(0);
+            let height_delta = new_height_i32 - old_height_i32;
 
-        let position_to_apply = OverlayPosition::Absolute { x: old_x, y: new_y };
-        apply_overlay_position(&app, &position_to_apply)?;
-        save_overlay_position(&app, &position_to_apply)?;
-    } else {
-        let has_saved_position = saved_pos.is_some();
-        if has_saved_position {
-            let _ = apply_saved_overlay_position_if_any(&app)?;
-        } else {
+            if height_delta == 0 {
+                apply_overlay_position(&app, pos)?;
+            } else {
+                let (old_x, old_y) = match pos {
+                    OverlayPosition::Absolute { x, y } => (*x, *y),
+                    OverlayPosition::LayerShellMargins { left, bottom } => {
+                        margins_to_absolute(&window, *left, *bottom)?
+                    }
+                };
+                let new_y = old_y - height_delta;
+                let adjusted = OverlayPosition::Absolute { x: old_x, y: new_y };
+                apply_overlay_position(&app, &adjusted)?;
+                save_overlay_position(&app, &adjusted)?;
+            }
+        }
+        (Some(pos), None) => {
+            apply_overlay_position(&app, pos)?;
+        }
+        (None, _) => {
             let (x, y) = compute_default_absolute_position(&window, new_height_i32)?;
             backend.set_position(&window, x, y)?;
         }
