@@ -106,7 +106,7 @@ pub fn run() {
             pob_settings_set_current_slot
         ])
         .setup(move |app| {
-            window::init_native_backend();
+            window::init_native_window();
 
             let app_handle = app.handle().clone();
             if let Some(main_window) = app.get_webview_window(MAIN_WINDOW_LABEL) {

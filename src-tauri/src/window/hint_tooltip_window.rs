@@ -6,7 +6,7 @@ use crate::window::identifiers::{HINT_TOOLTIP_VIEW_QUERY_VALUE, HINT_TOOLTIP_WIN
 pub fn ensure_hint_tooltip_always_on_top(
     window: &tauri::WebviewWindow,
 ) -> Result<(), CommandError> {
-    crate::window::native_backend().ensure_always_on_top(window)
+    crate::window::native_window().ensure_always_on_top(window)
 }
 
 pub fn ensure_hint_tooltip_window(
@@ -34,8 +34,8 @@ pub fn ensure_hint_tooltip_window(
     .build()
     .map_err(|e| command_error("hint_tooltip_window_create_failed", e.to_string()))
     .and_then(|window| {
-        if let Some(config) = crate::window::native_backend().create_tooltip_config() {
-            crate::window::native_backend()
+        if let Some(config) = crate::window::native_window().create_tooltip_config() {
+            crate::window::native_window()
                 .configure_window(&window, &config)?;
         }
 

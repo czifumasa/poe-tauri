@@ -20,43 +20,43 @@ pub use trait_def::NativeWindow;
 
 use std::sync::OnceLock;
 
-static NATIVE_BACKEND: OnceLock<Box<dyn NativeWindow>> = OnceLock::new();
+static NATIVE_WINDOW: OnceLock<Box<dyn NativeWindow>> = OnceLock::new();
 
-pub fn init_native_backend() {
-    NATIVE_BACKEND.get_or_init(|| {
+pub fn init_native_window() {
+    NATIVE_WINDOW.get_or_init(|| {
         #[cfg(linux_bsd_target_os)]
         {
-            let backend: Box<dyn NativeWindow> =
+            let native_window: Box<dyn NativeWindow> =
                 if layer_shell_support::probe_layer_shell_support() {
-                    Box::new(layer_shell_native_window::LayerShellBackend)
+                    Box::new(layer_shell_native_window::LayerShellNativeWindow)
                 } else {
-                    Box::new(x11_native_window::X11Backend)
+                    Box::new(x11_native_window::X11NativeWindow)
                 };
-            backend.init_window_manager();
-            return backend;
+            native_window.init_window_manager();
+            return native_window;
         }
 
         #[cfg(windows_target_os)]
         {
-            let backend: Box<dyn NativeWindow> =
-                Box::new(win32_native_window::Win32Backend);
-            backend.init_window_manager();
-            return backend;
+            let native_window: Box<dyn NativeWindow> =
+                Box::new(win32_native_window::Win32NativeWindow);
+            native_window.init_window_manager();
+            return native_window;
         }
 
         #[allow(unreachable_code)]
         {
-            let backend: Box<dyn NativeWindow> =
-                Box::new(default_native_window::DefaultBackend);
-            backend.init_window_manager();
-            backend
+            let native_window: Box<dyn NativeWindow> =
+                Box::new(default_native_window::DefaultNativeWindow);
+            native_window.init_window_manager();
+            native_window
         }
     });
 }
 
-pub fn native_backend() -> &'static dyn NativeWindow {
-    NATIVE_BACKEND
+pub fn native_window() -> &'static dyn NativeWindow {
+    NATIVE_WINDOW
         .get()
-        .expect("native backend not initialized; call init_native_backend() during setup")
+        .expect("native window not initialized; call init_native_window() during setup")
         .as_ref()
 }

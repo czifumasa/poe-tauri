@@ -5,7 +5,7 @@ use crate::error::{command_error, CommandError};
 use super::gtk_util::run_on_main_thread;
 use super::trait_def::{LayerShellConfig, NativeWindow};
 
-pub struct LayerShellBackend;
+pub struct LayerShellNativeWindow;
 
 fn apply_layer_shell_config(
     window: &tauri::WebviewWindow,
@@ -51,7 +51,7 @@ fn apply_layer_shell_config(
     })
 }
 
-impl NativeWindow for LayerShellBackend {
+impl NativeWindow for LayerShellNativeWindow {
     fn init_window_manager(&self) {
         super::layer_shell_support::init_on_main_thread();
     }

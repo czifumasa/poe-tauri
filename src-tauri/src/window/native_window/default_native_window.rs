@@ -1,5 +1,5 @@
 use super::trait_def::NativeWindow;
 
-pub struct DefaultBackend;
+pub struct DefaultNativeWindow;
 
-impl NativeWindow for DefaultBackend {}
+impl NativeWindow for DefaultNativeWindow {}

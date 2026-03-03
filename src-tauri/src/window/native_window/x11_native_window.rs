@@ -4,7 +4,7 @@ use crate::error::{command_error, CommandError};
 use super::gtk_util::run_on_main_thread;
 use super::trait_def::{LayerShellConfig, NativeWindow};
 
-pub struct X11Backend;
+pub struct X11NativeWindow;
 
 fn apply_x11_window_hints(window: &tauri::WebviewWindow) -> Result<(), CommandError> {
     run_on_main_thread(window, |w| {
@@ -21,7 +21,7 @@ fn apply_x11_window_hints(window: &tauri::WebviewWindow) -> Result<(), CommandEr
     })
 }
 
-impl NativeWindow for X11Backend {
+impl NativeWindow for X11NativeWindow {
     fn configure_window(
         &self,
         window: &tauri::WebviewWindow,

@@ -4,7 +4,7 @@ use crate::error::{command_error, CommandError};
 use crate::window::identifiers::{OVERLAY_VIEW_QUERY_VALUE, OVERLAY_WINDOW_LABEL};
 
 pub fn ensure_always_on_top(window: &tauri::WebviewWindow) -> Result<(), CommandError> {
-    crate::window::native_backend().ensure_always_on_top(window)
+    crate::window::native_window().ensure_always_on_top(window)
 }
 
 pub fn ensure_overlay_window(app: &tauri::AppHandle) -> Result<tauri::WebviewWindow, CommandError> {
@@ -30,8 +30,8 @@ pub fn ensure_overlay_window(app: &tauri::AppHandle) -> Result<tauri::WebviewWin
     .build()
     .map_err(|e| command_error("overlay_panel_window_create_failed", e.to_string()))
     .and_then(|window| {
-        if let Some(config) = crate::window::native_backend().create_overlay_config() {
-            crate::window::native_backend()
+        if let Some(config) = crate::window::native_window().create_overlay_config() {
+            crate::window::native_window()
                 .configure_window(&window, &config)?;
         }
 

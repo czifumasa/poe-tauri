@@ -99,7 +99,7 @@ fn pick_tooltip_position(
 }
 
 fn position_tooltip_window(app: &AppHandle) -> Result<(), CommandError> {
-    let backend = crate::window::native_backend();
+    let native_window = crate::window::native_window();
     let tooltip = ensure_hint_tooltip_window(app)?;
 
     let overlay_window = app
@@ -130,22 +130,22 @@ fn position_tooltip_window(app: &AppHandle) -> Result<(), CommandError> {
     let width = TOOLTIP_WIDTH_PX;
     let height = TOOLTIP_HEIGHT_PX;
 
-    if backend.uses_layer_shell_margins() {
+    if native_window.uses_layer_shell_margins() {
         let height_i32 = i32::try_from(height)
             .map_err(|e| command_error("hint_tooltip_height_overflow", e.to_string()))?;
 
         let left_margin = (x - monitor_rect.left).max(0);
         let bottom_margin = (monitor_rect.bottom - y - height_i32).max(0);
 
-        backend.set_size_with_gtk_refresh(&tooltip, width, height)?;
-        return backend.set_layer_shell_margins(&tooltip, left_margin, bottom_margin);
+        native_window.set_size_with_gtk_refresh(&tooltip, width, height)?;
+        return native_window.set_layer_shell_margins(&tooltip, left_margin, bottom_margin);
     }
 
     tooltip
         .set_size(tauri::Size::Physical(tauri::PhysicalSize { width, height }))
         .map_err(|e| command_error("hint_tooltip_set_size_failed", e.to_string()))?;
 
-    backend.set_position(&tooltip, x, y)
+    native_window.set_position(&tooltip, x, y)
 }
 
 #[tauri::command(async)]

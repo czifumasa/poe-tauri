@@ -8,7 +8,7 @@ use windows_sys::Win32::UI::WindowsAndMessaging::{
     SWP_FRAMECHANGED, SWP_NOMOVE, SWP_NOSIZE, WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
 };
 
-pub struct Win32Backend;
+pub struct Win32NativeWindow;
 
 fn extract_hwnd(window: &tauri::WebviewWindow) -> Result<HWND, CommandError> {
     let handle = window
@@ -46,7 +46,7 @@ fn apply_tool_window_style(window: &tauri::WebviewWindow) -> Result<(), CommandE
     Ok(())
 }
 
-impl NativeWindow for Win32Backend {
+impl NativeWindow for Win32NativeWindow {
     fn configure_window(
         &self,
         window: &tauri::WebviewWindow,

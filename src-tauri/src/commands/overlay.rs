@@ -182,16 +182,16 @@ fn apply_overlay_position(
     app: &tauri::AppHandle,
     position: &OverlayPosition,
 ) -> Result<(), CommandError> {
-    let backend = crate::window::native_backend();
+    let native_window = crate::window::native_window();
     let window = ensure_overlay_window(app)?;
 
-    if backend.uses_layer_shell_margins() {
+    if native_window.uses_layer_shell_margins() {
         let (left, bottom) = match position {
             OverlayPosition::LayerShellMargins { left, bottom } => (*left, *bottom),
             OverlayPosition::Absolute { x, y } => absolute_to_margins(&window, *x, *y)?,
         };
 
-        backend.set_layer_shell_margins(&window, left, bottom)?;
+        native_window.set_layer_shell_margins(&window, left, bottom)?;
         let size = window.outer_size().unwrap_or(tauri::PhysicalSize { width: 0, height: 0 });
         let w = i32::try_from(size.width).unwrap_or(0);
         let h = i32::try_from(size.height).unwrap_or(0);
@@ -206,7 +206,7 @@ fn apply_overlay_position(
         }
     };
 
-    backend.set_position(&window, x, y)?;
+    native_window.set_position(&window, x, y)?;
     let size = window.outer_size().unwrap_or(tauri::PhysicalSize { width: 0, height: 0 });
     let w = i32::try_from(size.width).unwrap_or(0);
     let h = i32::try_from(size.height).unwrap_or(0);
@@ -271,10 +271,10 @@ pub fn overlay_is_visible(app: tauri::AppHandle) -> Result<bool, CommandError> {
 
 #[tauri::command(async)]
 pub fn overlay_get_position(app: tauri::AppHandle) -> Result<OverlayPosition, CommandError> {
-    let backend = crate::window::native_backend();
+    let native_window = crate::window::native_window();
     let window = ensure_overlay_window(&app)?;
 
-    if backend.uses_layer_shell_margins() {
+    if native_window.uses_layer_shell_margins() {
         let saved = get_saved_overlay_position(&app)?;
         if let Some(position) = saved {
             let (left, bottom) = match position {
@@ -291,7 +291,7 @@ pub fn overlay_get_position(app: tauri::AppHandle) -> Result<OverlayPosition, Co
         });
     }
 
-    let (x, y) = backend.get_position(&window)?;
+    let (x, y) = native_window.get_position(&window)?;
     Ok(OverlayPosition::Absolute { x, y })
 }
 
@@ -356,7 +356,7 @@ pub fn set_overlay_panel_size(
     width: u32,
     height: u32,
 ) -> Result<(), CommandError> {
-    let backend = crate::window::native_backend();
+    let native_window = crate::window::native_window();
     let window = ensure_overlay_window(&app)?;
     let width = width.max(1);
     let height = height.max(1);
@@ -373,8 +373,8 @@ pub fn set_overlay_panel_size(
     let new_height_i32 = i32::try_from(height)
         .map_err(|e| command_error("overlay_panel_window_height_overflow", e.to_string()))?;
 
-    if backend.uses_layer_shell_margins() {
-        backend.set_size_with_gtk_refresh(&window, width, height)?;
+    if native_window.uses_layer_shell_margins() {
+        native_window.set_size_with_gtk_refresh(&window, width, height)?;
         ensure_always_on_top(&window)?;
 
         let saved_pos = get_saved_overlay_position(&app)?;
@@ -391,7 +391,7 @@ pub fn set_overlay_panel_size(
 
     let saved_pos = get_saved_overlay_position(&app)?;
 
-    backend.set_size_with_gtk_refresh(&window, width, height)?;
+    native_window.set_size_with_gtk_refresh(&window, width, height)?;
 
     match (&saved_pos, &old_panel_size) {
         (Some(pos), Some(old_size)) => {
@@ -418,7 +418,7 @@ pub fn set_overlay_panel_size(
         }
         (None, _) => {
             let (x, y) = compute_default_absolute_position(&window, new_height_i32)?;
-            backend.set_position(&window, x, y)?;
+            native_window.set_position(&window, x, y)?;
         }
     }
 
