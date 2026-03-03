@@ -16,7 +16,7 @@ mod x11_native_window;
 #[cfg(windows_target_os)]
 mod win32_native_window;
 
-pub use trait_def::{LayerShellConfig, NativeWindow};
+pub use trait_def::NativeWindow;
 
 use std::sync::OnceLock;
 

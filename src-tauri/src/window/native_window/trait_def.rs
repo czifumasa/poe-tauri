@@ -1,20 +1,39 @@
 use crate::error::{command_error, CommandError};
 
+
 pub struct LayerShellConfig {
+    #[cfg(linux_bsd_target_os)]
     pub namespace: &'static str,
+    #[cfg(linux_bsd_target_os)]
     pub keyboard_interactive: bool,
+    #[cfg(linux_bsd_target_os)]
     pub anchor_left: bool,
+    #[cfg(linux_bsd_target_os)]
     pub anchor_bottom: bool,
+    #[cfg(linux_bsd_target_os)]
     pub anchor_top: bool,
+    #[cfg(linux_bsd_target_os)]
     pub anchor_right: bool,
+    #[cfg(linux_bsd_target_os)]
     pub default_margin_left: i32,
+    #[cfg(linux_bsd_target_os)]
     pub default_margin_bottom: i32,
+    #[cfg(linux_bsd_target_os)]
     pub default_margin_top: i32,
+    #[cfg(linux_bsd_target_os)]
     pub default_margin_right: i32,
 }
 
 pub trait NativeWindow: Send + Sync {
     fn init_window_manager(&self) {}
+
+    fn create_overlay_config(&self) -> Option<LayerShellConfig> {
+        None
+    }
+
+    fn create_tooltip_config(&self) -> Option<LayerShellConfig> {
+        None
+    }
 
     fn configure_window(
         &self,

@@ -56,6 +56,37 @@ impl NativeWindow for LayerShellBackend {
         super::layer_shell_support::init_on_main_thread();
     }
 
+    fn create_overlay_config(&self) -> Option<LayerShellConfig> {
+        use crate::window::identifiers::{OVERLAY_DEFAULT_MARGIN_BOTTOM_PX, OVERLAY_DEFAULT_MARGIN_LEFT_PX};
+        Some(LayerShellConfig {
+            namespace: "poe-tauri-overlay",
+            keyboard_interactive: true,
+            anchor_left: true,
+            anchor_bottom: true,
+            anchor_top: false,
+            anchor_right: false,
+            default_margin_left: OVERLAY_DEFAULT_MARGIN_LEFT_PX,
+            default_margin_bottom: OVERLAY_DEFAULT_MARGIN_BOTTOM_PX,
+            default_margin_top: 0,
+            default_margin_right: 0,
+        })
+    }
+
+    fn create_tooltip_config(&self) -> Option<LayerShellConfig> {
+        Some(LayerShellConfig {
+            namespace: "poe-tauri-hint-tooltip",
+            keyboard_interactive: false,
+            anchor_left: true,
+            anchor_bottom: true,
+            anchor_top: false,
+            anchor_right: false,
+            default_margin_left: 0,
+            default_margin_bottom: 0,
+            default_margin_top: 0,
+            default_margin_right: 0,
+        })
+    }
+
     fn configure_window(
         &self,
         window: &tauri::WebviewWindow,

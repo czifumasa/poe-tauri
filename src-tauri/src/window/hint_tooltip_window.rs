@@ -2,20 +2,6 @@ use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 
 use crate::error::{command_error, CommandError};
 use crate::window::identifiers::{HINT_TOOLTIP_VIEW_QUERY_VALUE, HINT_TOOLTIP_WINDOW_LABEL};
-use crate::window::native_window::LayerShellConfig;
-
-const TOOLTIP_LAYER_SHELL_CONFIG: LayerShellConfig = LayerShellConfig {
-    namespace: "poe-tauri-hint-tooltip",
-    keyboard_interactive: false,
-    anchor_left: true,
-    anchor_bottom: true,
-    anchor_top: false,
-    anchor_right: false,
-    default_margin_left: 0,
-    default_margin_bottom: 0,
-    default_margin_top: 0,
-    default_margin_right: 0,
-};
 
 pub fn ensure_hint_tooltip_always_on_top(
     window: &tauri::WebviewWindow,
@@ -48,8 +34,10 @@ pub fn ensure_hint_tooltip_window(
     .build()
     .map_err(|e| command_error("hint_tooltip_window_create_failed", e.to_string()))
     .and_then(|window| {
-        crate::window::native_backend()
-            .configure_window(&window, &TOOLTIP_LAYER_SHELL_CONFIG)?;
+        if let Some(config) = crate::window::native_backend().create_tooltip_config() {
+            crate::window::native_backend()
+                .configure_window(&window, &config)?;
+        }
 
         window
             .set_min_size(Some(tauri::Size::Physical(tauri::PhysicalSize {

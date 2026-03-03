@@ -375,20 +375,6 @@ impl LevelingGuideManager {
         Ok(data)
     }
 
-    #[allow(dead_code)]
-    pub fn get_target_area_id(&self) -> Result<Option<String>, CommandError> {
-        let guard = self
-            .loaded
-            .lock()
-            .map_err(|_| command_error("guide_state_poisoned", "Guide state poisoned"))?;
-
-        let target = guard
-            .as_ref()
-            .and_then(|loaded| loaded.target_area_id.clone());
-
-        Ok(target)
-    }
-
     pub fn try_auto_advance(
         &self,
         app: &AppHandle,
