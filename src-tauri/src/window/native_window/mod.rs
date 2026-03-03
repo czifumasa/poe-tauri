@@ -2,6 +2,9 @@ mod trait_def;
 mod default_native_window;
 
 #[cfg(linux_bsd_target_os)]
+mod gtk_util;
+
+#[cfg(linux_bsd_target_os)]
 mod layer_shell_support;
 
 #[cfg(linux_bsd_target_os)]

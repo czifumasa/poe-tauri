@@ -47,7 +47,7 @@ pub fn ensure_overlay_window(app: &tauri::AppHandle) -> Result<tauri::WebviewWin
     .map_err(|e| command_error("overlay_panel_window_create_failed", e.to_string()))
     .and_then(|window| {
         crate::window::native_backend()
-            .configure_overlay_window(&window, &OVERLAY_LAYER_SHELL_CONFIG)?;
+            .configure_window(&window, &OVERLAY_LAYER_SHELL_CONFIG)?;
 
         window
             .set_min_size(Some(tauri::Size::Physical(tauri::PhysicalSize {

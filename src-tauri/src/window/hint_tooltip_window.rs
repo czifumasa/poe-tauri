@@ -49,7 +49,7 @@ pub fn ensure_hint_tooltip_window(
     .map_err(|e| command_error("hint_tooltip_window_create_failed", e.to_string()))
     .and_then(|window| {
         crate::window::native_backend()
-            .configure_tooltip_window(&window, &TOOLTIP_LAYER_SHELL_CONFIG)?;
+            .configure_window(&window, &TOOLTIP_LAYER_SHELL_CONFIG)?;
 
         window
             .set_min_size(Some(tauri::Size::Physical(tauri::PhysicalSize {

@@ -1,32 +1,11 @@
-use std::sync::mpsc;
-
 use gtk::prelude::WidgetExt;
 use gtk_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
 
 use crate::error::{command_error, CommandError};
+use super::gtk_util::run_on_main_thread;
 use super::trait_def::{LayerShellConfig, NativeWindow};
 
 pub struct LayerShellBackend;
-
-fn run_on_main_thread<F, R>(window: &tauri::WebviewWindow, f: F) -> Result<R, CommandError>
-where
-    F: FnOnce(&tauri::WebviewWindow) -> Result<R, CommandError> + Send + 'static,
-    R: Send + 'static,
-{
-    let (sender, receiver) = mpsc::channel::<Result<R, CommandError>>();
-    let window_for_closure = window.clone();
-
-    window
-        .run_on_main_thread(move || {
-            let result = f(&window_for_closure);
-            let _ = sender.send(result);
-        })
-        .map_err(|e| command_error("layer_shell_main_thread_dispatch_failed", e.to_string()))?;
-
-    receiver
-        .recv()
-        .map_err(|e| command_error("layer_shell_main_thread_channel_failed", e.to_string()))?
-}
 
 fn apply_layer_shell_config(
     window: &tauri::WebviewWindow,
@@ -77,26 +56,12 @@ impl NativeWindow for LayerShellBackend {
         super::layer_shell_support::init_on_main_thread();
     }
 
-    fn configure_overlay_window(
+    fn configure_window(
         &self,
         window: &tauri::WebviewWindow,
         layer_shell_config: &LayerShellConfig,
     ) -> Result<(), CommandError> {
         apply_layer_shell_config(window, layer_shell_config)
-    }
-
-    fn configure_tooltip_window(
-        &self,
-        window: &tauri::WebviewWindow,
-        layer_shell_config: &LayerShellConfig,
-    ) -> Result<(), CommandError> {
-        apply_layer_shell_config(window, layer_shell_config)
-    }
-
-    fn ensure_always_on_top(&self, window: &tauri::WebviewWindow) -> Result<(), CommandError> {
-        window.set_always_on_top(true).map_err(|e| {
-            command_error("window_set_always_on_top_failed", e.to_string())
-        })
     }
 
     fn set_position(
