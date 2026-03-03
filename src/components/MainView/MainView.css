@@ -47,6 +47,7 @@
 	align-items: center;
 	justify-content: flex-end;
 	padding: 0 24px 16px;
+	margin-top: auto;
 }
 
 .mainViewSettingsButton {
