@@ -82,6 +82,7 @@ pub fn settings_wipe(
 ) -> Result<(), CommandError> {
     manager.unload()?;
     store::wipe(&app)?;
+    crate::commands::overlay::clear_overlay_screen_rect();
     app.emit(LEVELING_GUIDE_CLEARED_EVENT, ())
         .map_err(|e| command_error("leveling_guide_cleared_emit_failed", e.to_string()))?;
     Ok(())

@@ -1,3 +1,5 @@
+use std::sync::{Mutex, OnceLock};
+
 use crate::error::{command_error, CommandError};
 use crate::persistence::store;
 use crate::window::identifiers::{OVERLAY_DEFAULT_MARGIN_PX, OVERLAY_WINDOW_LABEL};
@@ -19,6 +21,39 @@ pub struct OverlayPanelSize {
 pub enum OverlayPosition {
     Absolute { x: i32, y: i32 },
     LayerShellMargins { left: i32, bottom: i32 },
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct OverlayScreenRect {
+    pub left: i32,
+    pub top: i32,
+    pub right: i32,
+    pub bottom: i32,
+}
+
+static OVERLAY_SCREEN_RECT: OnceLock<Mutex<Option<OverlayScreenRect>>> = OnceLock::new();
+
+fn overlay_screen_rect_store() -> &'static Mutex<Option<OverlayScreenRect>> {
+    OVERLAY_SCREEN_RECT.get_or_init(|| Mutex::new(None))
+}
+
+pub fn get_overlay_screen_rect() -> Option<OverlayScreenRect> {
+    overlay_screen_rect_store()
+        .lock()
+        .ok()
+        .and_then(|guard| *guard)
+}
+
+fn set_overlay_screen_rect(rect: OverlayScreenRect) {
+    if let Ok(mut guard) = overlay_screen_rect_store().lock() {
+        *guard = Some(rect);
+    }
+}
+
+pub fn clear_overlay_screen_rect() {
+    if let Ok(mut guard) = overlay_screen_rect_store().lock() {
+        *guard = None;
+    }
 }
 
 fn get_overlay_monitor(window: &tauri::WebviewWindow) -> Result<tauri::Monitor, CommandError> {
@@ -97,6 +132,52 @@ fn save_overlay_position(
     store::set_value(app, OVERLAY_POSITION_STORE_KEY, position)
 }
 
+fn margins_to_absolute_with_height(
+    window: &tauri::WebviewWindow,
+    left: i32,
+    bottom: i32,
+    window_height: i32,
+) -> Result<(i32, i32), CommandError> {
+    let monitor = get_overlay_monitor(window)?;
+    let monitor_size = monitor.size();
+    let monitor_position = monitor.position();
+
+    let monitor_height = i32::try_from(monitor_size.height)
+        .map_err(|e| command_error("overlay_panel_window_height_overflow", e.to_string()))?;
+
+    let left = left.max(0);
+    let bottom = bottom.max(0);
+
+    let x = monitor_position.x + left;
+    let y_in_monitor = (monitor_height - bottom - window_height).max(0);
+    let y = monitor_position.y + y_in_monitor;
+    Ok((x, y))
+}
+
+fn refresh_overlay_screen_rect(
+    window: &tauri::WebviewWindow,
+    position: &OverlayPosition,
+    width: i32,
+    height: i32,
+) {
+    let origin = match position {
+        OverlayPosition::Absolute { x, y } => Some((*x, *y)),
+        OverlayPosition::LayerShellMargins { left, bottom } => {
+            margins_to_absolute_with_height(window, *left, *bottom, height).ok()
+        }
+    };
+    let (x, y) = match origin {
+        Some(pos) => pos,
+        None => return,
+    };
+    set_overlay_screen_rect(OverlayScreenRect {
+        left: x,
+        top: y,
+        right: x + width,
+        bottom: y + height,
+    });
+}
+
 fn apply_overlay_position(
     app: &tauri::AppHandle,
     position: &OverlayPosition,
@@ -110,7 +191,12 @@ fn apply_overlay_position(
             OverlayPosition::Absolute { x, y } => absolute_to_margins(&window, *x, *y)?,
         };
 
-        return backend.set_layer_shell_margins(&window, left, bottom);
+        backend.set_layer_shell_margins(&window, left, bottom)?;
+        let size = window.outer_size().unwrap_or(tauri::PhysicalSize { width: 0, height: 0 });
+        let w = i32::try_from(size.width).unwrap_or(0);
+        let h = i32::try_from(size.height).unwrap_or(0);
+        refresh_overlay_screen_rect(&window, position, w, h);
+        return Ok(());
     }
 
     let (x, y) = match position {
@@ -120,7 +206,12 @@ fn apply_overlay_position(
         }
     };
 
-    backend.set_position(&window, x, y)
+    backend.set_position(&window, x, y)?;
+    let size = window.outer_size().unwrap_or(tauri::PhysicalSize { width: 0, height: 0 });
+    let w = i32::try_from(size.width).unwrap_or(0);
+    let h = i32::try_from(size.height).unwrap_or(0);
+    refresh_overlay_screen_rect(&window, position, w, h);
+    Ok(())
 }
 
 fn apply_saved_overlay_position_if_any(app: &tauri::AppHandle) -> Result<bool, CommandError> {
@@ -136,7 +227,17 @@ fn apply_saved_overlay_position_if_any(app: &tauri::AppHandle) -> Result<bool, C
 pub fn show_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
     let overlay_window = ensure_overlay_window(&app)?;
 
-    let _ = apply_saved_overlay_position_if_any(&app)?;
+    let applied = apply_saved_overlay_position_if_any(&app)?;
+    if !applied {
+        let default_pos = OverlayPosition::LayerShellMargins {
+            left: OVERLAY_DEFAULT_MARGIN_PX,
+            bottom: OVERLAY_DEFAULT_MARGIN_PX,
+        };
+        let size = overlay_window.outer_size().unwrap_or(tauri::PhysicalSize { width: 0, height: 0 });
+        let w = i32::try_from(size.width).unwrap_or(0);
+        let h = i32::try_from(size.height).unwrap_or(0);
+        refresh_overlay_screen_rect(&overlay_window, &default_pos, w, h);
+    }
 
     overlay_window
         .show()
@@ -302,6 +403,16 @@ pub fn set_overlay_panel_size(
     if backend.uses_layer_shell_margins() {
         backend.set_size_with_gtk_refresh(&window, width, height)?;
         ensure_always_on_top(&window)?;
+
+        let saved_pos = get_saved_overlay_position(&app)?;
+        let position = saved_pos.unwrap_or(OverlayPosition::LayerShellMargins {
+            left: OVERLAY_DEFAULT_MARGIN_PX,
+            bottom: OVERLAY_DEFAULT_MARGIN_PX,
+        });
+        let w_i32 = i32::try_from(width).unwrap_or(0);
+        let h_i32 = i32::try_from(height).unwrap_or(0);
+        refresh_overlay_screen_rect(&window, &position, w_i32, h_i32);
+
         return Ok(());
     }
 
@@ -329,6 +440,14 @@ pub fn set_overlay_panel_size(
     }
 
     ensure_always_on_top(&window)?;
+
+    let final_pos = get_saved_overlay_position(&app)?;
+    if let Some(ref pos) = final_pos {
+        let size = window.outer_size().unwrap_or(tauri::PhysicalSize { width: 0, height: 0 });
+        let w = i32::try_from(size.width).unwrap_or(0);
+        let h = i32::try_from(size.height).unwrap_or(0);
+        refresh_overlay_screen_rect(&window, pos, w, h);
+    }
 
     Ok(())
 }

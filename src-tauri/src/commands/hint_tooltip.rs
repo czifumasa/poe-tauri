@@ -3,13 +3,12 @@ use std::sync::{Mutex, OnceLock};
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::error::{command_error, CommandError};
-use crate::persistence::store;
 use crate::window::hint_tooltip_window::{
     ensure_hint_tooltip_always_on_top, ensure_hint_tooltip_window,
 };
-use crate::window::identifiers::{OVERLAY_DEFAULT_MARGIN_PX, OVERLAY_WINDOW_LABEL};
+use crate::window::identifiers::OVERLAY_WINDOW_LABEL;
 
-use crate::commands::overlay::{OverlayPanelSize, OverlayPosition};
+use crate::commands::overlay::{OverlayScreenRect, get_overlay_screen_rect};
 
 const HINT_TOOLTIP_CONTENT_EVENT: &str = "hint_tooltip_content";
 const HINT_TOOLTIP_CLEAR_EVENT: &str = "hint_tooltip_clear";
@@ -17,9 +16,6 @@ const HINT_TOOLTIP_CLEAR_EVENT: &str = "hint_tooltip_clear";
 const TOOLTIP_WIDTH_PX: u32 = 360;
 const TOOLTIP_HEIGHT_PX: u32 = 260;
 const TOOLTIP_GAP_PX: i32 = 6;
-
-const OVERLAY_POSITION_STORE_KEY: &str = "overlay_position";
-const OVERLAY_PANEL_SIZE_STORE_KEY: &str = "overlay_panel_size";
 
 static LAST_TOOLTIP_CONTENT: OnceLock<Mutex<Option<HintTooltipContentPayload>>> = OnceLock::new();
 
@@ -41,78 +37,13 @@ pub struct HintTooltipShowArgs {
     pub data_uri: String,
 }
 
-#[derive(Debug, Clone, Copy)]
-struct Rect {
-    left: i32,
-    top: i32,
-    right: i32,
-    bottom: i32,
-}
-
 fn clamp_i32(value: i32, min: i32, max: i32) -> i32 {
     value.max(min).min(max)
 }
 
-fn monitor_height(monitor: Rect) -> i32 {
-    monitor.bottom - monitor.top
-}
-
-fn load_saved_overlay_position(app: &AppHandle) -> Result<Option<OverlayPosition>, CommandError> {
-    store::get_optional::<OverlayPosition>(app, OVERLAY_POSITION_STORE_KEY)
-}
-
-fn load_saved_overlay_panel_size(
-    app: &AppHandle,
-) -> Result<Option<OverlayPanelSize>, CommandError> {
-    store::get_optional::<OverlayPanelSize>(app, OVERLAY_PANEL_SIZE_STORE_KEY)
-}
-
-fn overlay_origin_physical(
-    app: &AppHandle,
-    overlay: &tauri::WebviewWindow,
-    monitor: Rect,
-) -> Result<(i32, i32), CommandError> {
-    let backend = crate::window::native_backend();
-
-    if backend.uses_layer_shell_margins() {
-        let saved = load_saved_overlay_position(app)?;
-        let (left, bottom) = match saved {
-            Some(OverlayPosition::LayerShellMargins { left, bottom }) => (left, bottom),
-            Some(OverlayPosition::Absolute { .. }) | None => {
-                (OVERLAY_DEFAULT_MARGIN_PX, OVERLAY_DEFAULT_MARGIN_PX)
-            }
-        };
-
-        let window_height = match load_saved_overlay_panel_size(app)? {
-            Some(size) => i32::try_from(size.height).map_err(|e| {
-                command_error("hint_tooltip_overlay_height_overflow", e.to_string())
-            })?,
-            None => {
-                let outer_size = overlay.outer_size().map_err(|e| {
-                    command_error("hint_tooltip_overlay_size_failed", e.to_string())
-                })?;
-                i32::try_from(outer_size.height).map_err(|e| {
-                    command_error("hint_tooltip_overlay_height_overflow", e.to_string())
-                })?
-            }
-        };
-
-        let left = left.max(0);
-        let bottom = bottom.max(0);
-
-        let x = monitor.left + left;
-        let y_in_monitor = (monitor_height(monitor) - bottom - window_height).max(0);
-        let y = monitor.top + y_in_monitor;
-        return Ok((x, y));
-    }
-
-    let pos = overlay
-        .outer_position()
-        .map_err(|e| command_error("hint_tooltip_overlay_position_failed", e.to_string()))?;
-    Ok((pos.x, pos.y))
-}
-
-fn monitor_rect_for_window(window: &tauri::WebviewWindow) -> Result<Rect, CommandError> {
+fn monitor_rect_for_window(
+    window: &tauri::WebviewWindow,
+) -> Result<OverlayScreenRect, CommandError> {
     let monitor = window
         .current_monitor()
         .map_err(|e| command_error("hint_tooltip_get_monitor_failed", e.to_string()))?
@@ -127,7 +58,7 @@ fn monitor_rect_for_window(window: &tauri::WebviewWindow) -> Result<Rect, Comman
     let height = i32::try_from(size.height)
         .map_err(|e| command_error("hint_tooltip_monitor_height_overflow", e.to_string()))?;
 
-    Ok(Rect {
+    Ok(OverlayScreenRect {
         left: pos.x,
         top: pos.y,
         right: pos.x + width,
@@ -135,7 +66,10 @@ fn monitor_rect_for_window(window: &tauri::WebviewWindow) -> Result<Rect, Comman
     })
 }
 
-fn pick_tooltip_position(overlay: Rect, monitor: Rect) -> Option<(i32, i32)> {
+fn pick_tooltip_position(
+    overlay: OverlayScreenRect,
+    monitor: OverlayScreenRect,
+) -> Option<(i32, i32)> {
     let width_i32 = i32::try_from(TOOLTIP_WIDTH_PX).ok()?;
     let height_i32 = i32::try_from(TOOLTIP_HEIGHT_PX).ok()?;
 
@@ -168,7 +102,7 @@ fn position_tooltip_window(app: &AppHandle) -> Result<(), CommandError> {
     let backend = crate::window::native_backend();
     let tooltip = ensure_hint_tooltip_window(app)?;
 
-    let overlay = app
+    let overlay_window = app
         .get_webview_window(OVERLAY_WINDOW_LABEL)
         .ok_or_else(|| {
             command_error(
@@ -177,38 +111,14 @@ fn position_tooltip_window(app: &AppHandle) -> Result<(), CommandError> {
             )
         })?;
 
-    let monitor_rect = monitor_rect_for_window(&overlay)?;
-    let overlay_origin = overlay_origin_physical(app, &overlay, monitor_rect)?;
+    let overlay_rect = get_overlay_screen_rect().ok_or_else(|| {
+        command_error(
+            "hint_tooltip_overlay_rect_missing",
+            "overlay screen rect not available",
+        )
+    })?;
 
-    let (overlay_width, overlay_height) = match load_saved_overlay_panel_size(app)? {
-        Some(size) => (
-            i32::try_from(size.width)
-                .map_err(|e| command_error("hint_tooltip_overlay_width_overflow", e.to_string()))?,
-            i32::try_from(size.height).map_err(|e| {
-                command_error("hint_tooltip_overlay_height_overflow", e.to_string())
-            })?,
-        ),
-        None => {
-            let overlay_size = overlay
-                .outer_size()
-                .map_err(|e| command_error("hint_tooltip_overlay_size_failed", e.to_string()))?;
-            (
-                i32::try_from(overlay_size.width).map_err(|e| {
-                    command_error("hint_tooltip_overlay_width_overflow", e.to_string())
-                })?,
-                i32::try_from(overlay_size.height).map_err(|e| {
-                    command_error("hint_tooltip_overlay_height_overflow", e.to_string())
-                })?,
-            )
-        }
-    };
-
-    let overlay_rect = Rect {
-        left: overlay_origin.0,
-        top: overlay_origin.1,
-        right: overlay_origin.0 + overlay_width,
-        bottom: overlay_origin.1 + overlay_height,
-    };
+    let monitor_rect = monitor_rect_for_window(&overlay_window)?;
 
     let Some((x, y)) = pick_tooltip_position(overlay_rect, monitor_rect) else {
         return Err(command_error(
@@ -219,10 +129,6 @@ fn position_tooltip_window(app: &AppHandle) -> Result<(), CommandError> {
 
     let width = TOOLTIP_WIDTH_PX;
     let height = TOOLTIP_HEIGHT_PX;
-
-    tooltip
-        .set_size(tauri::Size::Physical(tauri::PhysicalSize { width, height }))
-        .map_err(|e| command_error("hint_tooltip_set_size_failed", e.to_string()))?;
 
     if backend.uses_layer_shell_margins() {
         let left_margin = (x - monitor_rect.left).max(0);
@@ -241,6 +147,10 @@ fn position_tooltip_window(app: &AppHandle) -> Result<(), CommandError> {
             height_i32,
         );
     }
+
+    tooltip
+        .set_size(tauri::Size::Physical(tauri::PhysicalSize { width, height }))
+        .map_err(|e| command_error("hint_tooltip_set_size_failed", e.to_string()))?;
 
     backend.set_position(&tooltip, x, y)
 }
