@@ -44,7 +44,7 @@ export function PobImportDashboardSnippet(props: PobImportDashboardSnippetProps)
 		<ModuleSnippet
 			title="Path of Building"
 			description={DESCRIPTION}
-			active
+			active={hasSlots}
 			action={{ type: 'primary', label: actionLabel, onClick: props.onOpenSettings }}>
 			{hasSlots && <PobSummaryBody pobSettings={pobSettings} />}
 		</ModuleSnippet>
