@@ -106,8 +106,7 @@ pub fn run() {
             pob_settings_set_current_slot
         ])
         .setup(move |app| {
-            #[cfg(linux_bsd_target_os)]
-            window::layer_shell_support::init_on_main_thread();
+            window::init_native_backend();
 
             let app_handle = app.handle().clone();
             if let Some(main_window) = app.get_webview_window(MAIN_WINDOW_LABEL) {

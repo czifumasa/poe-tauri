@@ -1,8 +1,6 @@
 pub mod hint_tooltip_window;
 pub mod identifiers;
-#[cfg(linux_bsd_target_os)]
-pub mod layer_shell_support;
+pub mod native_window;
 pub mod overlay_window;
 
-#[cfg(windows_target_os)]
-pub mod win32;
+pub use native_window::{init_native_backend, native_backend};
