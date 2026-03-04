@@ -56,7 +56,7 @@ function GuideLoadedBody({ page, loading, onResetProgress }: GuideLoadedBodyProp
 export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnippetProps): JSX.Element {
 	const { page, loading } = props;
 	const isLoaded = page !== null;
-	const overlayToggleLabel = props.overlayVisible ? 'HIDE' : 'SHOW';
+	const overlayToggleLabel = props.overlayVisible ? 'HIDE OVERLAY' : 'SHOW OVERLAY';
 	const handleOverlayToggle = props.overlayVisible ? props.onHideOverlay : props.onShowOverlay;
 
 	return (
