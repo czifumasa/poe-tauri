@@ -708,7 +708,6 @@ function App(): JSX.Element {
 			/>
 			<ModuleSnippet
 				title="Map Tracking"
-				description="Tracks completed maps and their content."
 				disabled
 				action={{ type: 'comingSoon' }}
 				onSettingsClick={() => {}}

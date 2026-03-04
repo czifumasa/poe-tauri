@@ -9,8 +9,6 @@ type PobImportDashboardSnippetProps = {
 	onOpenSettings: () => void;
 };
 
-const DESCRIPTION = 'Import and manage Path of Building builds.';
-
 function PobSummaryBody(props: { pobSettings: PobSettings }): JSX.Element {
 	const { pobSettings } = props;
 	const currentSlot =
@@ -43,7 +41,6 @@ export function PobImportDashboardSnippet(props: PobImportDashboardSnippetProps)
 	return (
 		<ModuleSnippet
 			title="Path of Building"
-			description={DESCRIPTION}
 			active={hasSlots}
 			action={{ type: 'primary', label: actionLabel, onClick: props.onOpenSettings }}>
 			{hasSlots && <PobSummaryBody pobSettings={pobSettings} />}

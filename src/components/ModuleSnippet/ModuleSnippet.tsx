@@ -8,7 +8,6 @@ type ModuleSnippetAction =
 
 interface ModuleSnippetProps {
 	title: string;
-	description: string;
 	active?: boolean;
 	disabled?: boolean;
 	showButton?: { label: string; onClick: () => void; disabled?: boolean };
@@ -74,8 +73,6 @@ export function ModuleSnippet(props: ModuleSnippetProps): JSX.Element {
 					</button>
 				)}
 			</div>
-
-			<div className="moduleSnippetDescription">{props.description}</div>
 
 			<div className="moduleSnippetBody">{props.children}</div>
 

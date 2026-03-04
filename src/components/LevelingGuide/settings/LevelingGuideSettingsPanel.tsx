@@ -45,6 +45,8 @@ export function LevelingGuideSettingsPanel(props: LevelingGuideSettingsPanelProp
 
 	return (
 		<div className="settingsPanel">
+			<div className="settingsPanelDescription">Step-by-step act progression with gem and quest tracking.</div>
+
 			<div className="settingsGroup">
 				<div className="settingsGroupTitle">Guide Options</div>
 

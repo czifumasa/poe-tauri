@@ -65,6 +65,8 @@ export function PobImportSettingsPanel(props: PobImportSettingsPanelProps): JSX.
 
 	return (
 		<div className="pobSettingsPanel">
+			<div className="pobSettingsPanelDescription">Manage your Path of Building builds.</div>
+
 			<PobImportForm onAddSlot={props.onAddSlot} disabled={loading} />
 
 			<div className="pobSettingsGroup">

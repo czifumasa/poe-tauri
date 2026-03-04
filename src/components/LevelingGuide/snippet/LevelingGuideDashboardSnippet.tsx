@@ -16,8 +16,6 @@ type LevelingGuideDashboardSnippetProps = {
 	onOpenSettings: () => void;
 };
 
-const DESCRIPTION = 'Step-by-step act progression with gem and quest tracking.';
-
 function formatProgress(page: LevelingGuidePageDto): string {
 	return `${page.position.pageIndex + 1} / ${page.pageCountInAct}`;
 }
@@ -51,7 +49,6 @@ export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnipp
 	return (
 		<ModuleSnippet
 			title="Leveling Guide"
-			description={DESCRIPTION}
 			active={isLoaded}
 			showButton={
 				isLoaded

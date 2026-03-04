@@ -15,6 +15,8 @@ export function TimerSettingsPanel(props: TimerSettingsPanelProps): JSX.Element 
 
 	return (
 		<div className="settingsPanel">
+			<div className="settingsPanelDescription">Track act and campaign completion times.</div>
+
 			<div className="settingsGroup">
 				<div className="settingsGroupTitle">Timer Options</div>
 

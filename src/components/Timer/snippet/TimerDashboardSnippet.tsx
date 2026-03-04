@@ -6,8 +6,6 @@ import { ModuleSnippet } from '../../ModuleSnippet/ModuleSnippet.tsx';
 import './TimerDashboardSnippet.css';
 
 const ACT_COUNT = 10;
-const DESCRIPTION = 'Track act and campaign completion times.';
-
 type TimerDashboardSnippetProps = {
 	timerSettings: TimerSettings;
 	timerState: TimerState;
@@ -48,7 +46,6 @@ export function TimerDashboardSnippet(props: TimerDashboardSnippetProps): JSX.El
 	return (
 		<ModuleSnippet
 			title="Timers"
-			description={DESCRIPTION}
 			active={isActive}
 			action={{ type: 'primary', label: 'SETTINGS', onClick: props.onOpenSettings }}
 			onSettingsClick={props.onOpenSettings}>

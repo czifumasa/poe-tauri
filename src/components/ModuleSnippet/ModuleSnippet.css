@@ -65,12 +65,6 @@
 	opacity: 0.4;
 }
 
-.moduleSnippetDescription {
-	font-size: 13px;
-	color: rgba(200, 169, 110, 0.35);
-	line-height: 1.45;
-}
-
 .moduleSnippetBody {
 	flex: 1;
 	display: flex;

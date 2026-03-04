@@ -4,6 +4,12 @@
 	gap: 16px;
 }
 
+.pobSettingsPanelDescription {
+	font-size: 13px;
+	color: rgba(200, 169, 110, 0.35);
+	line-height: 1.45;
+}
+
 .pobSettingsGroup {
 	display: flex;
 	flex-direction: column;
