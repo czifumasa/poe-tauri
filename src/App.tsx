@@ -589,10 +589,6 @@ function App(): JSX.Element {
 
 	const wipeSettings = useCallback(async (): Promise<void> => {
 		try {
-			if (overlayVisible) {
-				await invoke('hide_overlay');
-			}
-			await invoke('overlay_reset_to_default_position');
 			await invoke('settings_wipe');
 			setCurrentPage(null);
 			setError(null);
@@ -620,7 +616,7 @@ function App(): JSX.Element {
 		} catch (err) {
 			console.error('Failed to wipe settings:', err);
 		}
-	}, [overlayVisible]);
+	}, []);
 
 	const openSettings = useCallback((tab: SettingsTab = 'global'): void => {
 		setActiveSettingsTab(tab);

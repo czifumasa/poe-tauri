@@ -23,6 +23,12 @@ fn last_tooltip_content() -> &'static Mutex<Option<HintTooltipContentPayload>> {
     LAST_TOOLTIP_CONTENT.get_or_init(|| Mutex::new(None))
 }
 
+pub fn clear_last_tooltip_content() {
+    if let Ok(mut guard) = last_tooltip_content().lock() {
+        *guard = None;
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HintTooltipContentPayload {

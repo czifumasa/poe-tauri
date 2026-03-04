@@ -1,12 +1,13 @@
 use std::sync::Arc;
 
-use tauri::{Emitter, State};
+use tauri::{Emitter, Manager, State};
 
 use crate::error::{command_error, CommandError};
 use crate::leveling_guide::LevelingGuideManager;
 use crate::persistence::settings::LevelingGuideSettings;
 use crate::persistence::store;
 use crate::timer::TimerManager;
+use crate::window::identifiers::{HINT_TOOLTIP_WINDOW_LABEL, OVERLAY_WINDOW_LABEL};
 
 const LEVELING_GUIDE_CLEARED_EVENT: &str = "leveling_guide_cleared";
 
@@ -83,8 +84,18 @@ pub fn settings_wipe(
     manager: State<'_, Arc<LevelingGuideManager>>,
 ) -> Result<(), CommandError> {
     manager.unload()?;
-    store::wipe(&app)?;
+
+    if let Some(window) = app.get_webview_window(HINT_TOOLTIP_WINDOW_LABEL) {
+        let _ = window.destroy();
+    }
+    crate::commands::hint_tooltip::clear_last_tooltip_content();
+
+    if let Some(window) = app.get_webview_window(OVERLAY_WINDOW_LABEL) {
+        let _ = window.destroy();
+    }
     crate::commands::overlay::clear_overlay_screen_rect();
+
+    store::wipe(&app)?;
     app.emit(LEVELING_GUIDE_CLEARED_EVENT, ())
         .map_err(|e| command_error("leveling_guide_cleared_emit_failed", e.to_string()))?;
     Ok(())
