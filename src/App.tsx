@@ -668,7 +668,7 @@ function App(): JSX.Element {
 
 	const settingsContent =
 		timerDetailsVisible ? (
-			<TimerDetailsPage timerState={timerState} onBack={closeTimerDetails} />
+			<TimerDetailsPage timerState={timerState} onBack={closeTimerDetails} onSaveRun={saveTimerRun} onResetRun={resetTimerRun} />
 		) : activeSettingsTab !== null ? (
 			<SettingsPage
 				activeTab={activeSettingsTab}
