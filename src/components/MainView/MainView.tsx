@@ -57,7 +57,7 @@ export function MainView({
 
 					<div className="mainViewFooter">
 						{versionLabel !== null ? <span className="mainViewVersionBadge">{versionLabel}</span> : null}
-						<button type="button" className="mainViewSettingsButton" onClick={onOpenSettings}>
+						<button type="button" className="mainViewSettingsButton" onClick={onOpenSettings} title="Settings">
 							<SettingsGearIcon />
 						</button>
 					</div>

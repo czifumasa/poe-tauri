@@ -82,7 +82,8 @@ export function ModuleSnippet(props: ModuleSnippetProps): JSX.Element {
 						type="button"
 						className="moduleSnippetSettingsButton"
 						onClick={props.onSettingsClick}
-						disabled={props.settingsDisabled}>
+						disabled={props.settingsDisabled}
+						title="Settings">
 						<SettingsIcon />
 					</button>
 				)}
