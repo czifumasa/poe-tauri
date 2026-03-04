@@ -1,6 +1,7 @@
 import { JSX, useState } from 'react';
 import type { TimerState } from '../../../types/Timer.ts';
 import { formatElapsedMs } from '../../../utils/formatTime.ts';
+import { SectionDivider } from '../../SectionDivider/SectionDivider.tsx';
 
 import './TimerDetailsPage.css';
 
@@ -83,12 +84,7 @@ export function TimerDetailsPage({ timerState, onBack }: TimerDetailsPageProps):
 
 	return (
 		<div className="timerDetailsPage">
-			<div className="timerDetailsHeader">
-				<button type="button" className="timerDetailsBackButton" onClick={onBack}>
-					← Back
-				</button>
-				<span className="timerDetailsTitle">Timer Details</span>
-			</div>
+			<SectionDivider label="TIMER DETAILS" onBack={onBack} />
 
 			<div className="timerDetailsTabs">
 				{TABS.map((tab) => (

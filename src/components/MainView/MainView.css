@@ -5,26 +5,8 @@
 	overflow: hidden;
 }
 
-.mainViewModulesDivider {
-	display: flex;
-	align-items: center;
-	gap: 16px;
+.mainViewDividerWrapper {
 	padding: 0 24px 8px 24px;
-}
-
-.mainViewModulesDivider::before,
-.mainViewModulesDivider::after {
-	content: '';
-	flex: 1;
-	height: 1px;
-	background: rgba(200, 169, 110, 0.1);
-}
-
-.mainViewModulesDividerLabel {
-	font-size: 10px;
-	font-weight: 600;
-	letter-spacing: 2px;
-	color: rgba(200, 169, 110, 0.3);
 }
 
 .mainViewModulesGrid {

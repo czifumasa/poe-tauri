@@ -1,5 +1,7 @@
 import { JSX, type ReactNode, useCallback, useState } from 'react';
 
+import { SectionDivider } from '../SectionDivider/SectionDivider.tsx';
+
 import './SettingsPage.css';
 
 export type SettingsTab = 'global' | 'levelingGuide' | 'pobImport' | 'timers';
@@ -75,12 +77,7 @@ export function SettingsPage({
 }: SettingsPageProps): JSX.Element {
 	return (
 		<div className="settingsPage">
-			<div className="settingsPageHeader">
-				<button type="button" className="settingsPageBackButton" onClick={onBack}>
-					← Back
-				</button>
-				<span className="settingsPageTitle">Settings</span>
-			</div>
+			<SectionDivider label="SETTINGS" onBack={onBack} />
 
 			<div className="settingsPageTabs">
 				{TABS.map((tab) => (

@@ -1,5 +1,6 @@
 import { JSX, type ReactNode } from 'react';
 
+import { SectionDivider } from '../SectionDivider/SectionDivider.tsx';
 import { TitleBar } from '../TitleBar/TitleBar.tsx';
 
 import './MainView.css';
@@ -48,8 +49,8 @@ export function MainView({
 				<div className="mainViewSettingsArea">{settingsContent}</div>
 			) : (
 				<>
-					<div className="mainViewModulesDivider">
-						<span className="mainViewModulesDividerLabel">MODULES</span>
+					<div className="mainViewDividerWrapper">
+						<SectionDivider label="MODULES" />
 					</div>
 
 					<div className="mainViewModulesGrid">{children}</div>
