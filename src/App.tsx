@@ -685,9 +685,6 @@ function App(): JSX.Element {
 		<MainView
 			versionLabel={appVersion}
 			settingsContent={settingsContent}
-			overlaysVisible={overlayVisible}
-			onShowAllOverlays={showOverlay}
-			onHideAllOverlays={hideOverlay}
 			onOpenSettings={() => openSettings('global')}>
 			<LevelingGuideDashboardSnippet
 				page={currentPage}

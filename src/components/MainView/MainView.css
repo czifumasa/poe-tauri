@@ -1,23 +1,15 @@
 .mainViewContainer {
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
 	height: 100vh;
 	overflow: hidden;
-}
-
-.mainViewTopRow {
-	display: grid;
-	grid-template-columns: 1fr auto;
-	gap: 12px;
-	padding: 0 24px;
 }
 
 .mainViewModulesDivider {
 	display: flex;
 	align-items: center;
 	gap: 16px;
-	padding: 8px 24px 0;
+	padding: 0 24px 8px 24px;
 }
 
 .mainViewModulesDivider::before,
@@ -46,8 +38,19 @@
 	display: flex;
 	align-items: center;
 	justify-content: flex-end;
+	gap: 12px;
 	padding: 0 24px 16px;
 	margin-top: auto;
+}
+
+.mainViewVersionBadge {
+	padding: 4px 12px;
+	font-size: 11px;
+	font-weight: 600;
+	color: rgba(200, 169, 110, 0.35);
+	border: 1px solid rgba(200, 169, 110, 0.12);
+	border-radius: 4px;
+	letter-spacing: 0.3px;
 }
 
 .mainViewSettingsButton {
@@ -60,17 +63,19 @@
 	border-radius: 6px;
 	border: 1px solid rgba(200, 169, 110, 0.15);
 	background: transparent;
-	color: rgba(200, 169, 110, 0.4);
+	color: rgba(212, 175, 55, 0.55);
 	cursor: pointer;
 	box-shadow: none;
 	transition:
 		color 0.2s,
-		border-color 0.2s;
+		border-color 0.2s,
+		background-color 0.2s;
 }
 
 .mainViewSettingsButton:hover {
-	color: rgba(200, 169, 110, 0.7);
-	border-color: rgba(200, 169, 110, 0.35);
+	color: rgba(212, 175, 55, 0.85);
+	border-color: rgba(212, 175, 55, 0.35);
+	background: rgba(212, 175, 55, 0.06);
 }
 
 .mainViewSettingsArea {

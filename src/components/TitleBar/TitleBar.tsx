@@ -3,10 +3,20 @@ import { JSX } from 'react';
 import './TitleBar.css';
 
 interface TitleBarProps {
-	versionLabel: string | null;
+	leagueName: string;
+	leagueDetail: string;
+	characterName: string;
+	characterClass: string;
+	characterLevel: number;
 }
 
-export function TitleBar({ versionLabel }: TitleBarProps): JSX.Element {
+export function TitleBar({
+	leagueName,
+	leagueDetail,
+	characterName,
+	characterClass,
+	characterLevel,
+}: TitleBarProps): JSX.Element {
 	return (
 		<header className="titleBar">
 			<img className="titleBarIcon" src="/icon.png" alt="POE Tauri" />
@@ -15,7 +25,23 @@ export function TitleBar({ versionLabel }: TitleBarProps): JSX.Element {
 				<span className="titleBarSubtitle">Overlay Dashboard</span>
 			</div>
 			<div className="titleBarSpacer" />
-			{versionLabel !== null ? <span className="titleBarVersion">{versionLabel}</span> : null}
+			<span className="titleBarCharacterInfo">
+				<span className="titleBarCharacterGroup">
+					<span className="titleBarCharacterLabel">League</span>
+					<span className="titleBarCharacterValues">
+						<span className="titleBarCharacterSegment">{leagueName}</span>
+						<span className="titleBarCharacterDetail">{leagueDetail}</span>
+					</span>
+				</span>
+				<span className="titleBarCharacterDivider" />
+				<span className="titleBarCharacterGroup">
+					<span className="titleBarCharacterLabel">Character</span>
+					<span className="titleBarCharacterValues">
+						<span className="titleBarCharacterSegment">{characterName}</span>
+						<span className="titleBarCharacterDetail">{characterClass} · Lvl {characterLevel}</span>
+					</span>
+				</span>
+			</span>
 		</header>
 	);
 }

@@ -1,8 +1,6 @@
 import { JSX, type ReactNode } from 'react';
 
 import { TitleBar } from '../TitleBar/TitleBar.tsx';
-import { CharacterCard } from '../DashboardCards/CharacterCard.tsx';
-import { OverlaysCard } from '../DashboardCards/OverlaysCard.tsx';
 
 import './MainView.css';
 
@@ -10,9 +8,6 @@ interface MainViewProps {
 	versionLabel: string | null;
 	children: ReactNode;
 	settingsContent?: ReactNode;
-	overlaysVisible: boolean;
-	onShowAllOverlays: () => Promise<void>;
-	onHideAllOverlays: () => Promise<void>;
 	onOpenSettings: () => void;
 }
 
@@ -37,30 +32,22 @@ export function MainView({
 	versionLabel,
 	children,
 	settingsContent,
-	overlaysVisible,
-	onShowAllOverlays,
-	onHideAllOverlays,
 	onOpenSettings,
 }: MainViewProps): JSX.Element {
 	return (
 		<main className="mainViewContainer">
-			<TitleBar versionLabel={versionLabel} />
+			<TitleBar
+				leagueName="Settlers"
+				leagueDetail="Hardcore · SSF"
+				characterName="Exile"
+				characterClass="Witch"
+				characterLevel={1}
+			/>
 
 			{settingsContent !== undefined ? (
 				<div className="mainViewSettingsArea">{settingsContent}</div>
 			) : (
 				<>
-					<div className="mainViewTopRow">
-						<CharacterCard
-							leagueName="Settlers"
-							leagueDetail="Hardcore · SSF"
-							characterName="Exile"
-							characterClass="Witch"
-							characterLevel={1}
-						/>
-						<OverlaysCard allVisible={overlaysVisible} onShowAll={onShowAllOverlays} onHideAll={onHideAllOverlays} />
-					</div>
-
 					<div className="mainViewModulesDivider">
 						<span className="mainViewModulesDividerLabel">MODULES</span>
 					</div>
@@ -68,6 +55,7 @@ export function MainView({
 					<div className="mainViewModulesGrid">{children}</div>
 
 					<div className="mainViewFooter">
+						{versionLabel !== null ? <span className="mainViewVersionBadge">{versionLabel}</span> : null}
 						<button type="button" className="mainViewSettingsButton" onClick={onOpenSettings}>
 							<SettingsGearIcon />
 						</button>
