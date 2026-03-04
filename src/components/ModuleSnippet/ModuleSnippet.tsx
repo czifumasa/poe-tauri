@@ -1,9 +1,10 @@
-import { JSX, type ReactNode } from 'react';
+import { Fragment, JSX, type ReactNode } from 'react';
 
 import './ModuleSnippet.css';
 
 type ModuleSnippetAction =
 	| { type: 'primary'; label: string; onClick: () => void; disabled?: boolean }
+	| { type: 'icon'; icon: ReactNode; title: string; onClick: () => void; disabled?: boolean }
 	| { type: 'comingSoon' };
 
 interface ModuleSnippetProps {
@@ -11,7 +12,7 @@ interface ModuleSnippetProps {
 	active?: boolean;
 	disabled?: boolean;
 	hint?: string;
-	action?: ModuleSnippetAction;
+	action?: ModuleSnippetAction | readonly ModuleSnippetAction[];
 	onSettingsClick?: () => void;
 	settingsDisabled?: boolean;
 	children?: ReactNode;
@@ -39,6 +40,19 @@ function renderFooterAction(action: ModuleSnippetAction): JSX.Element {
 		return (
 			<button type="button" className="moduleSnippetComingSoonButton" disabled>
 				COMING SOON
+			</button>
+		);
+	}
+
+	if (action.type === 'icon') {
+		return (
+			<button
+				type="button"
+				className="moduleSnippetIconButton"
+				onClick={action.onClick}
+				disabled={action.disabled}
+				title={action.title}>
+				{action.icon}
 			</button>
 		);
 	}
@@ -81,7 +95,9 @@ export function ModuleSnippet(props: ModuleSnippetProps): JSX.Element {
 
 			{props.action !== undefined && (
 				<div className="moduleSnippetFooter">
-					{renderFooterAction(props.action)}
+						{(Array.isArray(props.action) ? props.action : [props.action]).map((a, i) => (
+						<Fragment key={i}>{renderFooterAction(a)}</Fragment>
+					))}
 				</div>
 			)}
 		</div>

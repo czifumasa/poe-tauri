@@ -10,6 +10,7 @@ import { ModuleSnippet } from './components/ModuleSnippet/ModuleSnippet.tsx';
 import type { LevelingGuidePageDto } from './types/Guide.ts';
 import type { BanditsChoice, LevelingGuideSettings, PobSettings } from './types/Settings.ts';
 import type { TimerSettings, TimerState } from './types/Timer.ts';
+import { TimerDetailsPage } from './components/Timer/details/TimerDetailsPage.tsx';
 import { HINT_TOOLTIP_VIEW_QUERY_VALUE, OVERLAY_VIEW_QUERY_VALUE } from './constants/WindowIdentifiers.ts';
 import { LevelingGuideOverlay } from './components/LevelingGuide/overlay/LevelingGuideOverlay.tsx';
 import { LevelingGuideDashboardSnippet } from './components/LevelingGuide/snippet/LevelingGuideDashboardSnippet.tsx';
@@ -137,6 +138,7 @@ function App(): JSX.Element {
 	const timerStateRef = useRef<TimerState>(timerState);
 	timerStateRef.current = timerState;
 	const [resetEpoch, setResetEpoch] = useState<number>(0);
+	const [timerDetailsVisible, setTimerDetailsVisible] = useState<boolean>(false);
 
 	useEffect((): (() => void) => {
 		let isDisposed = false;
@@ -621,6 +623,28 @@ function App(): JSX.Element {
 		openSettings('timers');
 	}, [openSettings]);
 
+	const openTimerDetails = useCallback((): void => {
+		setTimerDetailsVisible(true);
+	}, []);
+
+	const closeTimerDetails = useCallback((): void => {
+		setTimerDetailsVisible(false);
+	}, []);
+
+	const saveTimerRun = useCallback((): void => {
+		void invoke('timer_save_run')
+			.then(() => {
+				console.info('Timer run saved.');
+			})
+			.catch((err: unknown) => {
+				console.error('Failed to save timer run:', err);
+			});
+	}, []);
+
+	const resetTimerRun = useCallback((): void => {
+		handleTimerAction('reset');
+	}, [handleTimerAction]);
+
 	if (viewMode === 'overlay') {
 		const overlaySize = getOverlayLogicalSize(currentPage);
 		return (
@@ -643,7 +667,9 @@ function App(): JSX.Element {
 	}
 
 	const settingsContent =
-		activeSettingsTab !== null ? (
+		timerDetailsVisible ? (
+			<TimerDetailsPage timerState={timerState} onBack={closeTimerDetails} />
+		) : activeSettingsTab !== null ? (
 			<SettingsPage
 				activeTab={activeSettingsTab}
 				onTabChange={setActiveSettingsTab}
@@ -702,7 +728,14 @@ function App(): JSX.Element {
 				onOpenSettings={openLevelingGuideSettings}
 			/>
 			<PobImportDashboardSnippet pobSettings={pobSettings} onOpenSettings={openPobImportSettings} />
-			<TimerDashboardSnippet timerSettings={timerSettings} timerState={timerState} onOpenSettings={openTimerSettings} />
+			<TimerDashboardSnippet
+				timerSettings={timerSettings}
+				timerState={timerState}
+				onOpenSettings={openTimerSettings}
+				onViewDetails={openTimerDetails}
+				onSaveRun={saveTimerRun}
+				onResetRun={resetTimerRun}
+			/>
 			<ModuleSnippet
 				title="Map Tracking"
 				disabled

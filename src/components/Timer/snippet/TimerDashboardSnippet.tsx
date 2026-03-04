@@ -6,11 +6,34 @@ import { ModuleSnippet } from '../../ModuleSnippet/ModuleSnippet.tsx';
 import './TimerDashboardSnippet.css';
 
 const ACT_COUNT = 10;
+
 type TimerDashboardSnippetProps = {
 	timerSettings: TimerSettings;
 	timerState: TimerState;
 	onOpenSettings: () => void;
+	onViewDetails: () => void;
+	onSaveRun: () => void;
+	onResetRun: () => void;
 };
+
+function SaveIcon(): JSX.Element {
+	return (
+		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+			<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+			<polyline points="17 21 17 13 7 13 7 21" />
+			<polyline points="7 3 7 8 15 8" />
+		</svg>
+	);
+}
+
+function ResetIcon(): JSX.Element {
+	return (
+		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+			<polyline points="23 4 23 10 17 10" />
+			<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+		</svg>
+	);
+}
 
 const HALF = Math.ceil(ACT_COUNT / 2);
 
@@ -58,14 +81,26 @@ function TimerTimetable(props: { timerState: TimerState }): JSX.Element {
 export function TimerDashboardSnippet(props: TimerDashboardSnippetProps): JSX.Element {
 	const { timerSettings, timerState } = props;
 	const isActive = timerSettings.actTimerEnabled || timerSettings.campaignTimerEnabled;
+	const hasRunData = timerState.status !== 'idle';
 
 	return (
 		<ModuleSnippet
 			title="Timers"
 			active={isActive}
 			hint={isActive ? undefined : 'All timers are disabled. Enable act or campaign timer in settings.'}
-			onSettingsClick={props.onOpenSettings}>
-			<div className="timerSnippetBody">{isActive && <TimerTimetable timerState={timerState} />}</div>
+			onSettingsClick={props.onOpenSettings}
+			action={
+				isActive
+					? [
+							{ type: 'primary', label: 'VIEW DETAILS', onClick: props.onViewDetails },
+							{ type: 'icon', icon: <SaveIcon />, title: 'Save Run', onClick: props.onSaveRun, disabled: !hasRunData },
+							{ type: 'icon', icon: <ResetIcon />, title: 'Reset Run', onClick: props.onResetRun, disabled: !hasRunData },
+						]
+					: undefined
+			}>
+			<div className="timerSnippetBody">
+				{isActive && <TimerTimetable timerState={timerState} />}
+			</div>
 		</ModuleSnippet>
 	);
 }

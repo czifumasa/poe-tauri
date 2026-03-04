@@ -48,7 +48,7 @@
 	align-items: center;
 	gap: 8px;
 	margin-top: auto;
-	padding-top: 8px;
+	padding-top: 4px;
 }
 
 .moduleSnippetActionButton {
@@ -111,6 +111,37 @@
 .moduleSnippetSettingsButton:disabled {
 	cursor: not-allowed;
 	opacity: 0.35;
+}
+
+.moduleSnippetIconButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border-radius: 6px;
+	border: 1px solid rgba(200, 169, 110, 0.15);
+	background: transparent;
+	color: rgba(212, 175, 55, 0.55);
+	cursor: pointer;
+	box-shadow: none;
+	flex-shrink: 0;
+	transition:
+		color 0.2s,
+		border-color 0.2s,
+		background-color 0.2s;
+}
+
+.moduleSnippetIconButton:hover {
+	border-color: rgba(212, 175, 55, 0.35);
+	background: rgba(212, 175, 55, 0.06);
+	color: rgba(212, 175, 55, 0.85);
+}
+
+.moduleSnippetIconButton:disabled {
+	cursor: not-allowed;
+	opacity: 0.4;
 }
 
 .moduleSnippetComingSoonButton {
