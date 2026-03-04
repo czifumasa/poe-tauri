@@ -20,6 +20,10 @@ function getPageCounterLabel(page: LevelingGuidePageDto): string {
 	return `${page.position.pageIndex + 1} / ${page.pageCountInAct}`;
 }
 
+function getCampaignCounterLabel(page: LevelingGuidePageDto): string {
+	return `${page.campaignPageIndex + 1} / ${page.campaignPageCount}`;
+}
+
 type OverlayPositionDto =
 	| { type: 'absolute'; x: number; y: number }
 	| { type: 'layer_shell_margins'; left: number; bottom: number };
@@ -272,8 +276,14 @@ export function LevelingGuideOverlay(props: LevelingGuideOverlayProps): JSX.Elem
 				onPointerUp={endDragging}
 				onPointerCancel={endDragging}
 				style={{ touchAction: 'none', cursor: 'move' }}>
-				<div className="guideHeaderLeft">{getActLabel(page)}</div>
-				<div className="guideHeaderRight">{getPageCounterLabel(page)}</div>
+				<div className="guideHeaderRow">
+					<div className="guideHeaderLeft">{getActLabel(page)}</div>
+					<div className="guideHeaderRight">{getPageCounterLabel(page)}</div>
+				</div>
+				<div className="guideHeaderRow guideHeaderRowCampaign">
+					<div className="guideHeaderLeft">Campaign</div>
+					<div className="guideHeaderRight">{getCampaignCounterLabel(page)}</div>
+				</div>
 			</div>
 			<div className="guideSteps">{page.lines.map((line, lineIndex) => renderLine(line, lineIndex))}</div>
 			<div className="guideNavigation">

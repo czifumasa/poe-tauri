@@ -135,6 +135,8 @@ pub struct LevelingGuidePageDto {
     pub lines: Vec<LevelingGuideLineDto>,
     pub has_previous: bool,
     pub has_next: bool,
+    pub campaign_page_index: usize,
+    pub campaign_page_count: usize,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub target_area: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -88,7 +88,7 @@ function getOverlayLogicalSize(page: LevelingGuidePageDto | null): {
 	heightPx: number;
 	variant: OverlayHeightVariant;
 } {
-	const headerHeightPx = 36;
+	const headerHeightPx = 52;
 	const footerHeightPx = 36;
 	const lineHeightPx = 24;
 	const widthPx = 340;

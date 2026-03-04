@@ -1192,6 +1192,18 @@ pub(crate) fn current_page_dto(
 
     loaded.target_area_id = target_area_id.clone();
 
+    let mut campaign_page_index: usize = 0;
+    let mut campaign_page_count: usize = 0;
+    for (act_index, act_pages) in loaded.guide.iter().enumerate() {
+        let act_eligible_count = eligible_page_indices(act_pages, settings).len();
+        campaign_page_count += act_eligible_count;
+        if act_index < loaded.position.act_index {
+            campaign_page_index += act_eligible_count;
+        } else if act_index == loaded.position.act_index {
+            campaign_page_index += display_page_index;
+        }
+    }
+
     Ok(LevelingGuidePageDto {
         guide_path: loaded.guide_path.clone(),
         position: GuidePosition {
@@ -1203,6 +1215,8 @@ pub(crate) fn current_page_dto(
         lines,
         has_previous,
         has_next,
+        campaign_page_index,
+        campaign_page_count,
         target_area,
         target_area_id,
     })

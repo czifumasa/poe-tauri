@@ -32,6 +32,8 @@ export interface LevelingGuidePageDto {
 	lines: LevelingGuideLineDto[];
 	hasPrevious: boolean;
 	hasNext: boolean;
+	campaignPageIndex: number;
+	campaignPageCount: number;
 	targetArea?: string;
 	targetAreaId?: string;
 }
