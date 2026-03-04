@@ -125,6 +125,52 @@
 	max-height: 36px;
 }
 
+.guideHeaderOverlay .guideHeaderCenter {
+	display: flex;
+	align-items: center;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	color: rgba(255, 255, 255, 0.6);
+	letter-spacing: 0.08em;
+	font-size: 10px;
+}
+
+.guideTimerButtonGroup {
+	display: flex;
+	gap: 4px;
+	align-items: center;
+}
+
+.guideTimerButton {
+	flex: 0 0 auto;
+	background: none;
+	border: 1px solid #222;
+	box-shadow: none;
+	color: #555;
+	padding: 2px 8px;
+	border-radius: 3px;
+	font-size: 10px;
+	line-height: 1;
+	cursor: pointer;
+	transition:
+		border-color 0.15s ease,
+		color 0.15s ease;
+}
+
+.guideTimerButton:hover {
+	border-color: rgba(200, 169, 110, 0.35);
+	color: rgba(200, 169, 110, 0.85);
+}
+
+.guideTimerButton:active {
+	background: rgba(26, 26, 26, 0.98);
+}
+
+.guideTimerButtonReset:hover {
+	border-color: rgba(180, 60, 60, 0.5);
+	color: rgba(220, 80, 80, 0.85);
+}
+
 .guideNavButton {
 	flex: 0 0 auto;
 	min-width: 96px;

@@ -1,4 +1,4 @@
-import { JSX, useCallback, useEffect, useMemo, useState } from 'react';
+import { JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { getVersion } from '@tauri-apps/api/app';
@@ -9,6 +9,7 @@ import { OverlayPanel } from './components/OverlayPanel/OverlayPanel';
 import { ModuleSnippet } from './components/ModuleSnippet/ModuleSnippet.tsx';
 import type { LevelingGuidePageDto } from './types/Guide.ts';
 import type { BanditsChoice, LevelingGuideSettings, PobSettings } from './types/Settings.ts';
+import type { TimerSettings, TimerState } from './types/Timer.ts';
 import { HINT_TOOLTIP_VIEW_QUERY_VALUE, OVERLAY_VIEW_QUERY_VALUE } from './constants/WindowIdentifiers.ts';
 import { LevelingGuideOverlay } from './components/LevelingGuide/overlay/LevelingGuideOverlay.tsx';
 import { LevelingGuideDashboardSnippet } from './components/LevelingGuide/snippet/LevelingGuideDashboardSnippet.tsx';
@@ -16,6 +17,8 @@ import { LevelingGuideSettingsPanel } from './components/LevelingGuide/settings/
 import { HintTooltipView } from './components/HintTooltip/HintTooltipView.tsx';
 import { PobImportDashboardSnippet } from './components/PobImport/snippet/PobImportDashboardSnippet.tsx';
 import { PobImportSettingsPanel } from './components/PobImport/settings/PobImportSettingsPanel.tsx';
+import { TimerDashboardSnippet } from './components/Timer/snippet/TimerDashboardSnippet.tsx';
+import { TimerSettingsPanel } from './components/Timer/settings/TimerSettingsPanel.tsx';
 import { SettingsPage, type SettingsTab } from './components/SettingsPage/SettingsPage.tsx';
 
 type ViewMode = 'main' | 'overlay' | 'hintTooltip';
@@ -119,6 +122,20 @@ function App(): JSX.Element {
 	const [settingsLoading, setSettingsLoading] = useState<boolean>(true);
 	const [pobSettings, setPobSettings] = useState<PobSettings>({ slots: [], currentSlotIndex: null });
 	const [pobSettingsLoading, setPobSettingsLoading] = useState<boolean>(true);
+	const [timerSettings, setTimerSettings] = useState<TimerSettings>({
+		actTimerEnabled: false,
+		campaignTimerEnabled: false,
+	});
+	const [timerState, setTimerState] = useState<TimerState>({
+		status: 'idle',
+		currentActIndex: 0,
+		actElapsedMs: Array.from({ length: 10 }, () => 0),
+		currentActElapsedMs: 0,
+		campaignElapsedMs: 0,
+	});
+	const timerTickRef = useRef<number | null>(null);
+	const timerStateRef = useRef<TimerState>(timerState);
+	timerStateRef.current = timerState;
 	const [resetEpoch, setResetEpoch] = useState<number>(0);
 
 	useEffect((): (() => void) => {
@@ -147,15 +164,19 @@ function App(): JSX.Element {
 		setPobSettingsLoading(true);
 		void (async (): Promise<void> => {
 			try {
-				const [persistedSettings, persistedPobSettings] = await Promise.all([
+				const [persistedSettings, persistedPobSettings, persistedTimerSettings, persistedTimerState] = await Promise.all([
 					invoke<LevelingGuideSettings>('settings_get_leveling_guide'),
 					invoke<PobSettings>('pob_settings_get'),
+					invoke<TimerSettings>('timer_get_settings'),
+					invoke<TimerState>('timer_load_state'),
 				]);
 				if (isDisposed) {
 					return;
 				}
 				setSettings(persistedSettings);
 				setPobSettings(persistedPobSettings);
+				setTimerSettings(persistedTimerSettings);
+				setTimerState(persistedTimerState);
 			} catch (err) {
 				console.error('Failed to initialize settings:', err);
 			} finally {
@@ -272,10 +293,11 @@ function App(): JSX.Element {
 		let isDisposed = false;
 		let unlistenPageUpdated: (() => void) | null = null;
 		let unlistenCleared: (() => void) | null = null;
+		let unlistenTimerState: (() => void) | null = null;
 
 		void (async (): Promise<void> => {
 			try {
-				const [pageUpdatedUnsub, clearedUnsub] = await Promise.all([
+				const [pageUpdatedUnsub, clearedUnsub, timerStateUnsub] = await Promise.all([
 					listen<LevelingGuidePageDto>('leveling_guide_page_updated', (event) => {
 						if (isDisposed) {
 							return;
@@ -288,9 +310,16 @@ function App(): JSX.Element {
 						}
 						setCurrentPage(null);
 					}),
+					listen<TimerState>('timer_state_updated', (event) => {
+						if (isDisposed) {
+							return;
+						}
+						setTimerState(event.payload);
+					}),
 				]);
 				unlistenPageUpdated = pageUpdatedUnsub;
 				unlistenCleared = clearedUnsub;
+				unlistenTimerState = timerStateUnsub;
 			} catch (err) {
 				console.error('Failed to listen for leveling guide updates:', err);
 			}
@@ -304,8 +333,80 @@ function App(): JSX.Element {
 			if (unlistenCleared !== null) {
 				unlistenCleared();
 			}
+			if (unlistenTimerState !== null) {
+				unlistenTimerState();
+			}
 		};
 	}, []);
+
+	useEffect((): (() => void) => {
+		if (timerState.status !== 'running') {
+			if (timerTickRef.current !== null) {
+				window.clearInterval(timerTickRef.current);
+				timerTickRef.current = null;
+			}
+			return (): void => {};
+		}
+
+		const startedAt = Date.now();
+		const baseActMs = timerState.currentActElapsedMs;
+		const baseCampaignMs = timerState.campaignElapsedMs;
+
+		timerTickRef.current = window.setInterval((): void => {
+			const elapsed = Date.now() - startedAt;
+			setTimerState((prev) => ({
+				...prev,
+				currentActElapsedMs: baseActMs + elapsed,
+				campaignElapsedMs: baseCampaignMs + elapsed,
+			}));
+		}, 1000);
+
+		return (): void => {
+			if (timerTickRef.current !== null) {
+				window.clearInterval(timerTickRef.current);
+				timerTickRef.current = null;
+			}
+		};
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [timerState.status]);
+
+	const handleTimerAction = useCallback((action: 'start' | 'pause' | 'resume' | 'reset'): void => {
+		const commandMap = {
+			start: 'timer_start',
+			pause: 'timer_pause',
+			resume: 'timer_resume',
+			reset: 'timer_reset',
+		} as const;
+		void invoke<TimerState>(commandMap[action])
+			.then((state) => {
+				setTimerState(state);
+			})
+			.catch((err: unknown) => {
+				console.error(`Failed to ${action} timer:`, err);
+			});
+	}, []);
+
+	const updateTimerActEnabled = useCallback((nextValue: boolean): void => {
+		const updated: TimerSettings = { ...timerSettings, actTimerEnabled: nextValue };
+		setTimerSettings(updated);
+		void invoke('timer_set_settings', {
+			actTimerEnabled: updated.actTimerEnabled,
+			campaignTimerEnabled: updated.campaignTimerEnabled,
+		}).catch((err: unknown) => {
+			console.error('Failed to persist timer settings:', err);
+		});
+	}, [timerSettings]);
+
+	const updateTimerCampaignEnabled = useCallback((nextValue: boolean): void => {
+		const updated: TimerSettings = { ...timerSettings, campaignTimerEnabled: nextValue };
+		setTimerSettings(updated);
+		void invoke('timer_set_settings', {
+			actTimerEnabled: updated.actTimerEnabled,
+			campaignTimerEnabled: updated.campaignTimerEnabled,
+		}).catch((err: unknown) => {
+			console.error('Failed to persist timer settings:', err);
+		});
+	}, [timerSettings]);
 
 	const updateLeagueStart = useCallback(
 		async (nextValue: boolean): Promise<void> => {
@@ -479,6 +580,14 @@ function App(): JSX.Element {
 				gemsEnabled: false,
 			});
 			setPobSettings({ slots: [], currentSlotIndex: null });
+			setTimerSettings({ actTimerEnabled: false, campaignTimerEnabled: false });
+			setTimerState({
+				status: 'idle',
+				currentActIndex: 0,
+				actElapsedMs: Array.from({ length: 10 }, () => 0),
+				currentActElapsedMs: 0,
+				campaignElapsedMs: 0,
+			});
 			setResetEpoch((prev) => prev + 1);
 		} catch (err) {
 			console.error('Failed to wipe settings:', err);
@@ -501,11 +610,23 @@ function App(): JSX.Element {
 		openSettings('pobImport');
 	}, [openSettings]);
 
+	const openTimerSettings = useCallback((): void => {
+		openSettings('timers');
+	}, [openSettings]);
+
 	if (viewMode === 'overlay') {
 		const overlaySize = getOverlayLogicalSize(currentPage);
 		return (
 			<OverlayPanel logicalWidthPx={overlaySize.widthPx} logicalHeightPx={overlaySize.heightPx}>
-				<LevelingGuideOverlay page={currentPage} loading={loading} error={error} onNavigate={handleNavigate} />
+				<LevelingGuideOverlay
+					page={currentPage}
+					loading={loading}
+					error={error}
+					onNavigate={handleNavigate}
+					timerSettings={timerSettings}
+					timerState={timerState}
+					onTimerAction={handleTimerAction}
+				/>
 			</OverlayPanel>
 		);
 	}
@@ -548,6 +669,15 @@ function App(): JSX.Element {
 						onSetCurrentSlot={setCurrentPobSlot}
 					/>
 				}
+				timerContent={
+					<TimerSettingsPanel
+						actTimerEnabled={timerSettings.actTimerEnabled}
+						campaignTimerEnabled={timerSettings.campaignTimerEnabled}
+						onActTimerEnabledChange={updateTimerActEnabled}
+						onCampaignTimerEnabledChange={updateTimerCampaignEnabled}
+						settingsLoading={settingsLoading}
+					/>
+				}
 			/>
 		) : undefined;
 
@@ -571,6 +701,11 @@ function App(): JSX.Element {
 				onOpenSettings={openLevelingGuideSettings}
 			/>
 			<PobImportDashboardSnippet pobSettings={pobSettings} onOpenSettings={openPobImportSettings} />
+			<TimerDashboardSnippet
+				timerSettings={timerSettings}
+				timerState={timerState}
+				onOpenSettings={openTimerSettings}
+			/>
 			<ModuleSnippet
 				title="Map Tracking"
 				description="Tracks completed maps and their content."

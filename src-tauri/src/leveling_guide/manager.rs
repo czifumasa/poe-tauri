@@ -11,6 +11,7 @@ use super::gem_db::load_gem_database;
 use super::gem_rewards::{inject_gem_rewards, prune_gem_quest_lines};
 use super::io::read_guide_content;
 use super::log_watcher::{spawn_log_watcher, LogWatcherHandle};
+use crate::timer::TimerManager;
 use super::parser::{
     clamp_position, current_page_dto, next_position, parse_guide_json, previous_position,
 };
@@ -408,11 +409,12 @@ impl LevelingGuideManager {
     pub fn start_log_watcher(
         self: &Arc<Self>,
         app: &AppHandle,
+        timer_manager: &Arc<TimerManager>,
         log_path: &str,
     ) -> Result<(), CommandError> {
         self.stop_log_watcher();
 
-        let handle = spawn_log_watcher(app, self, log_path)
+        let handle = spawn_log_watcher(app, self, timer_manager, log_path)
             .map_err(|e| command_error("log_watcher_start_failed", e))?;
 
         let mut guard = self
@@ -435,6 +437,7 @@ impl LevelingGuideManager {
     pub fn restart_log_watcher_if_configured(
         self: &Arc<Self>,
         app: &AppHandle,
+        timer_manager: &Arc<TimerManager>,
     ) -> Result<(), CommandError> {
         let settings = Self::load_settings(app)?;
         let Some(log_path) = settings.client_log_path.as_deref() else {
@@ -449,6 +452,6 @@ impl LevelingGuideManager {
             return Ok(());
         }
 
-        self.start_log_watcher(app, log_path)
+        self.start_log_watcher(app, timer_manager, log_path)
     }
 }

@@ -87,3 +87,24 @@ impl Default for PobSettings {
 impl PobSettings {
     pub const STORE_KEY: &'static str = "pob_settings";
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TimerSettings {
+    #[serde(default)]
+    pub act_timer_enabled: bool,
+    #[serde(default)]
+    pub campaign_timer_enabled: bool,
+}
+
+impl Default for TimerSettings {
+    fn default() -> Self {
+        Self {
+            act_timer_enabled: false,
+            campaign_timer_enabled: false,
+        }
+    }
+}
+
+impl TimerSettings {
+    pub const STORE_KEY: &'static str = "timer_settings";
+}

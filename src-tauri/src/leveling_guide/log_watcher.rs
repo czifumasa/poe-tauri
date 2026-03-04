@@ -9,6 +9,7 @@ use tauri::Emitter;
 
 use crate::leveling_guide::progress::save_leveling_guide_progress;
 use crate::leveling_guide::LevelingGuideManager;
+use crate::timer::TimerManager;
 
 const POLL_INTERVAL: Duration = Duration::from_millis(500);
 const LEVELING_GUIDE_PAGE_UPDATED_EVENT: &str = "leveling_guide_page_updated";
@@ -73,6 +74,7 @@ fn extract_last_area_id(content: &str) -> Option<String> {
 pub(crate) fn spawn_log_watcher(
     app: &AppHandle,
     manager: &Arc<LevelingGuideManager>,
+    timer_manager: &Arc<TimerManager>,
     log_path: &str,
 ) -> Result<LogWatcherHandle, String> {
     let path = Path::new(log_path);
@@ -87,10 +89,11 @@ pub(crate) fn spawn_log_watcher(
 
     let app_handle = app.clone();
     let manager = Arc::clone(manager);
+    let timer_manager = Arc::clone(timer_manager);
     let log_path_owned = log_path.to_string();
 
     std::thread::spawn(move || {
-        if let Err(err) = poll_loop(&app_handle, &manager, &log_path_owned, &stop_flag) {
+        if let Err(err) = poll_loop(&app_handle, &manager, &timer_manager, &log_path_owned, &stop_flag) {
             eprintln!("Log watcher error: {err}");
         }
     });
@@ -101,6 +104,7 @@ pub(crate) fn spawn_log_watcher(
 fn poll_loop(
     app: &AppHandle,
     manager: &LevelingGuideManager,
+    timer_manager: &TimerManager,
     log_path: &str,
     stop_flag: &AtomicBool,
 ) -> Result<(), String> {
@@ -132,11 +136,25 @@ fn poll_loop(
             continue;
         };
 
+        let act_index_before = manager
+            .get_current_progress()
+            .ok()
+            .map(|p| p.position.act_index);
+
         match manager.try_auto_advance(app, &area_id) {
             Ok(Some(page)) => {
                 if let Ok(progress) = manager.get_current_progress() {
                     if let Err(err) = save_leveling_guide_progress(app, &progress) {
                         eprintln!("Log watcher: failed to persist progress: {:?}", err);
+                    }
+                }
+
+                if let Some(prev_act) = act_index_before {
+                    let new_act = page.position.act_index;
+                    if new_act != prev_act {
+                        if let Err(err) = timer_manager.notify_act_completed(app, prev_act) {
+                            eprintln!("Log watcher: failed to notify timer of act completion: {:?}", err);
+                        }
                     }
                 }
 

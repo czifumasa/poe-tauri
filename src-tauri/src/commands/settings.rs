@@ -6,6 +6,7 @@ use crate::error::{command_error, CommandError};
 use crate::leveling_guide::LevelingGuideManager;
 use crate::persistence::settings::LevelingGuideSettings;
 use crate::persistence::store;
+use crate::timer::TimerManager;
 
 const LEVELING_GUIDE_CLEARED_EVENT: &str = "leveling_guide_cleared";
 
@@ -60,12 +61,13 @@ pub fn settings_get_leveling_guide(
 pub fn settings_set_leveling_guide(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
+    timer_manager: State<'_, Arc<TimerManager>>,
     settings: LevelingGuideSettingsDto,
 ) -> Result<(), CommandError> {
     let persisted = leveling_guide_settings_from_dto(settings);
     store::set_value(&app, LevelingGuideSettings::STORE_KEY, &persisted)?;
 
-    if let Err(err) = manager.restart_log_watcher_if_configured(&app) {
+    if let Err(err) = manager.restart_log_watcher_if_configured(&app, &timer_manager) {
         eprintln!(
             "Failed to restart log watcher after settings change: {:?}",
             err

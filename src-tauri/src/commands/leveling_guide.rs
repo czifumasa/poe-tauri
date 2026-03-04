@@ -6,6 +6,7 @@ use crate::leveling_guide::progress::{has_persisted_leveling_guide_progress, loa
 use crate::leveling_guide::{LevelingGuideManager, LevelingGuidePageDto};
 use crate::persistence::settings::{PobSettings, PobSlot};
 use crate::persistence::store;
+use crate::timer::TimerManager;
 use tauri::AppHandle;
 use tauri::Emitter;
 use tauri::State;
@@ -20,14 +21,18 @@ fn emit_page_updated(app: &AppHandle, page: &LevelingGuidePageDto) -> Result<(),
         .map_err(|e| command_error("leveling_guide_emit_failed", e.to_string()))
 }
 
-fn ensure_loaded(app: &AppHandle, manager: &Arc<LevelingGuideManager>) -> Result<(), CommandError> {
+fn ensure_loaded(
+    app: &AppHandle,
+    manager: &Arc<LevelingGuideManager>,
+    timer_manager: &Arc<TimerManager>,
+) -> Result<(), CommandError> {
     if manager.is_loaded()? {
         return Ok(());
     }
 
     let progress = load_leveling_guide_progress(app, DEFAULT_GUIDE_RELATIVE_RESOURCE_PATH)?;
     let _ = manager.load(app, progress)?;
-    start_log_watcher_if_configured(app, manager);
+    start_log_watcher_if_configured(app, manager, timer_manager);
     Ok(())
 }
 
@@ -39,8 +44,12 @@ fn persist_current_progress(
     save_leveling_guide_progress(app, &progress)
 }
 
-fn start_log_watcher_if_configured(app: &AppHandle, manager: &Arc<LevelingGuideManager>) {
-    if let Err(err) = manager.restart_log_watcher_if_configured(app) {
+fn start_log_watcher_if_configured(
+    app: &AppHandle,
+    manager: &Arc<LevelingGuideManager>,
+    timer_manager: &Arc<TimerManager>,
+) {
+    if let Err(err) = manager.restart_log_watcher_if_configured(app, timer_manager) {
         eprintln!("Failed to start log watcher: {:?}", err);
     }
 }
@@ -49,6 +58,7 @@ fn start_log_watcher_if_configured(app: &AppHandle, manager: &Arc<LevelingGuideM
 pub fn load_guide(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
+    timer_manager: State<'_, Arc<TimerManager>>,
 ) -> Result<LevelingGuidePageDto, CommandError> {
     if manager.is_loaded()? {
         let page = manager.get_current_page(&app)?;
@@ -58,7 +68,7 @@ pub fn load_guide(
 
     let progress = load_leveling_guide_progress(&app, DEFAULT_GUIDE_RELATIVE_RESOURCE_PATH)?;
     let page = manager.load(&app, progress)?;
-    start_log_watcher_if_configured(&app, &manager);
+    start_log_watcher_if_configured(&app, &manager, &timer_manager);
     emit_page_updated(&app, &page)?;
     Ok(page)
 }
@@ -87,8 +97,9 @@ pub fn leveling_guide_get_current_page(
 pub fn leveling_guide_next_page(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
+    timer_manager: State<'_, Arc<TimerManager>>,
 ) -> Result<LevelingGuidePageDto, CommandError> {
-    ensure_loaded(&app, &manager)?;
+    ensure_loaded(&app, &manager, &timer_manager)?;
     let page = manager.next_page(&app)?;
     persist_current_progress(&app, &manager)?;
     emit_page_updated(&app, &page)?;
@@ -99,8 +110,9 @@ pub fn leveling_guide_next_page(
 pub fn leveling_guide_previous_page(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
+    timer_manager: State<'_, Arc<TimerManager>>,
 ) -> Result<LevelingGuidePageDto, CommandError> {
-    ensure_loaded(&app, &manager)?;
+    ensure_loaded(&app, &manager, &timer_manager)?;
     let page = manager.previous_page(&app)?;
     persist_current_progress(&app, &manager)?;
     emit_page_updated(&app, &page)?;
@@ -111,8 +123,9 @@ pub fn leveling_guide_previous_page(
 pub fn leveling_guide_reset_progress(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
+    timer_manager: State<'_, Arc<TimerManager>>,
 ) -> Result<LevelingGuidePageDto, CommandError> {
-    ensure_loaded(&app, &manager)?;
+    ensure_loaded(&app, &manager, &timer_manager)?;
     let page = manager.reset_progress(&app)?;
     persist_current_progress(&app, &manager)?;
     emit_page_updated(&app, &page)?;
@@ -123,9 +136,10 @@ pub fn leveling_guide_reset_progress(
 pub fn leveling_guide_import_pob(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
+    timer_manager: State<'_, Arc<TimerManager>>,
     pob_code: String,
 ) -> Result<LevelingGuidePageDto, CommandError> {
-    ensure_loaded(&app, &manager)?;
+    ensure_loaded(&app, &manager, &timer_manager)?;
     let pob_data = pob_parser::parse_pob_export(&pob_code)?;
     let page = manager.import_pob(&app, pob_data.clone())?;
 
@@ -156,8 +170,9 @@ pub fn leveling_guide_get_pob_status(
 pub fn leveling_guide_reapply_gems(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
+    timer_manager: State<'_, Arc<TimerManager>>,
 ) -> Result<LevelingGuidePageDto, CommandError> {
-    ensure_loaded(&app, &manager)?;
+    ensure_loaded(&app, &manager, &timer_manager)?;
     let page = manager.reapply_gems(&app)?;
     persist_current_progress(&app, &manager)?;
     emit_page_updated(&app, &page)?;

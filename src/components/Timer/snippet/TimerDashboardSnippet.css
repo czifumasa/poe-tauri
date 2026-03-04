@@ -1,0 +1,58 @@
+.timerSnippetBody {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.timerSnippetTimetable {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 2px 12px;
+}
+
+.timerSnippetCell {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 12px;
+	color: rgba(200, 169, 110, 0.55);
+}
+
+.timerSnippetCell--active {
+	color: rgba(212, 175, 55, 0.95);
+	font-weight: 600;
+}
+
+.timerSnippetTotal {
+	grid-column: 1 / -1;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 12px;
+	border-top: 1px solid rgba(200, 169, 110, 0.12);
+	padding-top: 4px;
+	margin-top: 2px;
+	color: rgba(255, 255, 255, 0.7);
+	font-weight: 600;
+}
+
+.timerSnippetActLabel {
+	min-width: 36px;
+}
+
+.timerSnippetTimeLabel {
+	font-variant-numeric: tabular-nums;
+}
+
+.timerSnippetStatus {
+	font-size: 12px;
+	color: rgba(200, 169, 110, 0.55);
+}
+
+.timerSnippetStatusRunning {
+	color: rgba(100, 200, 100, 0.8);
+}
+
+.timerSnippetStatusPaused {
+	color: rgba(220, 180, 60, 0.8);
+}

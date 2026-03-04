@@ -1,15 +1,22 @@
 import { Fragment, JSX, type PointerEvent as ReactPointerEvent, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import type { LevelingGuideLineDto, LevelingGuidePageDto, LevelingGuideSpanDto } from '../../../types/Guide.ts';
+import type { TimerSettings, TimerState } from '../../../types/Timer.ts';
+import { formatElapsedMs } from '../../../utils/formatTime.ts';
 
 import '../LevelingGuideCommon.css';
 import './LevelingGuideOverlay.css';
+
+type TimerAction = 'start' | 'pause' | 'resume' | 'reset';
 
 type LevelingGuideOverlayProps = {
 	page: LevelingGuidePageDto | null;
 	loading: boolean;
 	error: string | null;
 	onNavigate: (direction: 'previous' | 'next') => Promise<void>;
+	timerSettings: TimerSettings;
+	timerState: TimerState;
+	onTimerAction: (action: TimerAction) => void;
 };
 
 function getActLabel(page: LevelingGuidePageDto): string {
@@ -267,6 +274,42 @@ export function LevelingGuideOverlay(props: LevelingGuideOverlayProps): JSX.Elem
 		void onNavigate('next');
 	};
 
+	const { timerSettings, timerState, onTimerAction } = props;
+	const anyTimerEnabled = timerSettings.actTimerEnabled || timerSettings.campaignTimerEnabled;
+
+	const renderTimerControls = (): JSX.Element | null => {
+		if (!anyTimerEnabled) {
+			return null;
+		}
+
+		if (timerState.status === 'idle') {
+			return (
+				<button type="button" className="guideTimerButton guideTimerButtonStart" onClick={() => onTimerAction('start')}>
+					{'▶'}
+				</button>
+			);
+		}
+
+		if (timerState.status === 'running') {
+			return (
+				<button type="button" className="guideTimerButton guideTimerButtonPause" onClick={() => onTimerAction('pause')}>
+					{'⏸'}
+				</button>
+			);
+		}
+
+		return (
+			<div className="guideTimerButtonGroup">
+				<button type="button" className="guideTimerButton guideTimerButtonResume" onClick={() => onTimerAction('resume')}>
+					{'▶'}
+				</button>
+				<button type="button" className="guideTimerButton guideTimerButtonReset" onClick={() => onTimerAction('reset')}>
+					{'⟲'}
+				</button>
+			</div>
+		);
+	};
+
 	return (
 		<div className="guideContent guideContentOverlay">
 			<div
@@ -278,10 +321,16 @@ export function LevelingGuideOverlay(props: LevelingGuideOverlayProps): JSX.Elem
 				style={{ touchAction: 'none', cursor: 'move' }}>
 				<div className="guideHeaderRow">
 					<div className="guideHeaderLeft">{getActLabel(page)}</div>
+					{timerSettings.actTimerEnabled && (
+						<div className="guideHeaderCenter">{formatElapsedMs(timerState.currentActElapsedMs)}</div>
+					)}
 					<div className="guideHeaderRight">{getPageCounterLabel(page)}</div>
 				</div>
 				<div className="guideHeaderRow guideHeaderRowCampaign">
 					<div className="guideHeaderLeft">Campaign</div>
+					{timerSettings.campaignTimerEnabled && (
+						<div className="guideHeaderCenter">{formatElapsedMs(timerState.campaignElapsedMs)}</div>
+					)}
 					<div className="guideHeaderRight">{getCampaignCounterLabel(page)}</div>
 				</div>
 			</div>
@@ -294,6 +343,7 @@ export function LevelingGuideOverlay(props: LevelingGuideOverlayProps): JSX.Elem
 					disabled={!page.hasPrevious || loading}>
 					{'← PREV'}
 				</button>
+				{renderTimerControls()}
 				<button type="button" className="guideNavButton" onClick={handleNext} disabled={!page.hasNext || loading}>
 					{'NEXT →'}
 				</button>

@@ -10,6 +10,7 @@ mod commands;
 mod error;
 mod leveling_guide;
 mod persistence;
+mod timer;
 mod window;
 
 use commands::common::*;
@@ -18,7 +19,9 @@ use commands::leveling_guide::*;
 use commands::overlay::*;
 use commands::pob_settings::*;
 use commands::settings::*;
+use commands::timer::*;
 use leveling_guide::LevelingGuideManager;
+use timer::TimerManager;
 
 fn lock_webview_window_inner_size(
     window: &tauri::WebviewWindow,
@@ -69,12 +72,14 @@ fn lock_webview_window_inner_size(
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let manager = Arc::new(LevelingGuideManager::default());
+    let timer_manager = Arc::new(TimerManager::default());
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_dialog::init())
         .manage(Arc::clone(&manager))
+        .manage(Arc::clone(&timer_manager))
         .invoke_handler(tauri::generate_handler![
             greet,
             load_guide,
@@ -103,7 +108,15 @@ pub fn run() {
             pob_settings_get,
             pob_settings_add_slot,
             pob_settings_remove_slot,
-            pob_settings_set_current_slot
+            pob_settings_set_current_slot,
+            timer_get_settings,
+            timer_set_settings,
+            timer_get_state,
+            timer_load_state,
+            timer_start,
+            timer_pause,
+            timer_resume,
+            timer_reset
         ])
         .setup(move |app| {
             window::init_native_window();
@@ -171,9 +184,11 @@ pub fn run() {
                 });
             }
 
-            if let Err(err) = manager.restart_log_watcher_if_configured(&app_handle) {
+            if let Err(err) = manager.restart_log_watcher_if_configured(&app_handle, &timer_manager) {
                 eprintln!("Failed to start log watcher on startup: {:?}", err);
             }
+
+            timer_manager.start_auto_save(&app_handle);
 
             Ok(())
         })

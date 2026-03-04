@@ -2,7 +2,7 @@ import { JSX, type ReactNode, useCallback, useState } from 'react';
 
 import './SettingsPage.css';
 
-export type SettingsTab = 'global' | 'levelingGuide' | 'pobImport';
+export type SettingsTab = 'global' | 'levelingGuide' | 'pobImport' | 'timers';
 
 type TabDefinition = {
 	readonly id: SettingsTab;
@@ -13,6 +13,7 @@ const TABS: readonly TabDefinition[] = [
 	{ id: 'global', label: 'Global' },
 	{ id: 'levelingGuide', label: 'Leveling Guide' },
 	{ id: 'pobImport', label: 'PoB Import' },
+	{ id: 'timers', label: 'Timers' },
 ] as const;
 
 interface SettingsPageProps {
@@ -22,6 +23,7 @@ interface SettingsPageProps {
 	onResetAppData: () => Promise<void>;
 	levelingGuideContent: ReactNode;
 	pobImportContent: ReactNode;
+	timerContent: ReactNode;
 }
 
 function ResetAppDataSection(props: { onReset: () => Promise<void> }): JSX.Element {
@@ -69,6 +71,7 @@ export function SettingsPage({
 	onResetAppData,
 	levelingGuideContent,
 	pobImportContent,
+	timerContent,
 }: SettingsPageProps): JSX.Element {
 	return (
 		<div className="settingsPage">
@@ -95,6 +98,7 @@ export function SettingsPage({
 				{activeTab === 'global' && <ResetAppDataSection onReset={onResetAppData} />}
 				{activeTab === 'levelingGuide' && levelingGuideContent}
 				{activeTab === 'pobImport' && pobImportContent}
+				{activeTab === 'timers' && timerContent}
 			</div>
 		</div>
 	);
