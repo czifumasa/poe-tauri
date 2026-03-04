@@ -125,8 +125,8 @@ function App(): JSX.Element {
 	const [pobSettingsLoading, setPobSettingsLoading] = useState<boolean>(true);
 	const [timerSettings, setTimerSettings] = useState<TimerSettings>({
 		enabled: false,
-		displayActTimer: false,
-		displayCampaignTimer: false,
+		displayActTimer: true,
+		displayCampaignTimer: true,
 	});
 	const [timerState, setTimerState] = useState<TimerState>({
 		status: 'idle',
@@ -608,7 +608,7 @@ function App(): JSX.Element {
 				gemsEnabled: false,
 			});
 			setPobSettings({ slots: [], currentSlotIndex: null });
-			setTimerSettings({ enabled: false, displayActTimer: false, displayCampaignTimer: false });
+			setTimerSettings({ enabled: false, displayActTimer: true, displayCampaignTimer: true });
 			setTimerState({
 				status: 'idle',
 				currentActIndex: 0,

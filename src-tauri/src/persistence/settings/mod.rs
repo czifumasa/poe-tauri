@@ -92,9 +92,9 @@ impl PobSettings {
 pub struct TimerSettings {
     #[serde(default)]
     pub enabled: bool,
-    #[serde(default)]
+    #[serde(default = "default_true")]
     pub display_act_timer: bool,
-    #[serde(default)]
+    #[serde(default = "default_true")]
     pub display_campaign_timer: bool,
 }
 
@@ -102,8 +102,8 @@ impl Default for TimerSettings {
     fn default() -> Self {
         Self {
             enabled: false,
-            display_act_timer: false,
-            display_campaign_timer: false,
+            display_act_timer: true,
+            display_campaign_timer: true,
         }
     }
 }
