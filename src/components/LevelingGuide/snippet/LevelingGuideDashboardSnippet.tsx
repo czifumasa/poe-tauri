@@ -63,7 +63,6 @@ export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnipp
 		<ModuleSnippet
 			title="Leveling Guide"
 			active={isLoaded}
-			hint={isLoaded ? undefined : 'No guide loaded. Load a guide to track your leveling progress.'}
 			action={
 				isLoaded
 					? { type: 'primary', label: overlayToggleLabel, onClick: () => void handleOverlayToggle(), disabled: loading }

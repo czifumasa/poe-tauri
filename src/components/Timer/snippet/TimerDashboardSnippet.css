@@ -5,9 +5,23 @@
 }
 
 .timerSnippetTimetable {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 2px 12px;
+	display: flex;
+	flex-direction: row;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.timerSnippetColumn {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	gap: 2px;
+}
+
+.timerSnippetDivider {
+	width: 1px;
+	background: rgba(200, 169, 110, 0.15);
+	align-self: stretch;
 }
 
 .timerSnippetCell {
@@ -24,7 +38,7 @@
 }
 
 .timerSnippetTotal {
-	grid-column: 1 / -1;
+	width: 100%;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;

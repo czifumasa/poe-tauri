@@ -40,7 +40,6 @@ export function PobImportDashboardSnippet(props: PobImportDashboardSnippetProps)
 		<ModuleSnippet
 			title="Path of Building"
 			active={hasSlots}
-			hint={hasSlots ? undefined : 'No build imported. Import a Path of Building code in settings.'}
 			onSettingsClick={props.onOpenSettings}>
 			{hasSlots && <PobSummaryBody pobSettings={pobSettings} />}
 		</ModuleSnippet>

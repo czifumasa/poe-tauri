@@ -10,7 +10,6 @@ interface ModuleSnippetProps {
 	title: string;
 	active?: boolean;
 	disabled?: boolean;
-	hint?: string;
 	action?: ModuleSnippetAction;
 	onSettingsClick?: () => void;
 	settingsDisabled?: boolean;
@@ -74,10 +73,7 @@ export function ModuleSnippet(props: ModuleSnippetProps): JSX.Element {
 				)}
 			</div>
 
-			<div className="moduleSnippetBody">
-				{props.hint !== undefined && <span className="moduleSnippetHint">{props.hint}</span>}
-				{props.children}
-			</div>
+			<div className="moduleSnippetBody">{props.children}</div>
 
 			{props.action !== undefined && (
 				<div className="moduleSnippetFooter">
