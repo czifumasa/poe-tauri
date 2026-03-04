@@ -1,3 +1,10 @@
+.dashboardTopRow {
+	display: grid;
+	grid-template-columns: 1fr 1fr auto;
+	gap: 12px;
+	padding: 0 24px;
+}
+
 .dashboardCard {
 	background: rgba(15, 13, 0, 0.7);
 	border: 1px solid rgba(212, 175, 55, 0.4);
@@ -27,20 +34,26 @@
 	color: rgba(200, 169, 110, 0.35);
 }
 
-.characterCard {
+.profileCard {
 	display: grid;
-	grid-template-columns: 1fr 1fr auto;
-	align-items: center;
-	gap: 0 16px;
+	grid-template-columns: 1fr 1fr;
+	grid-template-rows: auto auto;
+	gap: 4px 16px;
 }
 
-.characterCardSection {
+.profileCardSection {
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
 }
 
-.characterCardSyncButton {
+.profileCard > .dashboardCardConfigureButton {
+	grid-column: 1 / -1;
+}
+
+.dashboardCardConfigureButton {
+	width: 100%;
+	margin-top: 8px;
 	padding: 7px 16px;
 	font-size: 12px;
 	font-weight: 600;
@@ -57,7 +70,7 @@
 		color 0.2s;
 }
 
-.characterCardSyncButton:hover {
+.dashboardCardConfigureButton:hover {
 	border-color: rgba(212, 175, 55, 0.45);
 	color: rgba(212, 175, 55, 0.95);
 }
