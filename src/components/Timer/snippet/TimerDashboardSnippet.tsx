@@ -101,14 +101,14 @@ export function TimerDashboardSnippet(props: TimerDashboardSnippetProps): JSX.El
 
 	return (
 		<ModuleSnippet
-			title="Timers"
+			title="Run Timer"
 			active={isActive}
 			hint={isActive ? undefined : 'All timers are disabled. Enable act or campaign timer in settings.'}
 			onSettingsClick={props.onOpenSettings}
 			action={
 				isActive
 					? [
-							{ type: 'primary', label: 'ALL RUNS', onClick: props.onViewDetails },
+							{ type: 'primary', label: 'DETAILS', onClick: props.onViewDetails },
 							{ type: 'icon', icon: <SaveIcon />, title: 'Save Run', onClick: props.onSaveRun, disabled: !hasRunData },
 							{
 								type: 'icon',

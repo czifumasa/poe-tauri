@@ -415,7 +415,7 @@ export function TimerDetailsPage({ timerState, onBack, onSaveRun, onResetRun }: 
 
 	return (
 		<div className="timerDetailsPage">
-			<SectionDivider label="TIMER DETAILS" onBack={onBack} />
+			<SectionDivider label="RUN TIMER" onBack={onBack} />
 
 			<div className="timerDetailsTabs">
 				{TABS.map((tab) => (
