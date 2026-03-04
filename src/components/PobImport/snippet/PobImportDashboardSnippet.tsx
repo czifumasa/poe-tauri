@@ -36,13 +36,11 @@ export function PobImportDashboardSnippet(props: PobImportDashboardSnippetProps)
 	const { pobSettings } = props;
 	const hasSlots = pobSettings.slots.length > 0;
 
-	const actionLabel = hasSlots ? 'MANAGE BUILDS' : 'IMPORT BUILD';
-
 	return (
 		<ModuleSnippet
 			title="Path of Building"
 			active={hasSlots}
-			action={{ type: 'primary', label: actionLabel, onClick: props.onOpenSettings }}>
+			onSettingsClick={props.onOpenSettings}>
 			{hasSlots && <PobSummaryBody pobSettings={pobSettings} />}
 		</ModuleSnippet>
 	);

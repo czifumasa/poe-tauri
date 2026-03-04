@@ -20,7 +20,13 @@ function formatProgress(page: LevelingGuidePageDto): string {
 	return `${page.position.pageIndex + 1} / ${page.pageCountInAct}`;
 }
 
-function GuideLoadedBody({ page }: { page: LevelingGuidePageDto }): JSX.Element {
+type GuideLoadedBodyProps = {
+	page: LevelingGuidePageDto;
+	loading: boolean;
+	onResetProgress: () => Promise<void>;
+};
+
+function GuideLoadedBody({ page, loading, onResetProgress }: GuideLoadedBodyProps): JSX.Element {
 	const actLabel = `Act ${page.position.actIndex + 1}`;
 	const progressLabel = formatProgress(page);
 
@@ -36,6 +42,13 @@ function GuideLoadedBody({ page }: { page: LevelingGuidePageDto }): JSX.Element 
 					style={{ width: `${(page.position.pageIndex / Math.max(page.pageCountInAct - 1, 1)) * 100}%` }}
 				/>
 			</div>
+			<button
+				type="button"
+				className="guideSnippetResetButton"
+				onClick={() => void onResetProgress()}
+				disabled={loading}>
+				RESET
+			</button>
 		</div>
 	);
 }
@@ -50,18 +63,13 @@ export function LevelingGuideDashboardSnippet(props: LevelingGuideDashboardSnipp
 		<ModuleSnippet
 			title="Leveling Guide"
 			active={isLoaded}
-			showButton={
-				isLoaded
-					? { label: overlayToggleLabel, onClick: () => void handleOverlayToggle(), disabled: loading }
-					: undefined
-			}
 			action={
 				isLoaded
-					? { type: 'primary', label: 'RESET', onClick: () => void props.onResetProgress(), disabled: loading }
+					? { type: 'primary', label: overlayToggleLabel, onClick: () => void handleOverlayToggle(), disabled: loading }
 					: { type: 'primary', label: 'LOAD DEFAULT GUIDE', onClick: () => void props.onLoadGuide(), disabled: loading }
 			}
 			onSettingsClick={props.onOpenSettings}>
-			{isLoaded && <GuideLoadedBody page={page} />}
+			{isLoaded && <GuideLoadedBody page={page} loading={loading} onResetProgress={props.onResetProgress} />}
 			{props.error !== null && <div className="guideSnippetError">{props.error}</div>}
 		</ModuleSnippet>
 	);

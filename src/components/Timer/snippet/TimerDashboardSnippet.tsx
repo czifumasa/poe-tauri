@@ -47,7 +47,6 @@ export function TimerDashboardSnippet(props: TimerDashboardSnippetProps): JSX.El
 		<ModuleSnippet
 			title="Timers"
 			active={isActive}
-			action={{ type: 'primary', label: 'SETTINGS', onClick: props.onOpenSettings }}
 			onSettingsClick={props.onOpenSettings}>
 			<div className="timerSnippetBody">{isActive && <TimerTimetable timerState={timerState} />}</div>
 		</ModuleSnippet>

@@ -10,8 +10,7 @@ interface ModuleSnippetProps {
 	title: string;
 	active?: boolean;
 	disabled?: boolean;
-	showButton?: { label: string; onClick: () => void; disabled?: boolean };
-	action: ModuleSnippetAction;
+	action?: ModuleSnippetAction;
 	onSettingsClick?: () => void;
 	settingsDisabled?: boolean;
 	children?: ReactNode;
@@ -63,21 +62,6 @@ export function ModuleSnippet(props: ModuleSnippetProps): JSX.Element {
 		<div className={classNames}>
 			<div className="moduleSnippetHeader">
 				<span className="moduleSnippetTitle">{props.title}</span>
-				{props.showButton !== undefined && (
-					<button
-						type="button"
-						className="moduleSnippetShowButton"
-						onClick={props.showButton.onClick}
-						disabled={props.showButton.disabled}>
-						{props.showButton.label}
-					</button>
-				)}
-			</div>
-
-			<div className="moduleSnippetBody">{props.children}</div>
-
-			<div className="moduleSnippetFooter">
-				{renderFooterAction(props.action)}
 				{props.onSettingsClick !== undefined && (
 					<button
 						type="button"
@@ -88,6 +72,14 @@ export function ModuleSnippet(props: ModuleSnippetProps): JSX.Element {
 					</button>
 				)}
 			</div>
+
+			<div className="moduleSnippetBody">{props.children}</div>
+
+			{props.action !== undefined && (
+				<div className="moduleSnippetFooter">
+					{renderFooterAction(props.action)}
+				</div>
+			)}
 		</div>
 	);
 }
