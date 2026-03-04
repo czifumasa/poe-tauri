@@ -711,6 +711,22 @@ function App(): JSX.Element {
 				onSettingsClick={() => {}}
 				settingsDisabled
 			/>
+			<ModuleSnippet
+				title="Price Check"
+				disabled
+				hint="Quickly check item prices in-game."
+				action={{ type: 'comingSoon' }}
+				onSettingsClick={() => {}}
+				settingsDisabled
+			/>
+			<ModuleSnippet
+				title="Cheatsheets"
+				disabled
+				hint="Reference sheets for recipes, mechanics, and more."
+				action={{ type: 'comingSoon' }}
+				onSettingsClick={() => {}}
+				settingsDisabled
+			/>
 		</MainView>
 	);
 }
