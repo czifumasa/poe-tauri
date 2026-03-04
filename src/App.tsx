@@ -124,8 +124,9 @@ function App(): JSX.Element {
 	const [pobSettings, setPobSettings] = useState<PobSettings>({ slots: [], currentSlotIndex: null });
 	const [pobSettingsLoading, setPobSettingsLoading] = useState<boolean>(true);
 	const [timerSettings, setTimerSettings] = useState<TimerSettings>({
-		actTimerEnabled: false,
-		campaignTimerEnabled: false,
+		enabled: false,
+		displayActTimer: false,
+		displayCampaignTimer: false,
 	});
 	const [timerState, setTimerState] = useState<TimerState>({
 		status: 'idle',
@@ -297,10 +298,11 @@ function App(): JSX.Element {
 		let unlistenPageUpdated: (() => void) | null = null;
 		let unlistenCleared: (() => void) | null = null;
 		let unlistenTimerState: (() => void) | null = null;
+		let unlistenTimerSettings: (() => void) | null = null;
 
 		void (async (): Promise<void> => {
 			try {
-				const [pageUpdatedUnsub, clearedUnsub, timerStateUnsub] = await Promise.all([
+				const [pageUpdatedUnsub, clearedUnsub, timerStateUnsub, timerSettingsUnsub] = await Promise.all([
 					listen<LevelingGuidePageDto>('leveling_guide_page_updated', (event) => {
 						if (isDisposed) {
 							return;
@@ -319,10 +321,17 @@ function App(): JSX.Element {
 						}
 						setTimerState(event.payload);
 					}),
+					listen<TimerSettings>('timer_settings_updated', (event) => {
+						if (isDisposed) {
+							return;
+						}
+						setTimerSettings(event.payload);
+					}),
 				]);
 				unlistenPageUpdated = pageUpdatedUnsub;
 				unlistenCleared = clearedUnsub;
 				unlistenTimerState = timerStateUnsub;
+				unlistenTimerSettings = timerSettingsUnsub;
 			} catch (err) {
 				console.error('Failed to listen for leveling guide updates:', err);
 			}
@@ -338,6 +347,9 @@ function App(): JSX.Element {
 			}
 			if (unlistenTimerState !== null) {
 				unlistenTimerState();
+			}
+			if (unlistenTimerSettings !== null) {
+				unlistenTimerSettings();
 			}
 		};
 	}, []);
@@ -389,32 +401,39 @@ function App(): JSX.Element {
 			});
 	}, []);
 
-	const updateTimerActEnabled = useCallback(
-		(nextValue: boolean): void => {
-			const updated: TimerSettings = { ...timerSettings, actTimerEnabled: nextValue };
+	const persistTimerSettings = useCallback(
+		(updated: TimerSettings): void => {
 			setTimerSettings(updated);
 			void invoke('timer_set_settings', {
-				actTimerEnabled: updated.actTimerEnabled,
-				campaignTimerEnabled: updated.campaignTimerEnabled,
+				enabled: updated.enabled,
+				displayActTimer: updated.displayActTimer,
+				displayCampaignTimer: updated.displayCampaignTimer,
 			}).catch((err: unknown) => {
 				console.error('Failed to persist timer settings:', err);
 			});
 		},
-		[timerSettings],
+		[],
 	);
 
-	const updateTimerCampaignEnabled = useCallback(
+	const updateTimerEnabled = useCallback(
 		(nextValue: boolean): void => {
-			const updated: TimerSettings = { ...timerSettings, campaignTimerEnabled: nextValue };
-			setTimerSettings(updated);
-			void invoke('timer_set_settings', {
-				actTimerEnabled: updated.actTimerEnabled,
-				campaignTimerEnabled: updated.campaignTimerEnabled,
-			}).catch((err: unknown) => {
-				console.error('Failed to persist timer settings:', err);
-			});
+			persistTimerSettings({ ...timerSettings, enabled: nextValue });
 		},
-		[timerSettings],
+		[timerSettings, persistTimerSettings],
+	);
+
+	const updateDisplayActTimer = useCallback(
+		(nextValue: boolean): void => {
+			persistTimerSettings({ ...timerSettings, displayActTimer: nextValue });
+		},
+		[timerSettings, persistTimerSettings],
+	);
+
+	const updateDisplayCampaignTimer = useCallback(
+		(nextValue: boolean): void => {
+			persistTimerSettings({ ...timerSettings, displayCampaignTimer: nextValue });
+		},
+		[timerSettings, persistTimerSettings],
 	);
 
 	const updateLeagueStart = useCallback(
@@ -589,7 +608,7 @@ function App(): JSX.Element {
 				gemsEnabled: false,
 			});
 			setPobSettings({ slots: [], currentSlotIndex: null });
-			setTimerSettings({ actTimerEnabled: false, campaignTimerEnabled: false });
+			setTimerSettings({ enabled: false, displayActTimer: false, displayCampaignTimer: false });
 			setTimerState({
 				status: 'idle',
 				currentActIndex: 0,
@@ -704,10 +723,12 @@ function App(): JSX.Element {
 				}
 				timerContent={
 					<TimerSettingsPanel
-						actTimerEnabled={timerSettings.actTimerEnabled}
-						campaignTimerEnabled={timerSettings.campaignTimerEnabled}
-						onActTimerEnabledChange={updateTimerActEnabled}
-						onCampaignTimerEnabledChange={updateTimerCampaignEnabled}
+						enabled={timerSettings.enabled}
+						displayActTimer={timerSettings.displayActTimer}
+						displayCampaignTimer={timerSettings.displayCampaignTimer}
+						onEnabledChange={updateTimerEnabled}
+						onDisplayActTimerChange={updateDisplayActTimer}
+						onDisplayCampaignTimerChange={updateDisplayCampaignTimer}
 						settingsLoading={settingsLoading}
 					/>
 				}

@@ -46,24 +46,28 @@ impl TimerManager {
     pub fn get_settings(app: &AppHandle) -> Result<TimerSettingsDto, CommandError> {
         let settings = Self::load_settings(app)?;
         Ok(TimerSettingsDto {
-            act_timer_enabled: settings.act_timer_enabled,
-            campaign_timer_enabled: settings.campaign_timer_enabled,
+            enabled: settings.enabled,
+            display_act_timer: settings.display_act_timer,
+            display_campaign_timer: settings.display_campaign_timer,
         })
     }
 
     pub fn set_settings(
         app: &AppHandle,
-        act_timer_enabled: bool,
-        campaign_timer_enabled: bool,
+        enabled: bool,
+        display_act_timer: bool,
+        display_campaign_timer: bool,
     ) -> Result<TimerSettingsDto, CommandError> {
         let settings = TimerSettings {
-            act_timer_enabled,
-            campaign_timer_enabled,
+            enabled,
+            display_act_timer,
+            display_campaign_timer,
         };
         store::set_value(app, TimerSettings::STORE_KEY, &settings)?;
         Ok(TimerSettingsDto {
-            act_timer_enabled: settings.act_timer_enabled,
-            campaign_timer_enabled: settings.campaign_timer_enabled,
+            enabled: settings.enabled,
+            display_act_timer: settings.display_act_timer,
+            display_campaign_timer: settings.display_campaign_timer,
         })
     }
 

@@ -275,10 +275,10 @@ export function LevelingGuideOverlay(props: LevelingGuideOverlayProps): JSX.Elem
 	};
 
 	const { timerSettings, timerState, onTimerAction } = props;
-	const anyTimerEnabled = timerSettings.actTimerEnabled || timerSettings.campaignTimerEnabled;
+	const timerEnabled = timerSettings.enabled;
 
 	const renderTimerControls = (): JSX.Element | null => {
-		if (!anyTimerEnabled) {
+		if (!timerEnabled) {
 			return null;
 		}
 
@@ -321,14 +321,14 @@ export function LevelingGuideOverlay(props: LevelingGuideOverlayProps): JSX.Elem
 				style={{ touchAction: 'none', cursor: 'move' }}>
 				<div className="guideHeaderRow">
 					<div className="guideHeaderLeft">{getActLabel(page)}</div>
-					{timerSettings.actTimerEnabled && (
+					{timerEnabled && timerSettings.displayActTimer && (
 						<div className="guideHeaderCenter">{formatElapsedMs(timerState.currentActElapsedMs)}</div>
 					)}
 					<div className="guideHeaderRight">{getPageCounterLabel(page)}</div>
 				</div>
 				<div className="guideHeaderRow guideHeaderRowCampaign">
 					<div className="guideHeaderLeft">Campaign</div>
-					{timerSettings.campaignTimerEnabled && (
+					{timerEnabled && timerSettings.displayCampaignTimer && (
 						<div className="guideHeaderCenter">{formatElapsedMs(timerState.campaignElapsedMs)}</div>
 					)}
 					<div className="guideHeaderRight">{getCampaignCounterLabel(page)}</div>

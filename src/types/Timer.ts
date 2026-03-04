@@ -1,8 +1,9 @@
 export type TimerStatus = 'idle' | 'running' | 'paused';
 
 export type TimerSettings = {
-	actTimerEnabled: boolean;
-	campaignTimerEnabled: boolean;
+	enabled: boolean;
+	displayActTimer: boolean;
+	displayCampaignTimer: boolean;
 };
 
 export type TimerState = {

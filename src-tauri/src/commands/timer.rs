@@ -6,6 +6,7 @@ use crate::error::{command_error, CommandError};
 use crate::timer::{TimerManager, TimerSettingsDto, TimerStateDto};
 
 const TIMER_STATE_UPDATED_EVENT: &str = "timer_state_updated";
+const TIMER_SETTINGS_UPDATED_EVENT: &str = "timer_settings_updated";
 
 fn emit_timer_state(app: &tauri::AppHandle, state: &TimerStateDto) -> Result<(), CommandError> {
     app.emit(TIMER_STATE_UPDATED_EVENT, state)
@@ -20,10 +21,14 @@ pub fn timer_get_settings(app: tauri::AppHandle) -> Result<TimerSettingsDto, Com
 #[tauri::command(async)]
 pub fn timer_set_settings(
     app: tauri::AppHandle,
-    act_timer_enabled: bool,
-    campaign_timer_enabled: bool,
+    enabled: bool,
+    display_act_timer: bool,
+    display_campaign_timer: bool,
 ) -> Result<TimerSettingsDto, CommandError> {
-    TimerManager::set_settings(&app, act_timer_enabled, campaign_timer_enabled)
+    let dto = TimerManager::set_settings(&app, enabled, display_act_timer, display_campaign_timer)?;
+    app.emit(TIMER_SETTINGS_UPDATED_EVENT, &dto)
+        .map_err(|e| command_error("timer_settings_emit_failed", e.to_string()))?;
+    Ok(dto)
 }
 
 #[tauri::command(async)]

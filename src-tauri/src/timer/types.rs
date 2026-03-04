@@ -53,8 +53,9 @@ impl PersistedTimerState {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TimerSettingsDto {
-    pub act_timer_enabled: bool,
-    pub campaign_timer_enabled: bool,
+    pub enabled: bool,
+    pub display_act_timer: bool,
+    pub display_campaign_timer: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]

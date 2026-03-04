@@ -3,15 +3,17 @@ import { JSX } from 'react';
 import '../../LevelingGuide/settings/LevelingGuideSettingsPanel.css';
 
 type TimerSettingsPanelProps = {
-	actTimerEnabled: boolean;
-	campaignTimerEnabled: boolean;
-	onActTimerEnabledChange: (value: boolean) => void;
-	onCampaignTimerEnabledChange: (value: boolean) => void;
+	enabled: boolean;
+	displayActTimer: boolean;
+	displayCampaignTimer: boolean;
+	onEnabledChange: (value: boolean) => void;
+	onDisplayActTimerChange: (value: boolean) => void;
+	onDisplayCampaignTimerChange: (value: boolean) => void;
 	settingsLoading: boolean;
 };
 
 export function TimerSettingsPanel(props: TimerSettingsPanelProps): JSX.Element {
-	const { settingsLoading } = props;
+	const { enabled, settingsLoading } = props;
 
 	return (
 		<div className="settingsPanel">
@@ -23,21 +25,31 @@ export function TimerSettingsPanel(props: TimerSettingsPanelProps): JSX.Element 
 				<label className="settingsToggle">
 					<input
 						type="checkbox"
-						checked={props.actTimerEnabled}
-						onChange={(event) => props.onActTimerEnabledChange(event.currentTarget.checked)}
+						checked={enabled}
+						onChange={(event) => props.onEnabledChange(event.currentTarget.checked)}
 						disabled={settingsLoading}
 					/>
-					<span className="settingsToggleLabel">Act timer</span>
+					<span className="settingsToggleLabel">Enable timer</span>
 				</label>
 
 				<label className="settingsToggle">
 					<input
 						type="checkbox"
-						checked={props.campaignTimerEnabled}
-						onChange={(event) => props.onCampaignTimerEnabledChange(event.currentTarget.checked)}
-						disabled={settingsLoading}
+						checked={props.displayActTimer}
+						onChange={(event) => props.onDisplayActTimerChange(event.currentTarget.checked)}
+						disabled={settingsLoading || !enabled}
 					/>
-					<span className="settingsToggleLabel">Campaign timer</span>
+					<span className="settingsToggleLabel">Display act timer in leveling guide</span>
+				</label>
+
+				<label className="settingsToggle">
+					<input
+						type="checkbox"
+						checked={props.displayCampaignTimer}
+						onChange={(event) => props.onDisplayCampaignTimerChange(event.currentTarget.checked)}
+						disabled={settingsLoading || !enabled}
+					/>
+					<span className="settingsToggleLabel">Display campaign timer in leveling guide</span>
 				</label>
 			</div>
 		</div>

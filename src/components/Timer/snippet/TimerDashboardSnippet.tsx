@@ -96,14 +96,14 @@ function TimerTimetable(props: { timerState: TimerState }): JSX.Element {
 
 export function TimerDashboardSnippet(props: TimerDashboardSnippetProps): JSX.Element {
 	const { timerSettings, timerState } = props;
-	const isActive = timerSettings.actTimerEnabled || timerSettings.campaignTimerEnabled;
+	const isActive = timerSettings.enabled;
 	const hasRunData = timerState.status !== 'idle';
 
 	return (
 		<ModuleSnippet
 			title="Run Timer"
 			active={isActive}
-			hint={isActive ? undefined : 'All timers are disabled. Enable act or campaign timer in settings.'}
+			hint={isActive ? undefined : 'Timer is disabled. Enable it in settings.'}
 			onSettingsClick={props.onOpenSettings}
 			action={
 				isActive

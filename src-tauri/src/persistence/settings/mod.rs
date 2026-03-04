@@ -91,16 +91,19 @@ impl PobSettings {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimerSettings {
     #[serde(default)]
-    pub act_timer_enabled: bool,
+    pub enabled: bool,
     #[serde(default)]
-    pub campaign_timer_enabled: bool,
+    pub display_act_timer: bool,
+    #[serde(default)]
+    pub display_campaign_timer: bool,
 }
 
 impl Default for TimerSettings {
     fn default() -> Self {
         Self {
-            act_timer_enabled: false,
-            campaign_timer_enabled: false,
+            enabled: false,
+            display_act_timer: false,
+            display_campaign_timer: false,
         }
     }
 }
