@@ -1,8 +1,8 @@
 use crate::window::identifiers::{
     HINT_TOOLTIP_WINDOW_LABEL, MAIN_WINDOW_LABEL, OVERLAY_WINDOW_LABEL,
 };
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
 use tauri::Manager;
 
@@ -130,7 +130,7 @@ pub fn run() {
                 std::thread::spawn(move || {
                     let target_inner_size = tauri::PhysicalSize {
                         width: 800,
-                        height: 600,
+                        height: 700,
                     };
 
                     for _ in 0..10 {
@@ -138,8 +138,10 @@ pub fn run() {
                             return;
                         }
 
-                        if lock_webview_window_inner_size(&main_window_for_startup, target_inner_size)
-                        {
+                        if lock_webview_window_inner_size(
+                            &main_window_for_startup,
+                            target_inner_size,
+                        ) {
                             did_adjust_main_window_for_startup.store(true, Ordering::Relaxed);
                             return;
                         }
@@ -154,18 +156,19 @@ pub fn run() {
                 main_window.on_window_event(move |event| {
                     let should_adjust = matches!(
                         event,
-                        tauri::WindowEvent::Resized(_) | tauri::WindowEvent::ScaleFactorChanged { .. }
+                        tauri::WindowEvent::Resized(_)
+                            | tauri::WindowEvent::ScaleFactorChanged { .. }
                     );
 
-                    if should_adjust
-                        && !did_adjust_main_window_for_events.load(Ordering::Relaxed)
-                    {
+                    if should_adjust && !did_adjust_main_window_for_events.load(Ordering::Relaxed) {
                         let target_inner_size = tauri::PhysicalSize {
                             width: 800,
-                            height: 600,
+                            height: 700,
                         };
-                        if lock_webview_window_inner_size(&main_window_for_events, target_inner_size)
-                        {
+                        if lock_webview_window_inner_size(
+                            &main_window_for_events,
+                            target_inner_size,
+                        ) {
                             did_adjust_main_window_for_events.store(true, Ordering::Relaxed);
                         }
                     }
@@ -184,7 +187,8 @@ pub fn run() {
                 });
             }
 
-            if let Err(err) = manager.restart_log_watcher_if_configured(&app_handle, &timer_manager) {
+            if let Err(err) = manager.restart_log_watcher_if_configured(&app_handle, &timer_manager)
+            {
                 eprintln!("Failed to start log watcher on startup: {:?}", err);
             }
 
