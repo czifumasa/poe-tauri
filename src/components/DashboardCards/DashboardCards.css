@@ -1,18 +1,11 @@
-.dashboardTopRow {
-	display: grid;
-	grid-template-columns: 1fr 1fr auto;
-	gap: 12px;
-	padding: 0 24px;
-}
-
 .dashboardCard {
 	background: rgba(15, 13, 0, 0.7);
 	border: 1px solid rgba(212, 175, 55, 0.4);
 	border-radius: 10px;
-	padding: 14px 16px;
+	padding: 10px 14px;
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: 2px;
 }
 
 .dashboardCardLabel {
@@ -37,42 +30,19 @@
 .profileCard {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	grid-template-rows: auto auto;
-	gap: 4px 16px;
+	gap: 2px 16px;
 }
 
 .profileCardSection {
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: 1px;
 }
 
-.profileCard > .dashboardCardConfigureButton {
-	grid-column: 1 / -1;
-}
-
-.dashboardCardConfigureButton {
-	width: 100%;
-	margin-top: 8px;
-	padding: 7px 16px;
-	font-size: 12px;
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.8px;
-	border-radius: 6px;
-	border: 1px solid rgba(200, 169, 110, 0.2);
-	background: transparent;
-	color: rgba(212, 175, 55, 0.85);
-	cursor: pointer;
-	box-shadow: none;
-	transition:
-		border-color 0.2s,
-		color 0.2s;
-}
-
-.dashboardCardConfigureButton:hover {
-	border-color: rgba(212, 175, 55, 0.45);
-	color: rgba(212, 175, 55, 0.95);
+.profileCardRow {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
 }
 
 .overlaysCard {
