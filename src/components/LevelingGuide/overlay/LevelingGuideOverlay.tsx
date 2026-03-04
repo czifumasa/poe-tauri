@@ -284,7 +284,11 @@ export function LevelingGuideOverlay(props: LevelingGuideOverlayProps): JSX.Elem
 
 		if (timerState.status === 'idle') {
 			return (
-				<button type="button" className="guideTimerButton guideTimerButtonStart" onClick={() => onTimerAction('start')}>
+				<button
+					type="button"
+					className="guideTimerButton guideTimerButtonStart"
+					title="Start timer"
+					onClick={() => onTimerAction('start')}>
 					{'▶'}
 				</button>
 			);
@@ -292,21 +296,24 @@ export function LevelingGuideOverlay(props: LevelingGuideOverlayProps): JSX.Elem
 
 		if (timerState.status === 'running') {
 			return (
-				<button type="button" className="guideTimerButton guideTimerButtonPause" onClick={() => onTimerAction('pause')}>
-					{'⏸'}
+				<button
+					type="button"
+					className="guideTimerButton guideTimerButtonPause"
+					title="Pause timer"
+					onClick={() => onTimerAction('pause')}>
+					{'❚❚'}
 				</button>
 			);
 		}
 
 		return (
-			<div className="guideTimerButtonGroup">
-				<button type="button" className="guideTimerButton guideTimerButtonResume" onClick={() => onTimerAction('resume')}>
-					{'▶'}
-				</button>
-				<button type="button" className="guideTimerButton guideTimerButtonReset" onClick={() => onTimerAction('reset')}>
-					{'⟲'}
-				</button>
-			</div>
+			<button
+				type="button"
+				className="guideTimerButton guideTimerButtonResume"
+				title="Resume timer"
+				onClick={() => onTimerAction('resume')}>
+				{'▶'}
+			</button>
 		);
 	};
 
