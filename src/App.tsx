@@ -164,12 +164,13 @@ function App(): JSX.Element {
 		setPobSettingsLoading(true);
 		void (async (): Promise<void> => {
 			try {
-				const [persistedSettings, persistedPobSettings, persistedTimerSettings, persistedTimerState] = await Promise.all([
-					invoke<LevelingGuideSettings>('settings_get_leveling_guide'),
-					invoke<PobSettings>('pob_settings_get'),
-					invoke<TimerSettings>('timer_get_settings'),
-					invoke<TimerState>('timer_load_state'),
-				]);
+				const [persistedSettings, persistedPobSettings, persistedTimerSettings, persistedTimerState] =
+					await Promise.all([
+						invoke<LevelingGuideSettings>('settings_get_leveling_guide'),
+						invoke<PobSettings>('pob_settings_get'),
+						invoke<TimerSettings>('timer_get_settings'),
+						invoke<TimerState>('timer_load_state'),
+					]);
 				if (isDisposed) {
 					return;
 				}
@@ -367,7 +368,7 @@ function App(): JSX.Element {
 				timerTickRef.current = null;
 			}
 		};
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [timerState.status]);
 
 	const handleTimerAction = useCallback((action: 'start' | 'pause' | 'resume' | 'reset'): void => {
@@ -386,27 +387,33 @@ function App(): JSX.Element {
 			});
 	}, []);
 
-	const updateTimerActEnabled = useCallback((nextValue: boolean): void => {
-		const updated: TimerSettings = { ...timerSettings, actTimerEnabled: nextValue };
-		setTimerSettings(updated);
-		void invoke('timer_set_settings', {
-			actTimerEnabled: updated.actTimerEnabled,
-			campaignTimerEnabled: updated.campaignTimerEnabled,
-		}).catch((err: unknown) => {
-			console.error('Failed to persist timer settings:', err);
-		});
-	}, [timerSettings]);
+	const updateTimerActEnabled = useCallback(
+		(nextValue: boolean): void => {
+			const updated: TimerSettings = { ...timerSettings, actTimerEnabled: nextValue };
+			setTimerSettings(updated);
+			void invoke('timer_set_settings', {
+				actTimerEnabled: updated.actTimerEnabled,
+				campaignTimerEnabled: updated.campaignTimerEnabled,
+			}).catch((err: unknown) => {
+				console.error('Failed to persist timer settings:', err);
+			});
+		},
+		[timerSettings],
+	);
 
-	const updateTimerCampaignEnabled = useCallback((nextValue: boolean): void => {
-		const updated: TimerSettings = { ...timerSettings, campaignTimerEnabled: nextValue };
-		setTimerSettings(updated);
-		void invoke('timer_set_settings', {
-			actTimerEnabled: updated.actTimerEnabled,
-			campaignTimerEnabled: updated.campaignTimerEnabled,
-		}).catch((err: unknown) => {
-			console.error('Failed to persist timer settings:', err);
-		});
-	}, [timerSettings]);
+	const updateTimerCampaignEnabled = useCallback(
+		(nextValue: boolean): void => {
+			const updated: TimerSettings = { ...timerSettings, campaignTimerEnabled: nextValue };
+			setTimerSettings(updated);
+			void invoke('timer_set_settings', {
+				actTimerEnabled: updated.actTimerEnabled,
+				campaignTimerEnabled: updated.campaignTimerEnabled,
+			}).catch((err: unknown) => {
+				console.error('Failed to persist timer settings:', err);
+			});
+		},
+		[timerSettings],
+	);
 
 	const updateLeagueStart = useCallback(
 		async (nextValue: boolean): Promise<void> => {
@@ -682,10 +689,7 @@ function App(): JSX.Element {
 		) : undefined;
 
 	return (
-		<MainView
-			versionLabel={appVersion}
-			settingsContent={settingsContent}
-			onOpenSettings={() => openSettings('global')}>
+		<MainView versionLabel={appVersion} settingsContent={settingsContent} onOpenSettings={() => openSettings('global')}>
 			<LevelingGuideDashboardSnippet
 				page={currentPage}
 				overlayVisible={overlayVisible}
@@ -698,14 +702,11 @@ function App(): JSX.Element {
 				onOpenSettings={openLevelingGuideSettings}
 			/>
 			<PobImportDashboardSnippet pobSettings={pobSettings} onOpenSettings={openPobImportSettings} />
-			<TimerDashboardSnippet
-				timerSettings={timerSettings}
-				timerState={timerState}
-				onOpenSettings={openTimerSettings}
-			/>
+			<TimerDashboardSnippet timerSettings={timerSettings} timerState={timerState} onOpenSettings={openTimerSettings} />
 			<ModuleSnippet
 				title="Map Tracking"
 				disabled
+				hint="Track completed maps and their content."
 				action={{ type: 'comingSoon' }}
 				onSettingsClick={() => {}}
 				settingsDisabled

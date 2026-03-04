@@ -63,6 +63,7 @@ export function TimerDashboardSnippet(props: TimerDashboardSnippetProps): JSX.El
 		<ModuleSnippet
 			title="Timers"
 			active={isActive}
+			hint={isActive ? undefined : 'All timers are disabled. Enable act or campaign timer in settings.'}
 			onSettingsClick={props.onOpenSettings}>
 			<div className="timerSnippetBody">{isActive && <TimerTimetable timerState={timerState} />}</div>
 		</ModuleSnippet>
