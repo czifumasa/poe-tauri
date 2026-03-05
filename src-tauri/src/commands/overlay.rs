@@ -1,6 +1,7 @@
 use std::sync::{Mutex, OnceLock};
 
 use crate::error::{command_error, CommandError};
+use crate::logging;
 use crate::persistence::settings::LevelingGuideSettings;
 use crate::persistence::store;
 use crate::window::identifiers::{OVERLAY_DEFAULT_MARGIN_BOTTOM_PX, OVERLAY_DEFAULT_MARGIN_LEFT_PX, OVERLAY_WINDOW_LABEL};
@@ -234,6 +235,7 @@ fn persist_overlay_shown(app: &tauri::AppHandle, shown: bool) -> Result<(), Comm
 
 #[tauri::command(async)]
 pub fn show_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
+    logging::info("overlay_debug", "show_overlay called");
     let overlay_window = ensure_overlay_window(&app)?;
 
     let applied = apply_saved_overlay_position_if_any(&app)?;
@@ -248,25 +250,30 @@ pub fn show_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
         refresh_overlay_screen_rect(&overlay_window, &default_pos, w, h);
     }
 
+    logging::info("overlay_debug", "show_overlay: calling window.show()");
     overlay_window
         .show()
         .map_err(|e| command_error("overlay_panel_window_show_failed", e.to_string()))?;
 
+    logging::info("overlay_debug", "show_overlay: calling ensure_always_on_top");
     ensure_always_on_top(&overlay_window)?;
 
     persist_overlay_shown(&app, true)?;
+    logging::info("overlay_debug", "show_overlay complete");
 
     Ok(())
 }
 
 #[tauri::command(async)]
 pub fn hide_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
+    logging::info("overlay_debug", "hide_overlay called");
     if let Some(window) = app.get_webview_window(OVERLAY_WINDOW_LABEL) {
         window
             .hide()
             .map_err(|e| command_error("overlay_panel_window_hide_failed", e.to_string()))?;
     }
     persist_overlay_shown(&app, false)?;
+    logging::info("overlay_debug", "hide_overlay complete");
     Ok(())
 }
 
@@ -343,6 +350,7 @@ pub fn set_overlay_panel_size(
     width: u32,
     height: u32,
 ) -> Result<(), CommandError> {
+    logging::info("overlay_debug", &format!("set_overlay_panel_size {width}x{height}"));
     let native_window = crate::window::native_window();
     let window = ensure_overlay_window(&app)?;
     let width = width.max(1);

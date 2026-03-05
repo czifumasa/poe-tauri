@@ -2,6 +2,7 @@ use gtk::prelude::WidgetExt;
 use gtk_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
 
 use crate::error::{command_error, CommandError};
+use crate::logging;
 use super::gtk_util::run_on_main_thread;
 use super::trait_def::{LayerShellConfig, NativeWindow};
 
@@ -22,10 +23,14 @@ fn apply_layer_shell_config(
     let margin_top = config.default_margin_top;
     let margin_right = config.default_margin_right;
 
+    logging::info("layer_shell_debug", &format!("apply_layer_shell_config namespace={namespace}"));
+
     run_on_main_thread(window, move |w| {
         let gtk_window = w
             .gtk_window()
             .map_err(|e| command_error("layer_shell_gtk_window_failed", e.to_string()))?;
+
+        logging::info("layer_shell_debug", &format!("init_layer_shell for {namespace} on thread {:?}", std::thread::current().id()));
 
         gtk_window.init_layer_shell();
         gtk_window.set_namespace(namespace);
@@ -47,6 +52,7 @@ fn apply_layer_shell_config(
         gtk_window.set_layer_shell_margin(Edge::Bottom, margin_bottom);
         gtk_window.set_layer_shell_margin(Edge::Right, margin_right);
 
+        logging::info("layer_shell_debug", &format!("layer shell configured for {namespace}"));
         Ok(())
     })
 }
@@ -113,6 +119,8 @@ impl NativeWindow for LayerShellNativeWindow {
         let left = left.max(0);
         let bottom = bottom.max(0);
 
+        logging::info("layer_shell_debug", &format!("set_layer_shell_margins left={left} bottom={bottom}"));
+
         run_on_main_thread(window, move |w| {
             let gtk_window = w
                 .gtk_window()
@@ -136,11 +144,17 @@ impl NativeWindow for LayerShellNativeWindow {
         let height_i32 = i32::try_from(height)
             .map_err(|e| command_error("window_height_overflow", e.to_string()))?;
 
+        logging::info(
+            "layer_shell_debug",
+            &format!("set_size_with_gtk_refresh {width}x{height} (begin)"),
+        );
+
         run_on_main_thread(window, move |w| {
             let gtk_window = w
                 .gtk_window()
                 .map_err(|e| command_error("layer_shell_gtk_window_failed", e.to_string()))?;
 
+            logging::info("layer_shell_debug", &format!("set_size_request {width_i32}x{height_i32}"));
             gtk_window.set_size_request(width_i32, height_i32);
 
             w.set_size(tauri::Size::Physical(tauri::PhysicalSize { width, height }))
@@ -149,21 +163,27 @@ impl NativeWindow for LayerShellNativeWindow {
             Ok(())
         })?;
 
+        logging::info("layer_shell_debug", "set_size_with_gtk_refresh: starting hide/show cycle (sleeping on main thread!)");
+
         run_on_main_thread(window, |w| {
             let gtk_window = w
                 .gtk_window()
                 .map_err(|e| command_error("layer_shell_gtk_window_failed", e.to_string()))?;
 
             gtk_window.queue_draw();
+            logging::info("layer_shell_debug", "queue_draw done, hiding window");
 
             w.hide()
                 .map_err(|e| command_error("window_hide_failed", e.to_string()))?;
 
+            logging::warn("layer_shell_debug", "sleeping 1ms on GTK main thread");
             std::thread::sleep(std::time::Duration::from_millis(1));
 
+            logging::info("layer_shell_debug", "showing window after sleep");
             w.show()
                 .map_err(|e| command_error("window_show_failed", e.to_string()))?;
 
+            logging::info("layer_shell_debug", "set_size_with_gtk_refresh hide/show cycle complete");
             Ok(())
         })
     }

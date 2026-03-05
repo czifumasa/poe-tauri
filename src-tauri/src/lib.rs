@@ -28,14 +28,38 @@ fn lock_webview_window_inner_size(
     window: &tauri::WebviewWindow,
     target_inner_size: tauri::PhysicalSize<u32>,
 ) -> bool {
+    logging::info(
+        "window_debug",
+        &format!(
+            "lock_webview_window_inner_size called from thread {:?}",
+            std::thread::current().id()
+        ),
+    );
+
     let current_inner = match window.inner_size() {
         Ok(size) => size,
-        Err(_) => return false,
+        Err(e) => {
+            logging::warn("window_debug", &format!("inner_size() failed: {e}"));
+            return false;
+        }
     };
     let current_outer = match window.outer_size() {
         Ok(size) => size,
-        Err(_) => return false,
+        Err(e) => {
+            logging::warn("window_debug", &format!("outer_size() failed: {e}"));
+            return false;
+        }
     };
+
+    logging::info(
+        "window_debug",
+        &format!(
+            "inner={}x{} outer={}x{} target_inner={}x{}",
+            current_inner.width, current_inner.height,
+            current_outer.width, current_outer.height,
+            target_inner_size.width, target_inner_size.height
+        ),
+    );
 
     let decoration_width = current_outer.width.saturating_sub(current_inner.width);
     let decoration_height = current_outer.height.saturating_sub(current_inner.height);
@@ -50,12 +74,22 @@ fn lock_webview_window_inner_size(
 
     let updated_inner = match window.inner_size() {
         Ok(size) => size,
-        Err(_) => return false,
+        Err(e) => {
+            logging::warn("window_debug", &format!("updated inner_size() failed: {e}"));
+            return false;
+        }
     };
 
     if updated_inner.width != target_inner_size.width
         || updated_inner.height != target_inner_size.height
     {
+        logging::info(
+            "window_debug",
+            &format!(
+                "inner size mismatch after set: got {}x{}",
+                updated_inner.width, updated_inner.height
+            ),
+        );
         return false;
     }
 
@@ -67,6 +101,7 @@ fn lock_webview_window_inner_size(
     let _ = window.set_max_size(Some(locked));
     let _ = window.set_resizable(false);
 
+    logging::info("window_debug", "lock_webview_window_inner_size succeeded");
     true
 }
 
@@ -129,6 +164,10 @@ pub fn run() {
                 let main_window_for_startup = main_window.clone();
                 let did_adjust_main_window_for_startup = Arc::clone(&did_adjust_main_window);
                 std::thread::spawn(move || {
+                    logging::warn(
+                        "window_debug",
+                        "background thread started for lock_webview_window_inner_size (off main thread!)",
+                    );
                     let target_inner_size = tauri::PhysicalSize {
                         width: 800,
                         height: 700,
