@@ -21,6 +21,7 @@ pub struct LevelingGuideSettingsDto {
     pub bandits_choice: crate::persistence::settings::BanditsChoice,
     pub client_log_path: Option<String>,
     pub gems_enabled: bool,
+    pub overlay_shown: bool,
 }
 
 fn leveling_guide_settings_to_dto(settings: LevelingGuideSettings) -> LevelingGuideSettingsDto {
@@ -32,6 +33,7 @@ fn leveling_guide_settings_to_dto(settings: LevelingGuideSettings) -> LevelingGu
         bandits_choice: settings.bandits_choice,
         client_log_path: settings.client_log_path,
         gems_enabled: settings.gems_enabled,
+        overlay_shown: settings.overlay_shown,
     }
 }
 
@@ -44,6 +46,7 @@ fn leveling_guide_settings_from_dto(dto: LevelingGuideSettingsDto) -> LevelingGu
         bandits_choice: dto.bandits_choice,
         client_log_path: dto.client_log_path,
         gems_enabled: dto.gems_enabled,
+        overlay_shown: dto.overlay_shown,
     }
 }
 

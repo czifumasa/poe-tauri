@@ -68,6 +68,7 @@ pub fn load_guide(
 
     let progress = load_leveling_guide_progress(&app, DEFAULT_GUIDE_RELATIVE_RESOURCE_PATH)?;
     let page = manager.load(&app, progress)?;
+    persist_current_progress(&app, &manager)?;
     start_log_watcher_if_configured(&app, &manager, &timer_manager);
     emit_page_updated(&app, &page)?;
     Ok(page)

@@ -119,6 +119,7 @@ function App(): JSX.Element {
 		banditsChoice: 'KillAll',
 		clientLogPath: null,
 		gemsEnabled: false,
+		overlayShown: false,
 	});
 	const [settingsLoading, setSettingsLoading] = useState<boolean>(true);
 	const [pobSettings, setPobSettings] = useState<PobSettings>({ slots: [], currentSlotIndex: null });
@@ -181,6 +182,7 @@ function App(): JSX.Element {
 				setPobSettings(persistedPobSettings);
 				setTimerSettings(persistedTimerSettings);
 				setTimerState(persistedTimerState);
+				setOverlayVisible(persistedSettings.overlayShown);
 			} catch (err) {
 				console.error('Failed to initialize settings:', err);
 			} finally {
@@ -570,12 +572,18 @@ function App(): JSX.Element {
 		let isDisposed = false;
 		void (async (): Promise<void> => {
 			try {
-				const visible = await invoke<boolean>('overlay_is_visible');
-				if (!isDisposed) {
-					setOverlayVisible(visible);
+				const persistedSettings = await invoke<LevelingGuideSettings>('settings_get_leveling_guide');
+				if (isDisposed) {
+					return;
+				}
+				if (persistedSettings.overlayShown) {
+					await invoke('show_overlay');
+					if (!isDisposed) {
+						setOverlayVisible(true);
+					}
 				}
 			} catch (err) {
-				console.error('Failed to query overlay visibility:', err);
+				console.error('Failed to restore overlay visibility:', err);
 			}
 		})();
 		return (): void => {
@@ -598,6 +606,7 @@ function App(): JSX.Element {
 				banditsChoice: 'KillAll',
 				clientLogPath: null,
 				gemsEnabled: false,
+				overlayShown: false,
 			});
 			setPobSettings({ slots: [], currentSlotIndex: null });
 			setTimerSettings({ enabled: false, displayActTimer: true, displayCampaignTimer: true });

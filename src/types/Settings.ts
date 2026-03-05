@@ -13,6 +13,7 @@ export type LevelingGuideSettings = {
 	banditsChoice: BanditsChoice;
 	clientLogPath: string | null;
 	gemsEnabled: boolean;
+	overlayShown: boolean;
 };
 
 export type PobSlot = {

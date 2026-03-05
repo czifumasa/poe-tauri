@@ -40,6 +40,8 @@ pub struct LevelingGuideSettings {
     pub client_log_path: Option<String>,
     #[serde(default)]
     pub gems_enabled: bool,
+    #[serde(default)]
+    pub overlay_shown: bool,
 }
 
 impl Default for LevelingGuideSettings {
@@ -52,6 +54,7 @@ impl Default for LevelingGuideSettings {
             bandits_choice: BanditsChoice::KillAll,
             client_log_path: None,
             gems_enabled: true,
+            overlay_shown: false,
         }
     }
 }

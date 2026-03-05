@@ -1,6 +1,7 @@
 use std::sync::{Mutex, OnceLock};
 
 use crate::error::{command_error, CommandError};
+use crate::persistence::settings::LevelingGuideSettings;
 use crate::persistence::store;
 use crate::window::identifiers::{OVERLAY_DEFAULT_MARGIN_BOTTOM_PX, OVERLAY_DEFAULT_MARGIN_LEFT_PX, OVERLAY_WINDOW_LABEL};
 use crate::window::overlay_window::{ensure_always_on_top, ensure_overlay_window};
@@ -223,6 +224,14 @@ fn apply_saved_overlay_position_if_any(app: &tauri::AppHandle) -> Result<bool, C
     Ok(false)
 }
 
+fn persist_overlay_shown(app: &tauri::AppHandle, shown: bool) -> Result<(), CommandError> {
+    let mut settings =
+        store::get_optional::<LevelingGuideSettings>(app, LevelingGuideSettings::STORE_KEY)?
+            .unwrap_or_default();
+    settings.overlay_shown = shown;
+    store::set_value(app, LevelingGuideSettings::STORE_KEY, &settings)
+}
+
 #[tauri::command(async)]
 pub fn show_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
     let overlay_window = ensure_overlay_window(&app)?;
@@ -245,6 +254,8 @@ pub fn show_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
 
     ensure_always_on_top(&overlay_window)?;
 
+    persist_overlay_shown(&app, true)?;
+
     Ok(())
 }
 
@@ -255,6 +266,7 @@ pub fn hide_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
             .hide()
             .map_err(|e| command_error("overlay_panel_window_hide_failed", e.to_string()))?;
     }
+    persist_overlay_shown(&app, false)?;
     Ok(())
 }
 
