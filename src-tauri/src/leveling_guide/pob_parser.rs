@@ -12,6 +12,7 @@ pub(crate) struct PobImportData {
 }
 
 const ASCENDANCY_TO_BASE: &[(&str, &str)] = &[
+    ("reliquarian", "scion"),
     ("ascendant", "scion"),
     ("juggernaut", "marauder"),
     ("berserker", "marauder"),
