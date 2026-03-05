@@ -4,7 +4,11 @@ use serde::Serialize;
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
 
-const STORE_FILE: &str = "settings.json";
+const STORE_FILE: &str = if cfg!(debug_assertions) {
+    "settings.dev.json"
+} else {
+    "settings.json"
+};
 
 pub fn get_optional<T: DeserializeOwned>(
     app: &AppHandle,
