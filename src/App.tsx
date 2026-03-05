@@ -11,6 +11,7 @@ import type { LevelingGuidePageDto } from './types/Guide.ts';
 import type { BanditsChoice, LevelingGuideSettings, PobSettings } from './types/Settings.ts';
 import type { TimerSettings, TimerState } from './types/Timer.ts';
 import { TimerDetailsPage } from './components/Timer/details/TimerDetailsPage.tsx';
+import { SaveCampaignRunPage } from './components/Timer/save/SaveCampaignRunPage.tsx';
 import { HINT_TOOLTIP_VIEW_QUERY_VALUE, OVERLAY_VIEW_QUERY_VALUE } from './constants/WindowIdentifiers.ts';
 import { LevelingGuideOverlay } from './components/LevelingGuide/overlay/LevelingGuideOverlay.tsx';
 import { LevelingGuideDashboardSnippet } from './components/LevelingGuide/snippet/LevelingGuideDashboardSnippet.tsx';
@@ -141,6 +142,7 @@ function App(): JSX.Element {
 	timerStateRef.current = timerState;
 	const [resetEpoch, setResetEpoch] = useState<number>(0);
 	const [timerDetailsVisible, setTimerDetailsVisible] = useState<boolean>(false);
+	const [saveRunVisible, setSaveRunVisible] = useState<boolean>(false);
 
 	useEffect((): (() => void) => {
 		let isDisposed = false;
@@ -651,15 +653,17 @@ function App(): JSX.Element {
 		setTimerDetailsVisible(false);
 	}, []);
 
-	const saveTimerRun = useCallback((): void => {
-		void invoke('timer_save_run')
-			.then(() => {
-				console.info('Timer run saved.');
-			})
-			.catch((err: unknown) => {
-				console.error('Failed to save timer run:', err);
-			});
+	const openSaveRun = useCallback((): void => {
+		setSaveRunVisible(true);
 	}, []);
+
+	const closeSaveRun = useCallback((): void => {
+		setSaveRunVisible(false);
+	}, []);
+
+	const saveTimerRun = useCallback((): void => {
+		openSaveRun();
+	}, [openSaveRun]);
 
 	const resetTimerRun = useCallback((): void => {
 		handleTimerAction('reset');
@@ -686,7 +690,9 @@ function App(): JSX.Element {
 		return <HintTooltipView />;
 	}
 
-	const settingsContent = timerDetailsVisible ? (
+	const settingsContent = saveRunVisible ? (
+		<SaveCampaignRunPage timerState={timerState} onBack={closeSaveRun} />
+	) : timerDetailsVisible ? (
 		<TimerDetailsPage
 			timerState={timerState}
 			onBack={closeTimerDetails}

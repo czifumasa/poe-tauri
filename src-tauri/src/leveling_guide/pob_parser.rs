@@ -12,6 +12,23 @@ pub(crate) struct PobImportData {
     pub(crate) gem_names: Vec<String>,
 }
 
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct AscendancyClassEntry {
+    pub(crate) base_class: String,
+    pub(crate) ascendancy_class: String,
+}
+
+pub(crate) fn ascendancy_class_list() -> Vec<AscendancyClassEntry> {
+    ASCENDANCY_TO_BASE
+        .iter()
+        .map(|(ascendancy, base)| AscendancyClassEntry {
+            base_class: base.to_string(),
+            ascendancy_class: ascendancy.to_string(),
+        })
+        .collect()
+}
+
 const ASCENDANCY_TO_BASE: &[(&str, &str)] = &[
     ("reliquarian", "scion"),
     ("ascendant", "scion"),

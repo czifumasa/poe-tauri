@@ -109,7 +109,8 @@ pub fn run() {
             timer_start,
             timer_pause,
             timer_resume,
-            timer_reset
+            timer_reset,
+            get_ascendancy_classes
         ])
         .setup(move |app| {
             window::init_native_window();

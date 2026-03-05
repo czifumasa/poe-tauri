@@ -1,3 +1,8 @@
+export interface AscendancyClassEntry {
+	baseClass: string;
+	ascendancyClass: string;
+}
+
 export interface GuidePosition {
 	actIndex: number;
 	pageIndex: number;

@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::error::{command_error, CommandError};
 use crate::leveling_guide::progress::{has_persisted_leveling_guide_progress, load_leveling_guide_progress, save_leveling_guide_progress};
+use crate::leveling_guide::pob_parser::{ascendancy_class_list, AscendancyClassEntry};
 use crate::leveling_guide::{LevelingGuideManager, LevelingGuidePageDto};
 use crate::timer::TimerManager;
 use tauri::AppHandle;
@@ -141,4 +142,9 @@ pub fn leveling_guide_reapply_gems(
     persist_current_progress(&app, &manager)?;
     emit_page_updated(&app, &page)?;
     Ok(page)
+}
+
+#[tauri::command(async)]
+pub fn get_ascendancy_classes() -> Vec<AscendancyClassEntry> {
+    ascendancy_class_list()
 }
