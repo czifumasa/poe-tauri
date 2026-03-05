@@ -140,6 +140,7 @@ function App(): JSX.Element {
 	const timerTickRef = useRef<number | null>(null);
 	const timerStateRef = useRef<TimerState>(timerState);
 	timerStateRef.current = timerState;
+	const [timerSyncEpoch, setTimerSyncEpoch] = useState<number>(0);
 	const [resetEpoch, setResetEpoch] = useState<number>(0);
 	const [timerDetailsVisible, setTimerDetailsVisible] = useState<boolean>(false);
 	const [saveRunVisible, setSaveRunVisible] = useState<boolean>(false);
@@ -324,6 +325,7 @@ function App(): JSX.Element {
 							return;
 						}
 						setTimerState(event.payload);
+						setTimerSyncEpoch((prev) => prev + 1);
 					}),
 					listen<TimerSettings>('timer_settings_updated', (event) => {
 						if (isDisposed) {
@@ -386,7 +388,7 @@ function App(): JSX.Element {
 				timerTickRef.current = null;
 			}
 		};
-	}, [timerState.status]);
+	}, [timerState.status, timerSyncEpoch]);
 
 	const handleTimerAction = useCallback((action: 'start' | 'pause' | 'resume' | 'reset'): void => {
 		const commandMap = {
