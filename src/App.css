@@ -58,11 +58,11 @@ body {
 	box-shadow: none;
 }
 
-:root[data-view='overlay'] button:hover {
+:root[data-view='overlay'] button:not(:disabled):hover {
 	border-color: rgba(212, 175, 55, 0.45);
 }
 
-:root[data-view='overlay'] button:active {
+:root[data-view='overlay'] button:not(:disabled):active {
 	background-color: rgba(22, 22, 22, 0.98);
 }
 
@@ -111,11 +111,11 @@ button {
 	cursor: pointer;
 }
 
-button:hover {
+button:not(:disabled):hover {
 	border-color: rgba(200, 169, 110, 0.35);
 }
 
-button:active {
+button:not(:disabled):active {
 	background-color: rgba(200, 169, 110, 0.06);
 }
 

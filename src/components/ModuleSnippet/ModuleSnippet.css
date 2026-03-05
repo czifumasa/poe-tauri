@@ -70,7 +70,7 @@
 		color 0.2s;
 }
 
-.moduleSnippetActionButton:hover {
+.moduleSnippetActionButton:not(:disabled):hover {
 	border-color: rgba(212, 175, 55, 0.35);
 	background: rgba(212, 175, 55, 0.06);
 	color: rgba(212, 175, 55, 0.85);
@@ -102,7 +102,7 @@
 		background-color 0.2s;
 }
 
-.moduleSnippetSettingsButton:hover {
+.moduleSnippetSettingsButton:not(:disabled):hover {
 	border-color: rgba(212, 175, 55, 0.35);
 	background: rgba(212, 175, 55, 0.06);
 	color: rgba(212, 175, 55, 0.85);
@@ -133,7 +133,7 @@
 		background-color 0.2s;
 }
 
-.moduleSnippetIconButton:hover {
+.moduleSnippetIconButton:not(:disabled):hover {
 	border-color: rgba(212, 175, 55, 0.35);
 	background: rgba(212, 175, 55, 0.06);
 	color: rgba(212, 175, 55, 0.85);
