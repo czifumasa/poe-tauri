@@ -67,14 +67,13 @@ impl LevelingGuideSettings {
 pub struct PobSlot {
     pub pob_code: String,
     pub class: String,
+    pub ascend_class: Option<String>,
     pub gem_count: usize,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PobSettings {
-    #[serde(default)]
     pub slots: Vec<PobSlot>,
-    #[serde(default)]
     pub current_slot_index: Option<usize>,
 }
 

@@ -1,5 +1,6 @@
 import { JSX } from 'react';
 import type { PobSettings } from '../../../types/Settings.ts';
+import { pobSlotDisplayClass } from '../../../types/Settings.ts';
 import { ModuleSnippet } from '../../ModuleSnippet/ModuleSnippet.tsx';
 
 import './PobImportDashboardSnippet.css';
@@ -24,7 +25,7 @@ function PobSummaryBody(props: { pobSettings: PobSettings }): JSX.Element {
 	return (
 		<div className="pobSnippetSummary">
 			<div className="pobSnippetSummaryRow">
-				<span className="pobSnippetClassLabel">{currentSlot.class}</span>
+				<span className="pobSnippetClassLabel">{pobSlotDisplayClass(currentSlot)}</span>
 				<span className="pobSnippetGemLabel">{currentSlot.gemCount} gems</span>
 			</div>
 			<span className="pobSnippetSlotCount">{slotCountLabel}</span>

@@ -8,6 +8,7 @@ use std::io::Read;
 #[serde(rename_all = "camelCase")]
 pub(crate) struct PobImportData {
     pub(crate) class: String,
+    pub(crate) ascend_class: Option<String>,
     pub(crate) gem_names: Vec<String>,
 }
 
@@ -95,6 +96,9 @@ fn decode_pob_to_xml(pob_code: &str) -> Result<String, CommandError> {
 }
 
 fn extract_pob_data(xml: &str) -> Result<PobImportData, CommandError> {
+    // TODO: temporary debug dump – remove after inspection
+    let _ = std::fs::write("/home/czifumasa/Workspace/poe-tauri/pob.xml", xml);
+
     let xml_lower = xml.to_ascii_lowercase();
 
     if !xml_lower.contains("<pathofbuilding>") || !xml_lower.contains("</pathofbuilding>") {
@@ -106,6 +110,9 @@ fn extract_pob_data(xml: &str) -> Result<PobImportData, CommandError> {
 
     let raw_class = extract_attribute(&xml_lower, "classname").unwrap_or_default();
     let class = resolve_base_class(&raw_class);
+
+    let ascend_class =
+        extract_attribute(&xml_lower, "ascendclassname").filter(|v| !v.is_empty() && v != "none");
 
     let starters = starter_gems_for_class(&class);
     let mut gem_names: Vec<String> = Vec::new();
@@ -165,11 +172,15 @@ fn extract_pob_data(xml: &str) -> Result<PobImportData, CommandError> {
         }
     }
 
-    Ok(PobImportData { class, gem_names })
+    Ok(PobImportData {
+        class,
+        ascend_class,
+        gem_names,
+    })
 }
 
 fn extract_attribute(text: &str, attr_name: &str) -> Option<String> {
-    let pattern = format!("{attr_name}=\"");
+    let pattern = format!(" {attr_name}=\"");
     let start = text.find(&pattern)? + pattern.len();
     let rest = &text[start..];
     let end = rest.find('"')?;

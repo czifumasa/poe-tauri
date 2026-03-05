@@ -13,6 +13,7 @@ use crate::persistence::store;
 pub struct PobSlotDto {
     pub pob_code: String,
     pub class: String,
+    pub ascend_class: Option<String>,
     pub gem_count: usize,
 }
 
@@ -27,6 +28,7 @@ fn pob_slot_to_dto(slot: &PobSlot) -> PobSlotDto {
     PobSlotDto {
         pob_code: slot.pob_code.clone(),
         class: slot.class.clone(),
+        ascend_class: slot.ascend_class.clone(),
         gem_count: slot.gem_count,
     }
 }
@@ -64,6 +66,7 @@ pub fn pob_settings_add_slot(
     let slot = PobSlot {
         pob_code: pob_code.clone(),
         class: pob_data.class.clone(),
+        ascend_class: pob_data.ascend_class.clone(),
         gem_count: pob_data.gem_names.len(),
     };
 

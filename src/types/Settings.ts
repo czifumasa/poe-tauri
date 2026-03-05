@@ -19,8 +19,22 @@ export type LevelingGuideSettings = {
 export type PobSlot = {
 	pobCode: string;
 	class: string;
+	ascendClass: string | null;
 	gemCount: number;
 };
+
+function isNonEmptyAscendClass(value: string | null): value is string {
+	return value !== null && value !== '' && value.toLowerCase() !== 'none';
+}
+
+function titleCase(value: string): string {
+	return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+}
+
+export function pobSlotDisplayClass(slot: PobSlot): string {
+	const raw = isNonEmptyAscendClass(slot.ascendClass) ? slot.ascendClass : slot.class;
+	return titleCase(raw);
+}
 
 export type PobSettings = {
 	slots: PobSlot[];

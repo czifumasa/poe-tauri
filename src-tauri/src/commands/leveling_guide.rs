@@ -149,6 +149,7 @@ pub fn leveling_guide_import_pob(
     let slot = PobSlot {
         pob_code,
         class: pob_data.class,
+        ascend_class: pob_data.ascend_class,
         gem_count: pob_data.gem_names.len(),
     };
     pob_settings.slots.push(slot);

@@ -1,5 +1,6 @@
 import { JSX, useCallback, useState } from 'react';
 import type { PobSettings } from '../../../types/Settings.ts';
+import { pobSlotDisplayClass } from '../../../types/Settings.ts';
 
 import './PobImportSettingsPanel.css';
 
@@ -91,7 +92,7 @@ export function PobImportSettingsPanel(props: PobImportSettingsPanelProps): JSX.
 									}}>
 									<div className="pobSettingsSlotIndicator" />
 									<div className="pobSettingsSlotInfo">
-										<span className="pobSettingsSlotClass">{slot.class}</span>
+										<span className="pobSettingsSlotClass">{pobSlotDisplayClass(slot)}</span>
 										<span className="pobSettingsSlotGems">{slot.gemCount} gems</span>
 									</div>
 									<button
