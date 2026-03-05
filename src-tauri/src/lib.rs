@@ -107,6 +107,12 @@ fn lock_webview_window_inner_size(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[cfg(target_os = "linux")]
+    {
+        std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
+
     let manager = Arc::new(LevelingGuideManager::default());
     let timer_manager = Arc::new(TimerManager::default());
 
