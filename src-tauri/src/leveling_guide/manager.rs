@@ -275,6 +275,7 @@ impl LevelingGuideManager {
             .ok_or_else(|| command_error("guide_not_loaded", "Guide not loaded"))?;
 
         Ok(PersistedLevelingGuideProgress {
+            schema_version: 1,
             guide_path: loaded.guide_path.clone(),
             position: PersistedGuidePosition::from(loaded.position),
         })

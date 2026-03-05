@@ -113,6 +113,7 @@ function App(): JSX.Element {
 	const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab | null>(null);
 	const [overlayVisible, setOverlayVisible] = useState<boolean>(false);
 	const [settings, setSettings] = useState<LevelingGuideSettings>({
+		schemaVersion: 1,
 		leagueStart: true,
 		overlayPosition: null,
 		optionalQuests: true,
@@ -123,14 +124,16 @@ function App(): JSX.Element {
 		overlayShown: false,
 	});
 	const [settingsLoading, setSettingsLoading] = useState<boolean>(true);
-	const [pobSettings, setPobSettings] = useState<PobSettings>({ slots: [], currentSlotIndex: null });
+	const [pobSettings, setPobSettings] = useState<PobSettings>({ schemaVersion: 1, slots: [], currentSlotIndex: null });
 	const [pobSettingsLoading, setPobSettingsLoading] = useState<boolean>(true);
 	const [timerSettings, setTimerSettings] = useState<TimerSettings>({
+		schemaVersion: 1,
 		enabled: false,
 		displayActTimer: true,
 		displayCampaignTimer: true,
 	});
 	const [timerState, setTimerState] = useState<TimerState>({
+		schemaVersion: 1,
 		status: 'idle',
 		currentActIndex: 0,
 		actElapsedMs: Array.from({ length: 10 }, () => 0),
@@ -603,6 +606,7 @@ function App(): JSX.Element {
 			setActiveSettingsTab(null);
 			setOverlayVisible(false);
 			setSettings({
+				schemaVersion: 1,
 				leagueStart: true,
 				overlayPosition: null,
 				optionalQuests: true,
@@ -612,9 +616,10 @@ function App(): JSX.Element {
 				gemsEnabled: false,
 				overlayShown: false,
 			});
-			setPobSettings({ slots: [], currentSlotIndex: null });
-			setTimerSettings({ enabled: false, displayActTimer: true, displayCampaignTimer: true });
+			setPobSettings({ schemaVersion: 1, slots: [], currentSlotIndex: null });
+			setTimerSettings({ schemaVersion: 1, enabled: false, displayActTimer: true, displayCampaignTimer: true });
 			setTimerState({
+				schemaVersion: 1,
 				status: 'idle',
 				currentActIndex: 0,
 				actElapsedMs: Array.from({ length: 10 }, () => 0),

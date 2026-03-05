@@ -14,6 +14,7 @@ const LEVELING_GUIDE_CLEARED_EVENT: &str = "leveling_guide_cleared";
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LevelingGuideSettingsDto {
+    pub schema_version: u32,
     pub league_start: bool,
     pub overlay_position: Option<crate::persistence::settings::OverlayPosition>,
     pub optional_quests: bool,
@@ -26,6 +27,7 @@ pub struct LevelingGuideSettingsDto {
 
 fn leveling_guide_settings_to_dto(settings: LevelingGuideSettings) -> LevelingGuideSettingsDto {
     LevelingGuideSettingsDto {
+        schema_version: settings.schema_version,
         league_start: settings.league_start,
         overlay_position: settings.overlay_position,
         optional_quests: settings.optional_quests,
@@ -39,6 +41,7 @@ fn leveling_guide_settings_to_dto(settings: LevelingGuideSettings) -> LevelingGu
 
 fn leveling_guide_settings_from_dto(dto: LevelingGuideSettingsDto) -> LevelingGuideSettings {
     LevelingGuideSettings {
+        schema_version: dto.schema_version,
         league_start: dto.league_start,
         overlay_position: dto.overlay_position,
         optional_quests: dto.optional_quests,

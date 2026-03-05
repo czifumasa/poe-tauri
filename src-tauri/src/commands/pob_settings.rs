@@ -20,6 +20,7 @@ pub struct PobSlotDto {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PobSettingsDto {
+    pub schema_version: u32,
     pub slots: Vec<PobSlotDto>,
     pub current_slot_index: Option<usize>,
 }
@@ -35,6 +36,7 @@ fn pob_slot_to_dto(slot: &PobSlot) -> PobSlotDto {
 
 fn pob_settings_to_dto(settings: &PobSettings) -> PobSettingsDto {
     PobSettingsDto {
+        schema_version: settings.schema_version,
         slots: settings.slots.iter().map(pob_slot_to_dto).collect(),
         current_slot_index: settings.current_slot_index,
     }

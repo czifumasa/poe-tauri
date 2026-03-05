@@ -6,6 +6,7 @@ export type OverlayPosition = {
 export type BanditsChoice = 'KillAll' | 'HelpAlira' | 'HelpOak' | 'HelpKraityn';
 
 export type LevelingGuideSettings = {
+	schemaVersion: number;
 	leagueStart: boolean;
 	overlayPosition: OverlayPosition | null;
 	optionalQuests: boolean;
@@ -37,6 +38,7 @@ export function pobSlotDisplayClass(slot: PobSlot): string {
 }
 
 export type PobSettings = {
+	schemaVersion: number;
 	slots: PobSlot[];
 	currentSlotIndex: number | null;
 };

@@ -1,12 +1,14 @@
 export type TimerStatus = 'idle' | 'running' | 'paused';
 
 export type TimerSettings = {
+	schemaVersion: number;
 	enabled: boolean;
 	displayActTimer: boolean;
 	displayCampaignTimer: boolean;
 };
 
 export type TimerState = {
+	schemaVersion: number;
 	status: TimerStatus;
 	currentActIndex: number;
 	actElapsedMs: number[];

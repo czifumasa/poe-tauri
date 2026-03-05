@@ -5,6 +5,10 @@ use std::path::PathBuf;
 use super::gem_db::GemDatabase;
 use super::pob_parser::PobImportData;
 
+fn default_schema_version() -> u32 {
+    1
+}
+
 pub type GuideData = Vec<GuideAct>;
 pub type GuideAct = Vec<GuidePage>;
 
@@ -50,6 +54,8 @@ impl From<GuidePosition> for PersistedGuidePosition {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PersistedLevelingGuideProgress {
+    #[serde(default = "default_schema_version")]
+    pub schema_version: u32,
     pub guide_path: String,
     pub position: PersistedGuidePosition,
 }
@@ -57,6 +63,7 @@ pub struct PersistedLevelingGuideProgress {
 impl PersistedLevelingGuideProgress {
     pub fn default_for_resource(relative_resource_path: &str) -> Self {
         Self {
+            schema_version: 1,
             guide_path: format!("resource:{relative_resource_path}"),
             position: PersistedGuidePosition::from(GuidePosition::start()),
         }

@@ -4,6 +4,10 @@ fn default_true() -> bool {
     true
 }
 
+fn default_schema_version() -> u32 {
+    1
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OverlayPosition {
     pub x: i32,
@@ -26,6 +30,8 @@ impl Default for BanditsChoice {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LevelingGuideSettings {
+    #[serde(default = "default_schema_version")]
+    pub schema_version: u32,
     #[serde(default = "default_true")]
     pub league_start: bool,
     #[serde(default)]
@@ -47,6 +53,7 @@ pub struct LevelingGuideSettings {
 impl Default for LevelingGuideSettings {
     fn default() -> Self {
         Self {
+            schema_version: 1,
             league_start: true,
             overlay_position: None,
             optional_quests: true,
@@ -73,6 +80,8 @@ pub struct PobSlot {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PobSettings {
+    #[serde(default = "default_schema_version")]
+    pub schema_version: u32,
     pub slots: Vec<PobSlot>,
     pub current_slot_index: Option<usize>,
 }
@@ -80,6 +89,7 @@ pub struct PobSettings {
 impl Default for PobSettings {
     fn default() -> Self {
         Self {
+            schema_version: 1,
             slots: Vec::new(),
             current_slot_index: None,
         }
@@ -92,6 +102,8 @@ impl PobSettings {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimerSettings {
+    #[serde(default = "default_schema_version")]
+    pub schema_version: u32,
     #[serde(default)]
     pub enabled: bool,
     #[serde(default = "default_true")]
@@ -103,6 +115,7 @@ pub struct TimerSettings {
 impl Default for TimerSettings {
     fn default() -> Self {
         Self {
+            schema_version: 1,
             enabled: false,
             display_act_timer: true,
             display_campaign_timer: true,
