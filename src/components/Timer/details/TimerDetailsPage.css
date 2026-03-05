@@ -97,6 +97,10 @@
 	font-weight: 600;
 }
 
+.timerDetailsSplitRow--completed {
+	color: rgba(200, 169, 110, 0.8);
+}
+
 .timerDetailsSplitLabel {
 	min-width: 60px;
 }

@@ -57,13 +57,20 @@ function TimerActCell(props: { actIndex: number; timerState: TimerState }): JSX.
 	const { actIndex, timerState } = props;
 	const elapsed = timerState.actElapsedMs[actIndex] ?? 0;
 	const isActive = actIndex === timerState.currentActIndex && timerState.status !== 'idle';
+	const isCompleted = !isActive && actIndex < timerState.currentActIndex && timerState.status !== 'idle';
 	const displayMs = isActive ? timerState.currentActElapsedMs : elapsed;
-	const cellClass = isActive ? 'timerSnippetCell timerSnippetCell--active' : 'timerSnippetCell';
+	const cellClass = isActive
+		? 'timerSnippetCell timerSnippetCell--active'
+		: isCompleted
+			? 'timerSnippetCell timerSnippetCell--completed'
+			: 'timerSnippetCell';
 
 	return (
 		<div className={cellClass}>
 			<span className="timerSnippetActLabel">Act {actIndex + 1}</span>
-			<span className="timerSnippetTimeLabel">{formatElapsedMs(displayMs)}</span>
+			<span className="timerSnippetTimeLabel">
+				{isActive || isCompleted ? formatElapsedMs(displayMs) : '--:--:--'}
+			</span>
 		</div>
 	);
 }

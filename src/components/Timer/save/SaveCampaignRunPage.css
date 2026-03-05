@@ -98,6 +98,15 @@
 	padding: 2px 0;
 }
 
+.saveCampaignRunSplitRow--active {
+	color: rgba(212, 175, 55, 0.95);
+	font-weight: 600;
+}
+
+.saveCampaignRunSplitRow--completed {
+	color: rgba(200, 169, 110, 0.8);
+}
+
 .saveCampaignRunSplitLabel {
 	min-width: 60px;
 }

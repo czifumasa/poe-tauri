@@ -14,13 +14,24 @@ export type TimerState = {
 	campaignElapsedMs: number;
 };
 
+export type ActRunStatus = 'completed' | 'in_progress' | 'pending';
+
+export type ActRun = {
+	readonly actName: string;
+	readonly elapsedMs: number;
+	readonly status: ActRunStatus;
+};
+
 export type SavedRun = {
 	readonly id: string;
-	readonly name: string;
 	readonly league: string;
+	readonly hardcore: boolean;
+	readonly ssf: boolean;
+	readonly privateLeague: boolean;
 	readonly character: string;
 	readonly characterClass: string;
-	readonly actElapsedMs: readonly number[];
+	readonly runDetails: string;
+	readonly actRuns: readonly ActRun[];
 	readonly campaignElapsedMs: number;
 	readonly savedAt: number;
 };

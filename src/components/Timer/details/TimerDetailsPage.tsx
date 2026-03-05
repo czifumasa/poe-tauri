@@ -1,5 +1,5 @@
 import { JSX, useState } from 'react';
-import type { SavedRun, TimerState } from '../../../types/Timer.ts';
+import type { ActRun, SavedRun, TimerState } from '../../../types/Timer.ts';
 import { formatElapsedMs } from '../../../utils/formatTime.ts';
 import { SectionDivider } from '../../SectionDivider/SectionDivider.tsx';
 
@@ -22,65 +22,94 @@ const FILTER_OPTIONS: readonly { readonly value: BestRunsFilter; readonly label:
 	...Array.from({ length: ACT_COUNT }, (_, i) => ({ value: i as BestRunsFilter, label: `Act ${i + 1}` })),
 ];
 
+function buildCompletedActRuns(times: readonly number[]): readonly ActRun[] {
+	return times.map((ms, i) => ({ actName: `Act ${i + 1}`, elapsedMs: ms, status: 'completed' as const }));
+}
+
+function buildPartialActRuns(times: readonly number[], inProgressIndex: number): readonly ActRun[] {
+	return Array.from({ length: ACT_COUNT }, (_, i) => {
+		if (i < inProgressIndex) return { actName: `Act ${i + 1}`, elapsedMs: times[i], status: 'completed' as const };
+		if (i === inProgressIndex) return { actName: `Act ${i + 1}`, elapsedMs: times[i], status: 'in_progress' as const };
+		return { actName: `Act ${i + 1}`, elapsedMs: 0, status: 'pending' as const };
+	});
+}
+
 const MOCK_SAVED_RUNS: readonly SavedRun[] = [
 	{
 		id: '1',
-		name: 'Settlers Day 1',
-		league: 'Settlers',
+		league: 'Mirage',
+		hardcore: false,
+		ssf: false,
+		privateLeague: false,
 		character: 'SpeedyExile',
-		characterClass: 'Witch',
-		actElapsedMs: [
+		characterClass: 'Elementalist',
+		runDetails: 'SRS Necro league starter, rush acts',
+		actRuns: buildCompletedActRuns([
 			1_020_000, 960_000, 1_080_000, 1_140_000, 900_000, 1_200_000, 1_320_000, 1_080_000, 1_260_000, 1_440_000,
-		],
+		]),
 		campaignElapsedMs: 11_400_000,
 		savedAt: Date.now() - 86_400_000 * 3,
 	},
 	{
 		id: '2',
-		name: 'Settlers Practice',
-		league: 'Settlers',
+		league: 'Mirage',
+		hardcore: false,
+		ssf: false,
+		privateLeague: false,
 		character: 'TrailRunner',
-		characterClass: 'Ranger',
-		actElapsedMs: [
+		characterClass: 'Deadeye',
+		runDetails: 'Lightning Arrow practice, leveling uniques',
+		actRuns: buildCompletedActRuns([
 			1_140_000, 1_080_000, 1_200_000, 1_260_000, 1_020_000, 1_380_000, 1_440_000, 1_200_000, 1_380_000, 1_560_000,
-		],
+		]),
 		campaignElapsedMs: 12_660_000,
 		savedAt: Date.now() - 86_400_000 * 5,
 	},
 	{
 		id: '3',
-		name: 'League Start HC',
-		league: 'Settlers',
+		league: 'Mirage',
+		hardcore: true,
+		ssf: true,
+		privateLeague: false,
 		character: 'TankMaster',
-		characterClass: 'Marauder',
-		actElapsedMs: [
+		characterClass: 'Juggernaut',
+		runDetails: 'RF Jugg, safe pathing, over-leveled zones',
+		actRuns: buildCompletedActRuns([
 			1_260_000, 1_200_000, 1_320_000, 1_380_000, 1_140_000, 1_500_000, 1_560_000, 1_320_000, 1_500_000, 1_680_000,
-		],
+		]),
 		campaignElapsedMs: 13_860_000,
 		savedAt: Date.now() - 86_400_000 * 7,
 	},
 	{
 		id: '4',
-		name: 'SSF Attempt',
-		league: 'Settlers',
+		league: 'Mirage',
+		hardcore: false,
+		ssf: true,
+		privateLeague: false,
 		character: 'SoloSurvivor',
-		characterClass: 'Duelist',
-		actElapsedMs: [
-			1_380_000, 1_320_000, 1_440_000, 1_500_000, 1_260_000, 1_620_000, 1_680_000, 1_440_000, 1_620_000, 1_800_000,
-		],
-		campaignElapsedMs: 15_060_000,
+		characterClass: 'Champion',
+		runDetails: 'Steel skills Champion, vendor crafted gear',
+		actRuns: buildPartialActRuns(
+			[1_380_000, 1_320_000, 1_440_000, 1_500_000, 1_260_000, 1_620_000, 420_000, 0, 0, 0],
+			6,
+		),
+		campaignElapsedMs: 8_940_000,
 		savedAt: Date.now() - 86_400_000 * 10,
 	},
 	{
 		id: '5',
-		name: 'Casual Run',
-		league: 'Settlers',
+		league: 'Standard',
+		hardcore: false,
+		ssf: false,
+		privateLeague: true,
 		character: 'ChillWitch',
-		characterClass: 'Witch',
-		actElapsedMs: [
-			1_500_000, 1_440_000, 1_560_000, 1_620_000, 1_380_000, 1_740_000, 1_800_000, 1_560_000, 1_740_000, 1_920_000,
-		],
-		campaignElapsedMs: 16_260_000,
+		characterClass: 'Necromancer',
+		runDetails: 'Casual SRS Necro with friends, no rush',
+		actRuns: buildPartialActRuns(
+			[1_500_000, 1_440_000, 1_560_000, 780_000, 0, 0, 0, 0, 0, 0],
+			3,
+		),
+		campaignElapsedMs: 5_280_000,
 		savedAt: Date.now() - 86_400_000 * 14,
 	},
 ];
@@ -182,27 +211,37 @@ function ChevronIcon(props: { expanded: boolean }): JSX.Element {
 	);
 }
 
-function ActSplitList(props: { actElapsedMs: readonly number[] }): JSX.Element {
-	const half = Math.ceil(props.actElapsedMs.length / 2);
-	const left = props.actElapsedMs.slice(0, half);
-	const right = props.actElapsedMs.slice(half);
+function actRunRowClass(status: ActRun['status']): string {
+	if (status === 'in_progress') return 'timerDetailsSplitRow timerDetailsSplitRow--active';
+	if (status === 'completed') return 'timerDetailsSplitRow timerDetailsSplitRow--completed';
+	return 'timerDetailsSplitRow';
+}
+
+function ActSplitList(props: { actRuns: readonly ActRun[] }): JSX.Element {
+	const half = Math.ceil(props.actRuns.length / 2);
+	const left = props.actRuns.slice(0, half);
+	const right = props.actRuns.slice(half);
 
 	return (
 		<div className="timerDetailsSplitColumns">
 			<div className="timerDetailsSplitColumn">
-				{left.map((ms, i) => (
-					<div key={i} className="timerDetailsSplitRow">
-						<span className="timerDetailsSplitLabel">Act {i + 1}</span>
-						<span className="timerDetailsSplitValue">{formatElapsedMs(ms)}</span>
+				{left.map((act, i) => (
+					<div key={i} className={actRunRowClass(act.status)}>
+						<span className="timerDetailsSplitLabel">{act.actName}</span>
+						<span className="timerDetailsSplitValue">
+							{act.status === 'pending' ? '--:--:--' : formatElapsedMs(act.elapsedMs)}
+						</span>
 					</div>
 				))}
 			</div>
 			<div className="timerDetailsSplitColumnDivider" />
 			<div className="timerDetailsSplitColumn">
-				{right.map((ms, i) => (
-					<div key={i + half} className="timerDetailsSplitRow">
-						<span className="timerDetailsSplitLabel">Act {i + half + 1}</span>
-						<span className="timerDetailsSplitValue">{formatElapsedMs(ms)}</span>
+				{right.map((act, i) => (
+					<div key={i + half} className={actRunRowClass(act.status)}>
+						<span className="timerDetailsSplitLabel">{act.actName}</span>
+						<span className="timerDetailsSplitValue">
+							{act.status === 'pending' ? '--:--:--' : formatElapsedMs(act.elapsedMs)}
+						</span>
 					</div>
 				))}
 			</div>
@@ -223,13 +262,20 @@ function CurrentRunContent(props: {
 			<div className="timerDetailsSplitList">
 				{timerState.actElapsedMs.map((ms, i) => {
 					const isActive = i === timerState.currentActIndex && timerState.status !== 'idle';
+					const isCompleted = !isActive && i < timerState.currentActIndex && timerState.status !== 'idle';
 					const displayMs = isActive ? timerState.currentActElapsedMs : ms;
-					const rowClass = isActive ? 'timerDetailsSplitRow timerDetailsSplitRow--active' : 'timerDetailsSplitRow';
+					const rowClass = isActive
+						? 'timerDetailsSplitRow timerDetailsSplitRow--active'
+						: isCompleted
+							? 'timerDetailsSplitRow timerDetailsSplitRow--completed'
+							: 'timerDetailsSplitRow';
 
 					return (
 						<div key={i} className={rowClass}>
 							<span className="timerDetailsSplitLabel">Act {i + 1}</span>
-							<span className="timerDetailsSplitValue">{formatElapsedMs(displayMs)}</span>
+							<span className="timerDetailsSplitValue">
+								{isActive || isCompleted ? formatElapsedMs(displayMs) : '--:--:--'}
+							</span>
 						</div>
 					);
 				})}
@@ -261,13 +307,25 @@ function CurrentRunContent(props: {
 	);
 }
 
+function formatLeagueDisplay(run: SavedRun): string {
+	const tags: string[] = [];
+	if (run.hardcore) tags.push('HC');
+	if (run.ssf) tags.push('SSF');
+	if (run.privateLeague) tags.push('Private');
+	if (tags.length === 0) return run.league;
+	return `${run.league} (${tags.join(', ')})`;
+}
+
 function sortRunsByFilter(runs: readonly SavedRun[], filter: BestRunsFilter): readonly SavedRun[] {
-	return [...runs].sort((a, b) => {
+	const filtered = filter === 'campaign'
+		? [...runs]
+		: runs.filter((r) => r.actRuns[filter]?.status === 'completed');
+	return filtered.sort((a, b) => {
 		if (filter === 'campaign') {
 			return a.campaignElapsedMs - b.campaignElapsedMs;
 		}
 		const actIndex = filter;
-		return (a.actElapsedMs[actIndex] ?? 0) - (b.actElapsedMs[actIndex] ?? 0);
+		return (a.actRuns[actIndex]?.elapsedMs ?? 0) - (b.actRuns[actIndex]?.elapsedMs ?? 0);
 	});
 }
 
@@ -302,7 +360,7 @@ function BestRunsContent(): JSX.Element {
 			<div className="timerDetailsRunList">
 				{sorted.map((run, rank) => {
 					const isExpanded = expandedRunId === run.id;
-					const timeValue = filter === 'campaign' ? run.campaignElapsedMs : (run.actElapsedMs[filter] ?? 0);
+					const timeValue = filter === 'campaign' ? run.campaignElapsedMs : (run.actRuns[filter]?.elapsedMs ?? 0);
 
 					return (
 						<div key={run.id} className="timerDetailsRunItem">
@@ -312,9 +370,9 @@ function BestRunsContent(): JSX.Element {
 								onClick={() => toggleExpand(run.id)}>
 								<span className="timerDetailsRunRank">#{rank + 1}</span>
 								<div className="timerDetailsRunInfo">
-									<span className="timerDetailsRunName">{run.name}</span>
+									<span className="timerDetailsRunName">{run.runDetails}</span>
 									<span className="timerDetailsRunMeta">
-										{run.league} · {run.character} · {run.characterClass}
+										{formatLeagueDisplay(run)} · {run.character} · {run.characterClass}
 									</span>
 								</div>
 								<span className="timerDetailsRunTime">{formatElapsedMs(timeValue)}</span>
@@ -322,7 +380,7 @@ function BestRunsContent(): JSX.Element {
 							</button>
 							{filter === 'campaign' && isExpanded && (
 								<div className="timerDetailsRunExpanded">
-									<ActSplitList actElapsedMs={run.actElapsedMs} />
+									<ActSplitList actRuns={run.actRuns} />
 								</div>
 							)}
 						</div>
@@ -379,9 +437,9 @@ function ManageRunsContent(): JSX.Element {
 								className={isExpanded ? 'timerDetailsRunRow timerDetailsRunRow--expanded' : 'timerDetailsRunRow'}
 								onClick={() => toggleExpand(run.id)}>
 								<div className="timerDetailsRunInfo">
-									<span className="timerDetailsRunName">{run.name}</span>
+									<span className="timerDetailsRunName">{run.runDetails}</span>
 									<span className="timerDetailsRunMeta">
-										{run.league} · {run.character} · {run.characterClass}
+										{formatLeagueDisplay(run)} · {run.character} · {run.characterClass}
 									</span>
 								</div>
 								<span className="timerDetailsRunTime">{formatElapsedMs(run.campaignElapsedMs)}</span>
@@ -389,7 +447,7 @@ function ManageRunsContent(): JSX.Element {
 							</button>
 							{isExpanded && (
 								<div className="timerDetailsRunExpanded">
-									<ActSplitList actElapsedMs={run.actElapsedMs} />
+									<ActSplitList actRuns={run.actRuns} />
 									<div className="timerDetailsRunExpandedActions">
 										<button
 											type="button"

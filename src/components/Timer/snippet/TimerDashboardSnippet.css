@@ -37,6 +37,10 @@
 	font-weight: 600;
 }
 
+.timerSnippetCell--completed {
+	color: rgba(200, 169, 110, 0.8);
+}
+
 .timerSnippetTotal {
 	width: 100%;
 	display: flex;

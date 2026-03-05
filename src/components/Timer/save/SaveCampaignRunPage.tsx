@@ -68,7 +68,7 @@ export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageP
 	const [hardcore, setHardcore] = useState<boolean>(false);
 	const [ssf, setSsf] = useState<boolean>(false);
 	const [privateLeague, setPrivateLeague] = useState<boolean>(false);
-	const [note, setNote] = useState<string>('');
+	const [runDetails, setRunDetails] = useState<string>('');
 	const [classOptions, setClassOptions] = useState<readonly { readonly value: string; readonly label: string }[]>([]);
 
 	useEffect((): void => {
@@ -88,6 +88,7 @@ export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageP
 	const missingFields: string[] = [];
 	if (characterName.trim() === '') missingFields.push('character name');
 	if (selectedClass === '') missingFields.push('class');
+	if (runDetails.trim() === '') missingFields.push('run details');
 	const isSaveDisabled = missingFields.length > 0;
 	const saveTooltip = isSaveDisabled ? `Missing required fields: ${missingFields.join(', ')}` : undefined;
 
@@ -122,13 +123,13 @@ export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageP
 						</select>
 					</div>
 					<div className="saveCampaignRunFieldFull">
-						<span className="saveCampaignRunFieldLabel">Note</span>
+						<span className="saveCampaignRunFieldLabel">Run details</span>
 						<input
 							type="text"
 							className="saveCampaignRunInput"
-							placeholder="Optional note"
-							value={note}
-							onChange={(e) => setNote(e.currentTarget.value)}
+							placeholder="For example: build, strategy, used gear"
+							value={runDetails}
+							onChange={(e) => setRunDetails(e.currentTarget.value)}
 						/>
 					</div>
 				</div>
@@ -176,12 +177,20 @@ export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageP
 					<div className="saveCampaignRunSplitColumn">
 						{timerState.actElapsedMs.slice(0, Math.ceil(timerState.actElapsedMs.length / 2)).map((ms, i) => {
 							const isActive = i === timerState.currentActIndex && timerState.status !== 'idle';
+							const isCompleted = !isActive && i < timerState.currentActIndex && timerState.status !== 'idle';
 							const displayMs = isActive ? timerState.currentActElapsedMs : ms;
+							const rowClass = isActive
+								? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--active'
+								: isCompleted
+									? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--completed'
+									: 'saveCampaignRunSplitRow';
 
 							return (
-								<div key={i} className="saveCampaignRunSplitRow">
+								<div key={i} className={rowClass}>
 									<span className="saveCampaignRunSplitLabel">Act {i + 1}</span>
-									<span className="saveCampaignRunSplitValue">{formatElapsedMs(displayMs)}</span>
+									<span className="saveCampaignRunSplitValue">
+										{isActive || isCompleted ? formatElapsedMs(displayMs) : '--:--:--'}
+									</span>
 								</div>
 							);
 						})}
@@ -192,12 +201,20 @@ export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageP
 							const half = Math.ceil(timerState.actElapsedMs.length / 2);
 							const actIndex = half + i;
 							const isActive = actIndex === timerState.currentActIndex && timerState.status !== 'idle';
+							const isCompleted = !isActive && actIndex < timerState.currentActIndex && timerState.status !== 'idle';
 							const displayMs = isActive ? timerState.currentActElapsedMs : ms;
+							const rowClass = isActive
+								? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--active'
+								: isCompleted
+									? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--completed'
+									: 'saveCampaignRunSplitRow';
 
 							return (
-								<div key={actIndex} className="saveCampaignRunSplitRow">
+								<div key={actIndex} className={rowClass}>
 									<span className="saveCampaignRunSplitLabel">Act {actIndex + 1}</span>
-									<span className="saveCampaignRunSplitValue">{formatElapsedMs(displayMs)}</span>
+									<span className="saveCampaignRunSplitValue">
+										{isActive || isCompleted ? formatElapsedMs(displayMs) : '--:--:--'}
+									</span>
 								</div>
 							);
 						})}
