@@ -1,11 +1,8 @@
 use std::sync::Arc;
 
 use crate::error::{command_error, CommandError};
-use crate::leveling_guide::pob_parser::{self, PobImportData};
 use crate::leveling_guide::progress::{has_persisted_leveling_guide_progress, load_leveling_guide_progress, save_leveling_guide_progress};
 use crate::leveling_guide::{LevelingGuideManager, LevelingGuidePageDto};
-use crate::persistence::settings::{PobSettings, PobSlot};
-use crate::persistence::store;
 use crate::timer::TimerManager;
 use tauri::AppHandle;
 use tauri::Emitter;
@@ -131,41 +128,6 @@ pub fn leveling_guide_reset_progress(
     persist_current_progress(&app, &manager)?;
     emit_page_updated(&app, &page)?;
     Ok(page)
-}
-
-#[tauri::command(async)]
-pub fn leveling_guide_import_pob(
-    app: tauri::AppHandle,
-    manager: State<'_, Arc<LevelingGuideManager>>,
-    timer_manager: State<'_, Arc<TimerManager>>,
-    pob_code: String,
-) -> Result<LevelingGuidePageDto, CommandError> {
-    ensure_loaded(&app, &manager, &timer_manager)?;
-    let pob_data = pob_parser::parse_pob_export(&pob_code)?;
-    let page = manager.import_pob(&app, pob_data.clone())?;
-
-    let mut pob_settings =
-        store::get_optional::<PobSettings>(&app, PobSettings::STORE_KEY)?.unwrap_or_default();
-    let slot = PobSlot {
-        pob_code,
-        class: pob_data.class,
-        ascend_class: pob_data.ascend_class,
-        gem_count: pob_data.gem_names.len(),
-    };
-    pob_settings.slots.push(slot);
-    pob_settings.current_slot_index = Some(pob_settings.slots.len() - 1);
-    store::set_value(&app, PobSettings::STORE_KEY, &pob_settings)?;
-
-    persist_current_progress(&app, &manager)?;
-    emit_page_updated(&app, &page)?;
-    Ok(page)
-}
-
-#[tauri::command(async)]
-pub fn leveling_guide_get_pob_status(
-    manager: State<'_, Arc<LevelingGuideManager>>,
-) -> Result<Option<PobImportData>, CommandError> {
-    manager.get_pob_import_status()
 }
 
 #[tauri::command(async)]

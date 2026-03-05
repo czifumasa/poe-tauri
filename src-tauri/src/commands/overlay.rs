@@ -271,17 +271,6 @@ pub fn hide_overlay(app: tauri::AppHandle) -> Result<(), CommandError> {
 }
 
 #[tauri::command(async)]
-pub fn overlay_is_visible(app: tauri::AppHandle) -> Result<bool, CommandError> {
-    let Some(window) = app.get_webview_window(OVERLAY_WINDOW_LABEL) else {
-        return Ok(false);
-    };
-
-    window
-        .is_visible()
-        .map_err(|e| command_error("overlay_panel_window_get_visibility_failed", e.to_string()))
-}
-
-#[tauri::command(async)]
 pub fn overlay_get_position(app: tauri::AppHandle) -> Result<OverlayPosition, CommandError> {
     let native_window = crate::window::native_window();
     let window = ensure_overlay_window(&app)?;
@@ -314,20 +303,6 @@ pub fn overlay_set_position(
 ) -> Result<(), CommandError> {
     apply_overlay_position(&app, &position)?;
     save_overlay_position(&app, &position)?;
-    Ok(())
-}
-
-#[tauri::command(async)]
-pub fn overlay_reset_to_default_position(app: tauri::AppHandle) -> Result<(), CommandError> {
-    if app.get_webview_window(OVERLAY_WINDOW_LABEL).is_none() {
-        return Ok(());
-    }
-
-    let default_position = OverlayPosition::LayerShellMargins {
-        left: OVERLAY_DEFAULT_MARGIN_LEFT_PX,
-        bottom: OVERLAY_DEFAULT_MARGIN_BOTTOM_PX,
-    };
-    apply_overlay_position(&app, &default_position)?;
     Ok(())
 }
 

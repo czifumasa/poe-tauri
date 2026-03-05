@@ -91,16 +91,6 @@ impl TimerManager {
         Ok(TimerStateDto::from(&guard.state))
     }
 
-    pub fn get_state(&self) -> Result<TimerStateDto, CommandError> {
-        let mut guard = self
-            .inner
-            .lock()
-            .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
-
-        flush_elapsed(&mut guard);
-        Ok(TimerStateDto::from(&guard.state))
-    }
-
     pub fn start(&self, app: &AppHandle) -> Result<TimerStateDto, CommandError> {
         let mut guard = self
             .inner

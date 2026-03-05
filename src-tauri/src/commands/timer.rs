@@ -32,13 +32,6 @@ pub fn timer_set_settings(
 }
 
 #[tauri::command(async)]
-pub fn timer_get_state(
-    manager: State<'_, Arc<TimerManager>>,
-) -> Result<TimerStateDto, CommandError> {
-    manager.get_state()
-}
-
-#[tauri::command(async)]
 pub fn timer_load_state(
     app: tauri::AppHandle,
     manager: State<'_, Arc<TimerManager>>,

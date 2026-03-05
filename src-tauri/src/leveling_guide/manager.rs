@@ -363,19 +363,6 @@ impl LevelingGuideManager {
         current_page_dto(app, loaded, &settings)
     }
 
-    pub fn get_pob_import_status(&self) -> Result<Option<PobImportData>, CommandError> {
-        let guard = self
-            .loaded
-            .lock()
-            .map_err(|_| command_error("guide_state_poisoned", "Guide state poisoned"))?;
-
-        let data = guard
-            .as_ref()
-            .and_then(|loaded| loaded.pob_import_data.clone());
-
-        Ok(data)
-    }
-
     pub fn try_auto_advance(
         &self,
         app: &AppHandle,

@@ -13,7 +13,6 @@ mod persistence;
 mod timer;
 mod window;
 
-use commands::common::*;
 use commands::hint_tooltip::*;
 use commands::leveling_guide::*;
 use commands::overlay::*;
@@ -81,25 +80,20 @@ pub fn run() {
         .manage(Arc::clone(&manager))
         .manage(Arc::clone(&timer_manager))
         .invoke_handler(tauri::generate_handler![
-            greet,
             load_guide,
             leveling_guide_has_persisted_progress,
             leveling_guide_get_current_page,
             leveling_guide_next_page,
             leveling_guide_previous_page,
             leveling_guide_reset_progress,
-            leveling_guide_import_pob,
-            leveling_guide_get_pob_status,
             leveling_guide_reapply_gems,
             settings_get_leveling_guide,
             settings_set_leveling_guide,
             settings_wipe,
             show_overlay,
             hide_overlay,
-            overlay_is_visible,
             overlay_get_position,
             overlay_set_position,
-            overlay_reset_to_default_position,
             overlay_apply_position,
             set_overlay_panel_size,
             hint_tooltip_show,
@@ -111,7 +105,6 @@ pub fn run() {
             pob_settings_set_current_slot,
             timer_get_settings,
             timer_set_settings,
-            timer_get_state,
             timer_load_state,
             timer_start,
             timer_pause,
