@@ -45,18 +45,21 @@ function buildClassOptions(
 		baseClasses.add(entry.baseClass);
 	}
 
-	const options: { value: string; label: string }[] = [];
+	const ascendancyOptions: { value: string; label: string }[] = [];
+	const baseOptions: { value: string; label: string }[] = [];
 
 	for (const base of baseClasses) {
 		const capitalized = base.charAt(0).toUpperCase() + base.slice(1);
-		options.push({ value: base, label: capitalized });
+		baseOptions.push({ value: base, label: capitalized });
 		for (const entry of entries) {
 			if (entry.baseClass === base) {
 				const ascCapitalized = entry.ascendancyClass.charAt(0).toUpperCase() + entry.ascendancyClass.slice(1);
-				options.push({ value: entry.ascendancyClass, label: `  ${ascCapitalized}` });
+				ascendancyOptions.push({ value: entry.ascendancyClass, label: ascCapitalized });
 			}
 		}
 	}
+
+	const options: { value: string; label: string }[] = [...ascendancyOptions, ...baseOptions];
 
 	return options;
 }
@@ -77,9 +80,6 @@ export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageP
 			.then((entries) => {
 				const options = buildClassOptions(entries);
 				setClassOptions(options);
-				if (options.length > 0 && selectedClass === '') {
-					setSelectedClass(options[0].value);
-				}
 			})
 			.catch((err: unknown) => {
 				console.error('Failed to load ascendancy classes:', err);
@@ -116,6 +116,9 @@ export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageP
 							className="settingsSelect"
 							value={selectedClass}
 							onChange={(e) => setSelectedClass(e.currentTarget.value)}>
+							<option value="" disabled>
+								Select class
+							</option>
 							{classOptions.map((opt) => (
 								<option key={opt.value} value={opt.value}>
 									{opt.label}
