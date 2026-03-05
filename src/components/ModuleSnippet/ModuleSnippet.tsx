@@ -96,7 +96,7 @@ export function ModuleSnippet(props: ModuleSnippetProps): JSX.Element {
 
 			{props.action !== undefined && (
 				<div className="moduleSnippetFooter">
-						{(Array.isArray(props.action) ? props.action : [props.action]).map((a, i) => (
+					{(Array.isArray(props.action) ? props.action : [props.action]).map((a, i) => (
 						<Fragment key={i}>{renderFooterAction(a)}</Fragment>
 					))}
 				</div>

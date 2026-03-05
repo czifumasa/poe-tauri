@@ -25,4 +25,3 @@ export type PobSettings = {
 	slots: PobSlot[];
 	currentSlotIndex: number | null;
 };
-

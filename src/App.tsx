@@ -364,8 +364,8 @@ function App(): JSX.Element {
 		}
 
 		const startedAt = Date.now();
-		const baseActMs = timerState.currentActElapsedMs;
-		const baseCampaignMs = timerState.campaignElapsedMs;
+		const baseActMs = timerStateRef.current.currentActElapsedMs;
+		const baseCampaignMs = timerStateRef.current.campaignElapsedMs;
 
 		timerTickRef.current = window.setInterval((): void => {
 			const elapsed = Date.now() - startedAt;
@@ -382,7 +382,6 @@ function App(): JSX.Element {
 				timerTickRef.current = null;
 			}
 		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [timerState.status]);
 
 	const handleTimerAction = useCallback((action: 'start' | 'pause' | 'resume' | 'reset'): void => {
@@ -401,19 +400,16 @@ function App(): JSX.Element {
 			});
 	}, []);
 
-	const persistTimerSettings = useCallback(
-		(updated: TimerSettings): void => {
-			setTimerSettings(updated);
-			void invoke('timer_set_settings', {
-				enabled: updated.enabled,
-				displayActTimer: updated.displayActTimer,
-				displayCampaignTimer: updated.displayCampaignTimer,
-			}).catch((err: unknown) => {
-				console.error('Failed to persist timer settings:', err);
-			});
-		},
-		[],
-	);
+	const persistTimerSettings = useCallback((updated: TimerSettings): void => {
+		setTimerSettings(updated);
+		void invoke('timer_set_settings', {
+			enabled: updated.enabled,
+			displayActTimer: updated.displayActTimer,
+			displayCampaignTimer: updated.displayCampaignTimer,
+		}).catch((err: unknown) => {
+			console.error('Failed to persist timer settings:', err);
+		});
+	}, []);
 
 	const updateTimerEnabled = useCallback(
 		(nextValue: boolean): void => {
@@ -681,55 +677,59 @@ function App(): JSX.Element {
 		return <HintTooltipView />;
 	}
 
-	const settingsContent =
-		timerDetailsVisible ? (
-			<TimerDetailsPage timerState={timerState} onBack={closeTimerDetails} onSaveRun={saveTimerRun} onResetRun={resetTimerRun} />
-		) : activeSettingsTab !== null ? (
-			<SettingsPage
-				activeTab={activeSettingsTab}
-				onTabChange={setActiveSettingsTab}
-				onBack={closeSettings}
-				onResetAppData={wipeSettings}
-				levelingGuideContent={
-					<LevelingGuideSettingsPanel
-						settingsLoading={settingsLoading}
-						leagueStart={settings.leagueStart}
-						onLeagueStartChange={updateLeagueStart}
-						optionalQuests={settings.optionalQuests}
-						onOptionalQuestsChange={updateOptionalQuests}
-						levelRecommendations={settings.levelRecommendations}
-						onLevelRecommendationsChange={updateLevelRecommendations}
-						banditsChoice={settings.banditsChoice}
-						onBanditsChoiceChange={updateBanditsChoice}
-						clientLogPath={settings.clientLogPath}
-						onClientLogPathBrowse={browseClientLogPath}
-						onClientLogPathClear={clearClientLogPath}
-						gemsEnabled={settings.gemsEnabled}
-						onGemsEnabledChange={updateGemsEnabled}
-					/>
-				}
-				pobImportContent={
-					<PobImportSettingsPanel
-						pobSettings={pobSettings}
-						loading={pobSettingsLoading}
-						onAddSlot={addPobSlot}
-						onRemoveSlot={removePobSlot}
-						onSetCurrentSlot={setCurrentPobSlot}
-					/>
-				}
-				timerContent={
-					<TimerSettingsPanel
-						enabled={timerSettings.enabled}
-						displayActTimer={timerSettings.displayActTimer}
-						displayCampaignTimer={timerSettings.displayCampaignTimer}
-						onEnabledChange={updateTimerEnabled}
-						onDisplayActTimerChange={updateDisplayActTimer}
-						onDisplayCampaignTimerChange={updateDisplayCampaignTimer}
-						settingsLoading={settingsLoading}
-					/>
-				}
-			/>
-		) : undefined;
+	const settingsContent = timerDetailsVisible ? (
+		<TimerDetailsPage
+			timerState={timerState}
+			onBack={closeTimerDetails}
+			onSaveRun={saveTimerRun}
+			onResetRun={resetTimerRun}
+		/>
+	) : activeSettingsTab !== null ? (
+		<SettingsPage
+			activeTab={activeSettingsTab}
+			onTabChange={setActiveSettingsTab}
+			onBack={closeSettings}
+			onResetAppData={wipeSettings}
+			levelingGuideContent={
+				<LevelingGuideSettingsPanel
+					settingsLoading={settingsLoading}
+					leagueStart={settings.leagueStart}
+					onLeagueStartChange={updateLeagueStart}
+					optionalQuests={settings.optionalQuests}
+					onOptionalQuestsChange={updateOptionalQuests}
+					levelRecommendations={settings.levelRecommendations}
+					onLevelRecommendationsChange={updateLevelRecommendations}
+					banditsChoice={settings.banditsChoice}
+					onBanditsChoiceChange={updateBanditsChoice}
+					clientLogPath={settings.clientLogPath}
+					onClientLogPathBrowse={browseClientLogPath}
+					onClientLogPathClear={clearClientLogPath}
+					gemsEnabled={settings.gemsEnabled}
+					onGemsEnabledChange={updateGemsEnabled}
+				/>
+			}
+			pobImportContent={
+				<PobImportSettingsPanel
+					pobSettings={pobSettings}
+					loading={pobSettingsLoading}
+					onAddSlot={addPobSlot}
+					onRemoveSlot={removePobSlot}
+					onSetCurrentSlot={setCurrentPobSlot}
+				/>
+			}
+			timerContent={
+				<TimerSettingsPanel
+					enabled={timerSettings.enabled}
+					displayActTimer={timerSettings.displayActTimer}
+					displayCampaignTimer={timerSettings.displayCampaignTimer}
+					onEnabledChange={updateTimerEnabled}
+					onDisplayActTimerChange={updateDisplayActTimer}
+					onDisplayCampaignTimerChange={updateDisplayCampaignTimer}
+					settingsLoading={settingsLoading}
+				/>
+			}
+		/>
+	) : undefined;
 
 	return (
 		<MainView versionLabel={appVersion} settingsContent={settingsContent} onOpenSettings={() => openSettings('global')}>
@@ -770,7 +770,7 @@ function App(): JSX.Element {
 				settingsDisabled
 			/>
 			<ModuleSnippet
-				title="Cheatsheets"
+				title="Cheat Sheets"
 				disabled
 				hint="Reference sheets for recipes, mechanics, and more."
 				action={{ type: 'comingSoon' }}

@@ -29,12 +29,7 @@ function SettingsGearIcon(): JSX.Element {
 	);
 }
 
-export function MainView({
-	versionLabel,
-	children,
-	settingsContent,
-	onOpenSettings,
-}: MainViewProps): JSX.Element {
+export function MainView({ versionLabel, children, settingsContent, onOpenSettings }: MainViewProps): JSX.Element {
 	return (
 		<main className="mainViewContainer">
 			<TitleBar

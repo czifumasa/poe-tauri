@@ -29,7 +29,9 @@ const MOCK_SAVED_RUNS: readonly SavedRun[] = [
 		league: 'Settlers',
 		character: 'SpeedyExile',
 		characterClass: 'Witch',
-		actElapsedMs: [1_020_000, 960_000, 1_080_000, 1_140_000, 900_000, 1_200_000, 1_320_000, 1_080_000, 1_260_000, 1_440_000],
+		actElapsedMs: [
+			1_020_000, 960_000, 1_080_000, 1_140_000, 900_000, 1_200_000, 1_320_000, 1_080_000, 1_260_000, 1_440_000,
+		],
 		campaignElapsedMs: 11_400_000,
 		savedAt: Date.now() - 86_400_000 * 3,
 	},
@@ -39,7 +41,9 @@ const MOCK_SAVED_RUNS: readonly SavedRun[] = [
 		league: 'Settlers',
 		character: 'TrailRunner',
 		characterClass: 'Ranger',
-		actElapsedMs: [1_140_000, 1_080_000, 1_200_000, 1_260_000, 1_020_000, 1_380_000, 1_440_000, 1_200_000, 1_380_000, 1_560_000],
+		actElapsedMs: [
+			1_140_000, 1_080_000, 1_200_000, 1_260_000, 1_020_000, 1_380_000, 1_440_000, 1_200_000, 1_380_000, 1_560_000,
+		],
 		campaignElapsedMs: 12_660_000,
 		savedAt: Date.now() - 86_400_000 * 5,
 	},
@@ -49,7 +53,9 @@ const MOCK_SAVED_RUNS: readonly SavedRun[] = [
 		league: 'Settlers',
 		character: 'TankMaster',
 		characterClass: 'Marauder',
-		actElapsedMs: [1_260_000, 1_200_000, 1_320_000, 1_380_000, 1_140_000, 1_500_000, 1_560_000, 1_320_000, 1_500_000, 1_680_000],
+		actElapsedMs: [
+			1_260_000, 1_200_000, 1_320_000, 1_380_000, 1_140_000, 1_500_000, 1_560_000, 1_320_000, 1_500_000, 1_680_000,
+		],
 		campaignElapsedMs: 13_860_000,
 		savedAt: Date.now() - 86_400_000 * 7,
 	},
@@ -59,7 +65,9 @@ const MOCK_SAVED_RUNS: readonly SavedRun[] = [
 		league: 'Settlers',
 		character: 'SoloSurvivor',
 		characterClass: 'Duelist',
-		actElapsedMs: [1_380_000, 1_320_000, 1_440_000, 1_500_000, 1_260_000, 1_620_000, 1_680_000, 1_440_000, 1_620_000, 1_800_000],
+		actElapsedMs: [
+			1_380_000, 1_320_000, 1_440_000, 1_500_000, 1_260_000, 1_620_000, 1_680_000, 1_440_000, 1_620_000, 1_800_000,
+		],
 		campaignElapsedMs: 15_060_000,
 		savedAt: Date.now() - 86_400_000 * 10,
 	},
@@ -69,7 +77,9 @@ const MOCK_SAVED_RUNS: readonly SavedRun[] = [
 		league: 'Settlers',
 		character: 'ChillWitch',
 		characterClass: 'Witch',
-		actElapsedMs: [1_500_000, 1_440_000, 1_560_000, 1_620_000, 1_380_000, 1_740_000, 1_800_000, 1_560_000, 1_740_000, 1_920_000],
+		actElapsedMs: [
+			1_500_000, 1_440_000, 1_560_000, 1_620_000, 1_380_000, 1_740_000, 1_800_000, 1_560_000, 1_740_000, 1_920_000,
+		],
 		campaignElapsedMs: 16_260_000,
 		savedAt: Date.now() - 86_400_000 * 14,
 	},
@@ -214,9 +224,7 @@ function CurrentRunContent(props: {
 				{timerState.actElapsedMs.map((ms, i) => {
 					const isActive = i === timerState.currentActIndex && timerState.status !== 'idle';
 					const displayMs = isActive ? timerState.currentActElapsedMs : ms;
-					const rowClass = isActive
-						? 'timerDetailsSplitRow timerDetailsSplitRow--active'
-						: 'timerDetailsSplitRow';
+					const rowClass = isActive ? 'timerDetailsSplitRow timerDetailsSplitRow--active' : 'timerDetailsSplitRow';
 
 					return (
 						<div key={i} className={rowClass}>
@@ -294,10 +302,7 @@ function BestRunsContent(): JSX.Element {
 			<div className="timerDetailsRunList">
 				{sorted.map((run, rank) => {
 					const isExpanded = expandedRunId === run.id;
-					const timeValue =
-						filter === 'campaign'
-							? run.campaignElapsedMs
-							: (run.actElapsedMs[filter] ?? 0);
+					const timeValue = filter === 'campaign' ? run.campaignElapsedMs : (run.actElapsedMs[filter] ?? 0);
 
 					return (
 						<div key={run.id} className="timerDetailsRunItem">
@@ -325,9 +330,7 @@ function BestRunsContent(): JSX.Element {
 				})}
 			</div>
 
-			{sorted.length === 0 && (
-				<div className="timerDetailsEmpty">No saved runs yet.</div>
-			)}
+			{sorted.length === 0 && <div className="timerDetailsEmpty">No saved runs yet.</div>}
 		</div>
 	);
 }
@@ -403,9 +406,7 @@ function ManageRunsContent(): JSX.Element {
 				})}
 			</div>
 
-			{runs.length === 0 && (
-				<div className="timerDetailsEmpty">No saved runs.</div>
-			)}
+			{runs.length === 0 && <div className="timerDetailsEmpty">No saved runs.</div>}
 		</div>
 	);
 }

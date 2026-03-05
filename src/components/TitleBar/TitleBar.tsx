@@ -38,7 +38,9 @@ export function TitleBar({
 					<span className="titleBarCharacterLabel">Character</span>
 					<span className="titleBarCharacterValues">
 						<span className="titleBarCharacterSegment">{characterName}</span>
-						<span className="titleBarCharacterDetail">{characterClass} · Lvl {characterLevel}</span>
+						<span className="titleBarCharacterDetail">
+							{characterClass} · Lvl {characterLevel}
+						</span>
 					</span>
 				</span>
 			</span>
