@@ -320,6 +320,147 @@ function BestRunsContent(props: { runs: readonly SavedRun[] }): JSX.Element {
 	);
 }
 
+function runStatusClass(status: SavedRun['status']): string {
+	if (status === 'completed') return 'timerDetailsRunStatus timerDetailsRunStatus--completed';
+	return 'timerDetailsRunStatus timerDetailsRunStatus--inProgress';
+}
+
+function runStatusLabel(status: SavedRun['status']): string {
+	return status === 'completed' ? 'Completed' : 'In progress';
+}
+
+type ConfirmationVariant = 'default' | 'delete';
+
+function confirmButtonClass(variant: ConfirmationVariant): string {
+	if (variant === 'delete') return 'timerDetailsConfirmButton timerDetailsConfirmButton--delete';
+	return 'timerDetailsConfirmButton';
+}
+
+function InlineConfirmation(props: {
+	message: string;
+	variant?: ConfirmationVariant;
+	onConfirm: () => void;
+	onCancel: () => void;
+}): JSX.Element {
+	return (
+		<div className="timerDetailsConfirmBox">
+			<span className="timerDetailsConfirmMessage">{props.message}</span>
+			<div className="timerDetailsConfirmActions">
+				<button type="button" className={confirmButtonClass(props.variant ?? 'default')} onClick={props.onConfirm}>
+					Confirm
+				</button>
+				<button type="button" className="timerDetailsConfirmCancelButton" onClick={props.onCancel}>
+					Cancel
+				</button>
+			</div>
+		</div>
+	);
+}
+
+function ManageRunExpandedPanel(props: {
+	run: SavedRun;
+	isConfirmingContinue: boolean;
+	isConfirmingDelete: boolean;
+	onRequestContinue: () => void;
+	onConfirmContinue: () => void;
+	onCancelContinue: () => void;
+	onRequestDelete: () => void;
+	onConfirmDelete: () => void;
+	onCancelDelete: () => void;
+}): JSX.Element {
+	const { run, isConfirmingContinue, isConfirmingDelete } = props;
+	const hasActiveConfirmation = isConfirmingContinue || isConfirmingDelete;
+
+	return (
+		<div className="timerDetailsRunExpanded">
+			<ActSplitList actRuns={run.actRuns} />
+			<div className="timerDetailsRunExpandedActions">
+				{run.status === 'in_progress' && (
+					<button
+						type="button"
+						className="timerDetailsActionButton timerDetailsActionButton--continue"
+						disabled={hasActiveConfirmation}
+						onClick={props.onRequestContinue}>
+						<PlayIcon />
+						Continue Run
+					</button>
+				)}
+				<button
+					type="button"
+					className="timerDetailsActionButton timerDetailsActionButton--delete"
+					disabled={hasActiveConfirmation}
+					onClick={props.onRequestDelete}>
+					<TrashIcon />
+					Delete Run
+				</button>
+			</div>
+			{isConfirmingContinue && (
+				<InlineConfirmation
+					message="Current run progress will be replaced with this saved run."
+					onConfirm={props.onConfirmContinue}
+					onCancel={props.onCancelContinue}
+				/>
+			)}
+			{isConfirmingDelete && (
+				<InlineConfirmation
+					message="This run will be permanently deleted."
+					variant="delete"
+					onConfirm={props.onConfirmDelete}
+					onCancel={props.onCancelDelete}
+				/>
+			)}
+		</div>
+	);
+}
+
+function ManageRunItem(props: {
+	run: SavedRun;
+	isExpanded: boolean;
+	isConfirmingContinue: boolean;
+	isConfirmingDelete: boolean;
+	onToggle: () => void;
+	onRequestContinue: () => void;
+	onConfirmContinue: () => void;
+	onCancelContinue: () => void;
+	onRequestDelete: () => void;
+	onConfirmDelete: () => void;
+	onCancelDelete: () => void;
+}): JSX.Element {
+	const { run, isExpanded } = props;
+
+	return (
+		<div className="timerDetailsRunItem">
+			<button
+				type="button"
+				className={isExpanded ? 'timerDetailsRunRow timerDetailsRunRow--expanded' : 'timerDetailsRunRow'}
+				onClick={props.onToggle}>
+				<div className="timerDetailsRunInfo">
+					<span className="timerDetailsRunName">{run.runDetails}</span>
+					<span className="timerDetailsRunMeta">
+						{formatLeagueDisplay(run)} · {run.character} · {run.characterClass}
+					</span>
+				</div>
+				<span className={runStatusClass(run.status)}>{runStatusLabel(run.status)}</span>
+				<span className="timerDetailsRunTime">{formatElapsedMs(run.campaignElapsedMs)}</span>
+				<ChevronIcon expanded={isExpanded} />
+			</button>
+			{isExpanded && (
+				<ManageRunExpandedPanel
+					run={run}
+					isConfirmingContinue={props.isConfirmingContinue}
+					isConfirmingDelete={props.isConfirmingDelete}
+					onRequestContinue={props.onRequestContinue}
+					onConfirmContinue={props.onConfirmContinue}
+					onCancelContinue={props.onCancelContinue}
+					onRequestDelete={props.onRequestDelete}
+					onConfirmDelete={props.onConfirmDelete}
+					onCancelDelete={props.onCancelDelete}
+				/>
+			)}
+		</div>
+	);
+}
+
 function ManageRunsContent(props: {
 	runs: readonly SavedRun[];
 	onDeleteRun: (runId: string) => void;
@@ -328,10 +469,16 @@ function ManageRunsContent(props: {
 	const { runs, onDeleteRun, onContinueRun } = props;
 	const [expandedRunId, setExpandedRunId] = useState<string | null>(null);
 	const [confirmContinueRunId, setConfirmContinueRunId] = useState<string | null>(null);
+	const [confirmDeleteRunId, setConfirmDeleteRunId] = useState<string | null>(null);
+
+	const clearConfirmations = (): void => {
+		setConfirmContinueRunId(null);
+		setConfirmDeleteRunId(null);
+	};
 
 	const toggleExpand = (runId: string): void => {
 		setExpandedRunId((prev) => (prev === runId ? null : runId));
-		setConfirmContinueRunId(null);
+		clearConfirmations();
 	};
 
 	const exportAllRuns = (): void => {
@@ -353,84 +500,34 @@ function ManageRunsContent(props: {
 			</div>
 
 			<div className="timerDetailsRunList">
-				{runs.map((run) => {
-					const isExpanded = expandedRunId === run.id;
-					const isConfirmingContinue = confirmContinueRunId === run.id;
-
-					return (
-						<div key={run.id} className="timerDetailsRunItem">
-							<button
-								type="button"
-								className={isExpanded ? 'timerDetailsRunRow timerDetailsRunRow--expanded' : 'timerDetailsRunRow'}
-								onClick={() => toggleExpand(run.id)}>
-								<div className="timerDetailsRunInfo">
-									<span className="timerDetailsRunName">{run.runDetails}</span>
-									<span className="timerDetailsRunMeta">
-										{formatLeagueDisplay(run)} · {run.character} · {run.characterClass}
-									</span>
-								</div>
-								<span
-									className={
-										run.status === 'completed'
-											? 'timerDetailsRunStatus timerDetailsRunStatus--completed'
-											: 'timerDetailsRunStatus timerDetailsRunStatus--inProgress'
-									}>
-									{run.status === 'completed' ? 'Completed' : 'In progress'}
-								</span>
-								<span className="timerDetailsRunTime">{formatElapsedMs(run.campaignElapsedMs)}</span>
-								<ChevronIcon expanded={isExpanded} />
-							</button>
-							{isExpanded && (
-								<div className="timerDetailsRunExpanded">
-									<ActSplitList actRuns={run.actRuns} />
-									<div className="timerDetailsRunExpandedActions">
-										{run.status === 'in_progress' && (
-											<button
-												type="button"
-												className="timerDetailsActionButton timerDetailsActionButton--continue"
-												disabled={isConfirmingContinue}
-												onClick={() => setConfirmContinueRunId(run.id)}>
-												<PlayIcon />
-												Continue Run
-											</button>
-										)}
-										<button
-											type="button"
-											className="timerDetailsActionButton timerDetailsActionButton--delete"
-											onClick={() => onDeleteRun(run.id)}>
-											<TrashIcon />
-											Delete Run
-										</button>
-									</div>
-									{isConfirmingContinue && (
-										<div className="timerDetailsContinueConfirm">
-											<span className="timerDetailsContinueWarning">
-												Current run progress will be replaced with this saved run.
-											</span>
-											<div className="timerDetailsContinueConfirmActions">
-												<button
-													type="button"
-													className="timerDetailsContinueConfirmButton"
-													onClick={() => {
-														setConfirmContinueRunId(null);
-														onContinueRun(run.id);
-													}}>
-													Confirm
-												</button>
-												<button
-													type="button"
-													className="timerDetailsContinueCancelButton"
-													onClick={() => setConfirmContinueRunId(null)}>
-													Cancel
-												</button>
-											</div>
-										</div>
-									)}
-								</div>
-							)}
-						</div>
-					);
-				})}
+				{runs.map((run) => (
+					<ManageRunItem
+						key={run.id}
+						run={run}
+						isExpanded={expandedRunId === run.id}
+						isConfirmingContinue={confirmContinueRunId === run.id}
+						isConfirmingDelete={confirmDeleteRunId === run.id}
+						onToggle={() => toggleExpand(run.id)}
+						onRequestContinue={() => {
+							clearConfirmations();
+							setConfirmContinueRunId(run.id);
+						}}
+						onConfirmContinue={() => {
+							setConfirmContinueRunId(null);
+							onContinueRun(run.id);
+						}}
+						onCancelContinue={() => setConfirmContinueRunId(null)}
+						onRequestDelete={() => {
+							clearConfirmations();
+							setConfirmDeleteRunId(run.id);
+						}}
+						onConfirmDelete={() => {
+							setConfirmDeleteRunId(null);
+							onDeleteRun(run.id);
+						}}
+						onCancelDelete={() => setConfirmDeleteRunId(null)}
+					/>
+				))}
 			</div>
 
 			{runs.length === 0 && <div className="timerDetailsEmpty">No saved runs.</div>}
