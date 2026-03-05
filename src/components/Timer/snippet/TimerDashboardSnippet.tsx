@@ -68,9 +68,7 @@ function TimerActCell(props: { actIndex: number; timerState: TimerState }): JSX.
 	return (
 		<div className={cellClass}>
 			<span className="timerSnippetActLabel">Act {actIndex + 1}</span>
-			<span className="timerSnippetTimeLabel">
-				{isActive || isCompleted ? formatElapsedMs(displayMs) : '--:--:--'}
-			</span>
+			<span className="timerSnippetTimeLabel">{isActive || isCompleted ? formatElapsedMs(displayMs) : '--:--:--'}</span>
 		</div>
 	);
 }

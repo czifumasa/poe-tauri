@@ -243,9 +243,10 @@ function formatLeagueDisplay(run: SavedRun): string {
 }
 
 function sortRunsByFilter(runs: readonly SavedRun[], filter: BestRunsFilter): readonly SavedRun[] {
-	const filtered = filter === 'campaign'
-		? runs.filter((r) => r.status === 'completed')
-		: runs.filter((r) => r.actRuns[filter]?.status === 'completed');
+	const filtered =
+		filter === 'campaign'
+			? runs.filter((r) => r.status === 'completed')
+			: runs.filter((r) => r.actRuns[filter]?.status === 'completed');
 	return [...filtered].sort((a, b) => {
 		if (filter === 'campaign') {
 			return a.campaignElapsedMs - b.campaignElapsedMs;
@@ -368,7 +369,12 @@ function ManageRunsContent(props: {
 										{formatLeagueDisplay(run)} · {run.character} · {run.characterClass}
 									</span>
 								</div>
-								<span className={run.status === 'completed' ? 'timerDetailsRunStatus timerDetailsRunStatus--completed' : 'timerDetailsRunStatus timerDetailsRunStatus--inProgress'}>
+								<span
+									className={
+										run.status === 'completed'
+											? 'timerDetailsRunStatus timerDetailsRunStatus--completed'
+											: 'timerDetailsRunStatus timerDetailsRunStatus--inProgress'
+									}>
 									{run.status === 'completed' ? 'Completed' : 'In progress'}
 								</span>
 								<span className="timerDetailsRunTime">{formatElapsedMs(run.campaignElapsedMs)}</span>
@@ -432,7 +438,13 @@ function ManageRunsContent(props: {
 	);
 }
 
-export function TimerDetailsPage({ timerState, onBack, onSaveRun, onResetRun, onContinueRun }: TimerDetailsPageProps): JSX.Element {
+export function TimerDetailsPage({
+	timerState,
+	onBack,
+	onSaveRun,
+	onResetRun,
+	onContinueRun,
+}: TimerDetailsPageProps): JSX.Element {
 	const [activeTab, setActiveTab] = useState<DetailsTab>('current');
 	const [savedRuns, setSavedRuns] = useState<readonly SavedRun[]>([]);
 
@@ -469,7 +481,9 @@ export function TimerDetailsPage({ timerState, onBack, onSaveRun, onResetRun, on
 					<CurrentRunContent timerState={timerState} onSaveRun={onSaveRun} onResetRun={onResetRun} />
 				)}
 				{activeTab === 'best' && <BestRunsContent runs={savedRuns} />}
-				{activeTab === 'manage' && <ManageRunsContent runs={savedRuns} onDeleteRun={handleDeleteRun} onContinueRun={onContinueRun} />}
+				{activeTab === 'manage' && (
+					<ManageRunsContent runs={savedRuns} onDeleteRun={handleDeleteRun} onContinueRun={onContinueRun} />
+				)}
 			</div>
 		</div>
 	);
