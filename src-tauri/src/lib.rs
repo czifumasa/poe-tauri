@@ -9,6 +9,7 @@ use tauri::Manager;
 mod commands;
 mod error;
 mod leveling_guide;
+mod logging;
 mod persistence;
 mod timer;
 mod window;
@@ -118,6 +119,7 @@ pub fn run() {
             saved_runs_continue
         ])
         .setup(move |app| {
+            logging::init(app.handle());
             window::init_native_window();
 
             let app_handle = app.handle().clone();

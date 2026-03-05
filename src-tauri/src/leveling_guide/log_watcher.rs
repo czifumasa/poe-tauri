@@ -9,6 +9,7 @@ use tauri::Emitter;
 
 use crate::leveling_guide::progress::save_leveling_guide_progress;
 use crate::leveling_guide::LevelingGuideManager;
+use crate::logging;
 use crate::timer::TimerManager;
 
 const POLL_INTERVAL: Duration = Duration::from_millis(500);
@@ -79,6 +80,7 @@ pub(crate) fn spawn_log_watcher(
 ) -> Result<LogWatcherHandle, String> {
     let path = Path::new(log_path);
     if !path.exists() {
+        logging::warn("log_watcher", &format!("spawn: client log not found: {log_path}"));
         return Err(format!("Client log file not found: {log_path}"));
     }
 
@@ -92,9 +94,11 @@ pub(crate) fn spawn_log_watcher(
     let timer_manager = Arc::clone(timer_manager);
     let log_path_owned = log_path.to_string();
 
+    logging::info("log_watcher", &format!("spawn: starting watcher for {log_path}"));
+
     std::thread::spawn(move || {
         if let Err(err) = poll_loop(&app_handle, &manager, &timer_manager, &log_path_owned, &stop_flag) {
-            eprintln!("Log watcher error: {err}");
+            logging::error("log_watcher", &format!("poll_loop exited with error: {err}"));
         }
     });
 
@@ -136,6 +140,8 @@ fn poll_loop(
             continue;
         };
 
+        logging::info("log_watcher", &format!("detected area: {area_id}"));
+
         let act_index_before = manager
             .get_current_progress()
             .ok()
@@ -143,28 +149,55 @@ fn poll_loop(
 
         match manager.try_auto_advance(app, &area_id) {
             Ok(Some(page)) => {
+                logging::info(
+                    "log_watcher",
+                    &format!(
+                        "auto-advanced to act_index={} page_index={}",
+                        page.position.act_index, page.position.page_index
+                    ),
+                );
+
                 if let Ok(progress) = manager.get_current_progress() {
                     if let Err(err) = save_leveling_guide_progress(app, &progress) {
-                        eprintln!("Log watcher: failed to persist progress: {:?}", err);
+                        logging::error(
+                            "log_watcher",
+                            &format!("failed to persist progress: {:?}", err),
+                        );
                     }
                 }
 
                 if let Some(prev_act) = act_index_before {
                     let new_act = page.position.act_index;
                     if new_act != prev_act {
+                        logging::info(
+                            "log_watcher",
+                            &format!(
+                                "act transition detected: {} -> {}, notifying timer with completed_act_index={}",
+                                prev_act, new_act, prev_act
+                            ),
+                        );
                         if let Err(err) = timer_manager.notify_act_completed(app, prev_act) {
-                            eprintln!("Log watcher: failed to notify timer of act completion: {:?}", err);
+                            logging::error(
+                                "log_watcher",
+                                &format!("failed to notify timer of act completion: {:?}", err),
+                            );
                         }
                     }
                 }
 
                 if let Err(err) = app.emit(LEVELING_GUIDE_PAGE_UPDATED_EVENT, &page) {
-                    eprintln!("Log watcher: failed to emit page update: {err}");
+                    logging::error(
+                        "log_watcher",
+                        &format!("failed to emit page update: {err}"),
+                    );
                 }
             }
             Ok(None) => {}
             Err(err) => {
-                eprintln!("Log watcher: auto-advance error: {:?}", err);
+                logging::error(
+                    "log_watcher",
+                    &format!("auto-advance error for area {area_id}: {:?}", err),
+                );
             }
         }
     }

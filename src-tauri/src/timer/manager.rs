@@ -6,6 +6,7 @@ use tauri::AppHandle;
 use tauri::Emitter;
 
 use crate::error::{command_error, CommandError};
+use crate::logging;
 use crate::persistence::settings::TimerSettings;
 use crate::persistence::store;
 
@@ -87,8 +88,20 @@ impl TimerManager {
             store::get_optional::<PersistedTimerState>(app, PersistedTimerState::STORE_KEY)?
                 .unwrap_or_default();
 
+        logging::info(
+            "timer",
+            &format!(
+                "load_state: persisted status={:?} act_index={} act_ms={} campaign_ms={}",
+                persisted.status,
+                persisted.current_act_index,
+                persisted.current_act_elapsed_ms,
+                persisted.campaign_elapsed_ms
+            ),
+        );
+
         guard.state = persisted;
         if guard.state.status == TimerStatus::Running {
+            logging::info("timer", "load_state: was running, transitioning to paused");
             guard.state.status = TimerStatus::Paused;
             save_state_inner(app, &guard.state);
         }
@@ -104,6 +117,10 @@ impl TimerManager {
             .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
 
         if guard.state.status != TimerStatus::Idle {
+            logging::warn(
+                "timer",
+                &format!("start: rejected, current status={:?}", guard.state.status),
+            );
             return Err(command_error(
                 "timer_invalid_transition",
                 "Timer can only be started from idle state",
@@ -113,6 +130,7 @@ impl TimerManager {
         guard.state.status = TimerStatus::Running;
         guard.last_tick = Some(Instant::now());
 
+        logging::info("timer", "start: timer started from idle");
         let dto = TimerStateDto::from(&guard.state);
         save_state_inner(app, &guard.state);
         Ok(dto)
@@ -125,6 +143,10 @@ impl TimerManager {
             .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
 
         if guard.state.status != TimerStatus::Running {
+            logging::warn(
+                "timer",
+                &format!("pause: rejected, current status={:?}", guard.state.status),
+            );
             return Err(command_error(
                 "timer_invalid_transition",
                 "Timer can only be paused from running state",
@@ -135,6 +157,15 @@ impl TimerManager {
         guard.state.status = TimerStatus::Paused;
         guard.last_tick = None;
 
+        logging::info(
+            "timer",
+            &format!(
+                "pause: act_index={} act_ms={} campaign_ms={}",
+                guard.state.current_act_index,
+                guard.state.current_act_elapsed_ms,
+                guard.state.campaign_elapsed_ms
+            ),
+        );
         let dto = TimerStateDto::from(&guard.state);
         save_state_inner(app, &guard.state);
         Ok(dto)
@@ -147,6 +178,10 @@ impl TimerManager {
             .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
 
         if guard.state.status != TimerStatus::Paused {
+            logging::warn(
+                "timer",
+                &format!("resume: rejected, current status={:?}", guard.state.status),
+            );
             return Err(command_error(
                 "timer_invalid_transition",
                 "Timer can only be resumed from paused state",
@@ -156,6 +191,15 @@ impl TimerManager {
         guard.state.status = TimerStatus::Running;
         guard.last_tick = Some(Instant::now());
 
+        logging::info(
+            "timer",
+            &format!(
+                "resume: act_index={} act_ms={} campaign_ms={}",
+                guard.state.current_act_index,
+                guard.state.current_act_elapsed_ms,
+                guard.state.campaign_elapsed_ms
+            ),
+        );
         let dto = TimerStateDto::from(&guard.state);
         save_state_inner(app, &guard.state);
         Ok(dto)
@@ -166,6 +210,16 @@ impl TimerManager {
             .inner
             .lock()
             .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
+
+        logging::info(
+            "timer",
+            &format!(
+                "reset: from status={:?} act_index={} campaign_ms={}",
+                guard.state.status,
+                guard.state.current_act_index,
+                guard.state.campaign_elapsed_ms
+            ),
+        );
 
         guard.state = PersistedTimerState::default();
         guard.last_tick = None;
@@ -185,11 +239,33 @@ impl TimerManager {
             .lock()
             .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
 
+        logging::info(
+            "timer",
+            &format!(
+                "notify_act_completed: requested_act={} timer_status={:?} timer_act_index={}",
+                completed_act_index, guard.state.status, guard.state.current_act_index
+            ),
+        );
+
         if guard.state.status != TimerStatus::Running {
+            logging::warn(
+                "timer",
+                &format!(
+                    "notify_act_completed: skipped, timer not running (status={:?})",
+                    guard.state.status
+                ),
+            );
             return Ok(());
         }
 
         if completed_act_index != guard.state.current_act_index {
+            logging::warn(
+                "timer",
+                &format!(
+                    "notify_act_completed: act index mismatch, guide says {} but timer is at {}",
+                    completed_act_index, guard.state.current_act_index
+                ),
+            );
             return Ok(());
         }
 
@@ -203,11 +279,21 @@ impl TimerManager {
         guard.state.current_act_index = next_act;
         guard.state.current_act_elapsed_ms = 0;
 
+        logging::info(
+            "timer",
+            &format!(
+                "notify_act_completed: act {} completed with {}ms, advancing to act {}",
+                completed_act_index + 1,
+                guard.state.act_elapsed_ms.get(completed_act_index).copied().unwrap_or(0),
+                next_act + 1
+            ),
+        );
+
         let dto = TimerStateDto::from(&guard.state);
         save_state_inner(app, &guard.state);
 
         if let Err(err) = app.emit(TIMER_STATE_UPDATED_EVENT, &dto) {
-            eprintln!("Failed to emit timer state update: {err}");
+            logging::error("timer", &format!("notify_act_completed: failed to emit update: {err}"));
         }
 
         Ok(())
@@ -323,6 +409,8 @@ impl TimerManager {
             return;
         }
 
+        logging::info("timer", "start_auto_save: spawning auto-save thread");
+
         let manager = Arc::clone(self);
         let app_handle = app.clone();
 
@@ -333,7 +421,10 @@ impl TimerManager {
                 let state_snapshot = {
                     let mut guard = match manager.inner.lock() {
                         Ok(g) => g,
-                        Err(_) => break,
+                        Err(_) => {
+                            logging::error("timer", "auto_save: mutex poisoned, stopping thread");
+                            break;
+                        }
                     };
 
                     if guard.state.status != TimerStatus::Running {
@@ -344,11 +435,21 @@ impl TimerManager {
                     guard.state.clone()
                 };
 
+                logging::info(
+                    "timer",
+                    &format!(
+                        "auto_save: act_index={} act_ms={} campaign_ms={}",
+                        state_snapshot.current_act_index,
+                        state_snapshot.current_act_elapsed_ms,
+                        state_snapshot.campaign_elapsed_ms
+                    ),
+                );
+
                 save_state_inner(&app_handle, &state_snapshot);
 
                 let dto = TimerStateDto::from(&state_snapshot);
                 if let Err(err) = app_handle.emit(TIMER_STATE_UPDATED_EVENT, &dto) {
-                    eprintln!("Timer auto-save: failed to emit update: {err}");
+                    logging::error("timer", &format!("auto_save: failed to emit update: {err}"));
                 }
             }
         });
@@ -369,7 +470,7 @@ fn flush_elapsed(inner: &mut TimerInner) {
 
 fn save_state_inner(app: &AppHandle, state: &PersistedTimerState) {
     if let Err(err) = store::set_value(app, PersistedTimerState::STORE_KEY, state) {
-        eprintln!("Failed to persist timer state: {:?}", err);
+        logging::error("timer", &format!("save_state_inner: persist failed: {:?}", err));
     }
 }
 
