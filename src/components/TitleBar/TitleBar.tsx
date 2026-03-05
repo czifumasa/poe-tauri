@@ -25,7 +25,7 @@ export function TitleBar({
 				<span className="titleBarSubtitle">Overlay Dashboard</span>
 			</div>
 			<div className="titleBarSpacer" />
-			<span className="titleBarCharacterInfo">
+			<span className="titleBarCharacterInfo" style={{ display: 'none' }}>
 				<span className="titleBarCharacterGroup">
 					<span className="titleBarCharacterLabel">League</span>
 					<span className="titleBarCharacterValues">
