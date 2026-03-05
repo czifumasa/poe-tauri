@@ -82,11 +82,11 @@ impl TimerManager {
                 .unwrap_or_default();
 
         guard.state = persisted;
-        guard.last_tick = if guard.state.status == TimerStatus::Running {
-            Some(Instant::now())
-        } else {
-            None
-        };
+        if guard.state.status == TimerStatus::Running {
+            guard.state.status = TimerStatus::Paused;
+            save_state_inner(app, &guard.state);
+        }
+        guard.last_tick = None;
 
         Ok(TimerStateDto::from(&guard.state))
     }
