@@ -89,3 +89,118 @@ impl From<&PersistedTimerState> for TimerStateDto {
         }
     }
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ActRunStatus {
+    Completed,
+    InProgress,
+    Pending,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ActRun {
+    pub act_name: String,
+    pub elapsed_ms: u64,
+    pub status: ActRunStatus,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SavedRunStatus {
+    Completed,
+    InProgress,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SavedRun {
+    #[serde(default = "default_schema_version")]
+    pub schema_version: u32,
+    pub id: String,
+    pub league: String,
+    pub hardcore: bool,
+    pub ssf: bool,
+    pub private_league: bool,
+    pub character: String,
+    pub character_class: String,
+    pub run_details: String,
+    pub status: SavedRunStatus,
+    pub act_runs: Vec<ActRun>,
+    pub campaign_elapsed_ms: u64,
+    pub saved_at: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SavedRunsData {
+    #[serde(default = "default_schema_version")]
+    pub schema_version: u32,
+    #[serde(default)]
+    pub runs: Vec<SavedRun>,
+}
+
+impl Default for SavedRunsData {
+    fn default() -> Self {
+        Self {
+            schema_version: 1,
+            runs: Vec::new(),
+        }
+    }
+}
+
+impl SavedRunsData {
+    pub const STORE_KEY: &'static str = "saved_runs";
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ActRunDto {
+    pub act_name: String,
+    pub elapsed_ms: u64,
+    pub status: ActRunStatus,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SavedRunDto {
+    pub schema_version: u32,
+    pub id: String,
+    pub league: String,
+    pub hardcore: bool,
+    pub ssf: bool,
+    pub private_league: bool,
+    pub character: String,
+    pub character_class: String,
+    pub run_details: String,
+    pub status: SavedRunStatus,
+    pub act_runs: Vec<ActRunDto>,
+    pub campaign_elapsed_ms: u64,
+    pub saved_at: u64,
+}
+
+impl From<&SavedRun> for SavedRunDto {
+    fn from(run: &SavedRun) -> Self {
+        Self {
+            schema_version: run.schema_version,
+            id: run.id.clone(),
+            league: run.league.clone(),
+            hardcore: run.hardcore,
+            ssf: run.ssf,
+            private_league: run.private_league,
+            character: run.character.clone(),
+            character_class: run.character_class.clone(),
+            run_details: run.run_details.clone(),
+            status: run.status,
+            act_runs: run
+                .act_runs
+                .iter()
+                .map(|a| ActRunDto {
+                    act_name: a.act_name.clone(),
+                    elapsed_ms: a.elapsed_ms,
+                    status: a.status,
+                })
+                .collect(),
+            campaign_elapsed_ms: run.campaign_elapsed_ms,
+            saved_at: run.saved_at,
+        }
+    }
+}

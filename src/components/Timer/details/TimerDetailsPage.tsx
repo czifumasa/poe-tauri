@@ -1,4 +1,5 @@
-import { JSX, useState } from 'react';
+import { JSX, useCallback, useEffect, useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import type { ActRun, SavedRun, TimerState } from '../../../types/Timer.ts';
 import { formatElapsedMs } from '../../../utils/formatTime.ts';
 import { SectionDivider } from '../../SectionDivider/SectionDivider.tsx';
@@ -22,103 +23,12 @@ const FILTER_OPTIONS: readonly { readonly value: BestRunsFilter; readonly label:
 	...Array.from({ length: ACT_COUNT }, (_, i) => ({ value: i as BestRunsFilter, label: `Act ${i + 1}` })),
 ];
 
-function buildCompletedActRuns(times: readonly number[]): readonly ActRun[] {
-	return times.map((ms, i) => ({ actName: `Act ${i + 1}`, elapsedMs: ms, status: 'completed' as const }));
-}
-
-function buildPartialActRuns(times: readonly number[], inProgressIndex: number): readonly ActRun[] {
-	return Array.from({ length: ACT_COUNT }, (_, i) => {
-		if (i < inProgressIndex) return { actName: `Act ${i + 1}`, elapsedMs: times[i], status: 'completed' as const };
-		if (i === inProgressIndex) return { actName: `Act ${i + 1}`, elapsedMs: times[i], status: 'in_progress' as const };
-		return { actName: `Act ${i + 1}`, elapsedMs: 0, status: 'pending' as const };
-	});
-}
-
-const MOCK_SAVED_RUNS: readonly SavedRun[] = [
-	{
-		id: '1',
-		league: 'Mirage',
-		hardcore: false,
-		ssf: false,
-		privateLeague: false,
-		character: 'SpeedyExile',
-		characterClass: 'Elementalist',
-		runDetails: 'SRS Necro league starter, rush acts',
-		actRuns: buildCompletedActRuns([
-			1_020_000, 960_000, 1_080_000, 1_140_000, 900_000, 1_200_000, 1_320_000, 1_080_000, 1_260_000, 1_440_000,
-		]),
-		campaignElapsedMs: 11_400_000,
-		savedAt: Date.now() - 86_400_000 * 3,
-	},
-	{
-		id: '2',
-		league: 'Mirage',
-		hardcore: false,
-		ssf: false,
-		privateLeague: false,
-		character: 'TrailRunner',
-		characterClass: 'Deadeye',
-		runDetails: 'Lightning Arrow practice, leveling uniques',
-		actRuns: buildCompletedActRuns([
-			1_140_000, 1_080_000, 1_200_000, 1_260_000, 1_020_000, 1_380_000, 1_440_000, 1_200_000, 1_380_000, 1_560_000,
-		]),
-		campaignElapsedMs: 12_660_000,
-		savedAt: Date.now() - 86_400_000 * 5,
-	},
-	{
-		id: '3',
-		league: 'Mirage',
-		hardcore: true,
-		ssf: true,
-		privateLeague: false,
-		character: 'TankMaster',
-		characterClass: 'Juggernaut',
-		runDetails: 'RF Jugg, safe pathing, over-leveled zones',
-		actRuns: buildCompletedActRuns([
-			1_260_000, 1_200_000, 1_320_000, 1_380_000, 1_140_000, 1_500_000, 1_560_000, 1_320_000, 1_500_000, 1_680_000,
-		]),
-		campaignElapsedMs: 13_860_000,
-		savedAt: Date.now() - 86_400_000 * 7,
-	},
-	{
-		id: '4',
-		league: 'Mirage',
-		hardcore: false,
-		ssf: true,
-		privateLeague: false,
-		character: 'SoloSurvivor',
-		characterClass: 'Champion',
-		runDetails: 'Steel skills Champion, vendor crafted gear',
-		actRuns: buildPartialActRuns(
-			[1_380_000, 1_320_000, 1_440_000, 1_500_000, 1_260_000, 1_620_000, 420_000, 0, 0, 0],
-			6,
-		),
-		campaignElapsedMs: 8_940_000,
-		savedAt: Date.now() - 86_400_000 * 10,
-	},
-	{
-		id: '5',
-		league: 'Standard',
-		hardcore: false,
-		ssf: false,
-		privateLeague: true,
-		character: 'ChillWitch',
-		characterClass: 'Necromancer',
-		runDetails: 'Casual SRS Necro with friends, no rush',
-		actRuns: buildPartialActRuns(
-			[1_500_000, 1_440_000, 1_560_000, 780_000, 0, 0, 0, 0, 0, 0],
-			3,
-		),
-		campaignElapsedMs: 5_280_000,
-		savedAt: Date.now() - 86_400_000 * 14,
-	},
-];
-
 interface TimerDetailsPageProps {
 	timerState: TimerState;
 	onBack: () => void;
 	onSaveRun: () => void;
 	onResetRun: () => void;
+	onContinueRun: (runId: string) => void;
 }
 
 function SaveIcon(): JSX.Element {
@@ -190,6 +100,22 @@ function ExportIcon(): JSX.Element {
 			<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
 			<polyline points="7 10 12 15 17 10" />
 			<line x1="12" y1="15" x2="12" y2="3" />
+		</svg>
+	);
+}
+
+function PlayIcon(): JSX.Element {
+	return (
+		<svg
+			width="14"
+			height="14"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round">
+			<polygon points="5 3 19 12 5 21 5 3" />
 		</svg>
 	);
 }
@@ -318,9 +244,9 @@ function formatLeagueDisplay(run: SavedRun): string {
 
 function sortRunsByFilter(runs: readonly SavedRun[], filter: BestRunsFilter): readonly SavedRun[] {
 	const filtered = filter === 'campaign'
-		? [...runs]
+		? runs.filter((r) => r.status === 'completed')
 		: runs.filter((r) => r.actRuns[filter]?.status === 'completed');
-	return filtered.sort((a, b) => {
+	return [...filtered].sort((a, b) => {
 		if (filter === 'campaign') {
 			return a.campaignElapsedMs - b.campaignElapsedMs;
 		}
@@ -329,10 +255,10 @@ function sortRunsByFilter(runs: readonly SavedRun[], filter: BestRunsFilter): re
 	});
 }
 
-function BestRunsContent(): JSX.Element {
+function BestRunsContent(props: { runs: readonly SavedRun[] }): JSX.Element {
 	const [filter, setFilter] = useState<BestRunsFilter>('campaign');
 	const [expandedRunId, setExpandedRunId] = useState<string | null>(null);
-	const sorted = sortRunsByFilter(MOCK_SAVED_RUNS, filter);
+	const sorted = sortRunsByFilter(props.runs, filter);
 
 	const toggleExpand = (runId: string): void => {
 		setExpandedRunId((prev) => (prev === runId ? null : runId));
@@ -393,19 +319,18 @@ function BestRunsContent(): JSX.Element {
 	);
 }
 
-function ManageRunsContent(): JSX.Element {
+function ManageRunsContent(props: {
+	runs: readonly SavedRun[];
+	onDeleteRun: (runId: string) => void;
+	onContinueRun: (runId: string) => void;
+}): JSX.Element {
+	const { runs, onDeleteRun, onContinueRun } = props;
 	const [expandedRunId, setExpandedRunId] = useState<string | null>(null);
-	const [runs, setRuns] = useState<readonly SavedRun[]>(MOCK_SAVED_RUNS);
+	const [confirmContinueRunId, setConfirmContinueRunId] = useState<string | null>(null);
 
 	const toggleExpand = (runId: string): void => {
 		setExpandedRunId((prev) => (prev === runId ? null : runId));
-	};
-
-	const deleteRun = (runId: string): void => {
-		setRuns((prev) => prev.filter((r) => r.id !== runId));
-		if (expandedRunId === runId) {
-			setExpandedRunId(null);
-		}
+		setConfirmContinueRunId(null);
 	};
 
 	const exportAllRuns = (): void => {
@@ -429,6 +354,7 @@ function ManageRunsContent(): JSX.Element {
 			<div className="timerDetailsRunList">
 				{runs.map((run) => {
 					const isExpanded = expandedRunId === run.id;
+					const isConfirmingContinue = confirmContinueRunId === run.id;
 
 					return (
 						<div key={run.id} className="timerDetailsRunItem">
@@ -442,6 +368,9 @@ function ManageRunsContent(): JSX.Element {
 										{formatLeagueDisplay(run)} · {run.character} · {run.characterClass}
 									</span>
 								</div>
+								<span className={run.status === 'completed' ? 'timerDetailsRunStatus timerDetailsRunStatus--completed' : 'timerDetailsRunStatus timerDetailsRunStatus--inProgress'}>
+									{run.status === 'completed' ? 'Completed' : 'In progress'}
+								</span>
 								<span className="timerDetailsRunTime">{formatElapsedMs(run.campaignElapsedMs)}</span>
 								<ChevronIcon expanded={isExpanded} />
 							</button>
@@ -449,14 +378,48 @@ function ManageRunsContent(): JSX.Element {
 								<div className="timerDetailsRunExpanded">
 									<ActSplitList actRuns={run.actRuns} />
 									<div className="timerDetailsRunExpandedActions">
+										{run.status === 'in_progress' && (
+											<button
+												type="button"
+												className="timerDetailsActionButton timerDetailsActionButton--continue"
+												disabled={isConfirmingContinue}
+												onClick={() => setConfirmContinueRunId(run.id)}>
+												<PlayIcon />
+												Continue Run
+											</button>
+										)}
 										<button
 											type="button"
 											className="timerDetailsActionButton timerDetailsActionButton--delete"
-											onClick={() => deleteRun(run.id)}>
+											onClick={() => onDeleteRun(run.id)}>
 											<TrashIcon />
 											Delete Run
 										</button>
 									</div>
+									{isConfirmingContinue && (
+										<div className="timerDetailsContinueConfirm">
+											<span className="timerDetailsContinueWarning">
+												Current run progress will be replaced with this saved run.
+											</span>
+											<div className="timerDetailsContinueConfirmActions">
+												<button
+													type="button"
+													className="timerDetailsContinueConfirmButton"
+													onClick={() => {
+														setConfirmContinueRunId(null);
+														onContinueRun(run.id);
+													}}>
+													Confirm
+												</button>
+												<button
+													type="button"
+													className="timerDetailsContinueCancelButton"
+													onClick={() => setConfirmContinueRunId(null)}>
+													Cancel
+												</button>
+											</div>
+										</div>
+									)}
 								</div>
 							)}
 						</div>
@@ -469,8 +432,21 @@ function ManageRunsContent(): JSX.Element {
 	);
 }
 
-export function TimerDetailsPage({ timerState, onBack, onSaveRun, onResetRun }: TimerDetailsPageProps): JSX.Element {
+export function TimerDetailsPage({ timerState, onBack, onSaveRun, onResetRun, onContinueRun }: TimerDetailsPageProps): JSX.Element {
 	const [activeTab, setActiveTab] = useState<DetailsTab>('current');
+	const [savedRuns, setSavedRuns] = useState<readonly SavedRun[]>([]);
+
+	useEffect((): void => {
+		void invoke<SavedRun[]>('saved_runs_load')
+			.then((runs) => setSavedRuns(runs))
+			.catch((err: unknown) => console.error('Failed to load saved runs:', err));
+	}, []);
+
+	const handleDeleteRun = useCallback((runId: string): void => {
+		void invoke<SavedRun[]>('saved_runs_delete', { runId })
+			.then((runs) => setSavedRuns(runs))
+			.catch((err: unknown) => console.error('Failed to delete run:', err));
+	}, []);
 
 	return (
 		<div className="timerDetailsPage">
@@ -492,8 +468,8 @@ export function TimerDetailsPage({ timerState, onBack, onSaveRun, onResetRun }: 
 				{activeTab === 'current' && (
 					<CurrentRunContent timerState={timerState} onSaveRun={onSaveRun} onResetRun={onResetRun} />
 				)}
-				{activeTab === 'best' && <BestRunsContent />}
-				{activeTab === 'manage' && <ManageRunsContent />}
+				{activeTab === 'best' && <BestRunsContent runs={savedRuns} />}
+				{activeTab === 'manage' && <ManageRunsContent runs={savedRuns} onDeleteRun={handleDeleteRun} onContinueRun={onContinueRun} />}
 			</div>
 		</div>
 	);

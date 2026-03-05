@@ -18,6 +18,7 @@ use commands::leveling_guide::*;
 use commands::overlay::*;
 use commands::pob_settings::*;
 use commands::settings::*;
+use commands::saved_runs::*;
 use commands::timer::*;
 use leveling_guide::LevelingGuideManager;
 use timer::TimerManager;
@@ -110,7 +111,11 @@ pub fn run() {
             timer_pause,
             timer_resume,
             timer_reset,
-            get_ascendancy_classes
+            get_ascendancy_classes,
+            saved_runs_save,
+            saved_runs_load,
+            saved_runs_delete,
+            saved_runs_continue
         ])
         .setup(move |app| {
             window::init_native_window();

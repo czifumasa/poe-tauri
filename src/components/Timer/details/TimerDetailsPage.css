@@ -177,6 +177,78 @@
 	color: rgba(240, 100, 100, 0.95);
 }
 
+.timerDetailsActionButton--continue {
+	border-color: rgba(200, 169, 110, 0.3);
+	color: rgba(200, 169, 110, 0.85);
+	background: rgba(200, 169, 110, 0.08);
+}
+
+.timerDetailsActionButton--continue:hover:not(:disabled) {
+	background: rgba(200, 169, 110, 0.16);
+	border-color: rgba(200, 169, 110, 0.45);
+	color: rgba(212, 175, 55, 0.95);
+}
+
+.timerDetailsContinueConfirm {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-top: 8px;
+	padding: 10px;
+	border-radius: 4px;
+	border: 1px solid rgba(200, 169, 110, 0.15);
+	background: rgba(200, 169, 110, 0.04);
+}
+
+.timerDetailsContinueWarning {
+	font-size: 12px;
+	color: rgba(200, 169, 110, 0.7);
+	line-height: 1.5;
+}
+
+.timerDetailsContinueConfirmActions {
+	display: flex;
+	gap: 8px;
+}
+
+.timerDetailsContinueConfirmButton {
+	padding: 6px 16px;
+	font-size: 12px;
+	font-weight: 600;
+	border: 1px solid rgba(200, 169, 110, 0.3);
+	border-radius: 4px;
+	background: rgba(200, 169, 110, 0.1);
+	color: rgba(200, 169, 110, 0.85);
+	cursor: pointer;
+	transition:
+		background-color 0.15s,
+		border-color 0.15s;
+}
+
+.timerDetailsContinueConfirmButton:hover {
+	background: rgba(200, 169, 110, 0.2);
+	border-color: rgba(200, 169, 110, 0.5);
+}
+
+.timerDetailsContinueCancelButton {
+	padding: 6px 16px;
+	font-size: 12px;
+	font-weight: 600;
+	border: 1px solid rgba(200, 169, 110, 0.15);
+	border-radius: 4px;
+	background: transparent;
+	color: rgba(200, 169, 110, 0.5);
+	cursor: pointer;
+	transition:
+		border-color 0.15s,
+		color 0.15s;
+}
+
+.timerDetailsContinueCancelButton:hover {
+	border-color: rgba(200, 169, 110, 0.4);
+	color: rgba(200, 169, 110, 0.9);
+}
+
 .timerDetailsFilterBar {
 	display: flex;
 	align-items: center;
@@ -255,6 +327,25 @@
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.timerDetailsRunStatus {
+	flex-shrink: 0;
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.3px;
+	padding: 2px 6px;
+	border-radius: 3px;
+}
+
+.timerDetailsRunStatus--completed {
+	color: rgba(100, 200, 120, 0.85);
+	background: rgba(100, 200, 120, 0.1);
+}
+
+.timerDetailsRunStatus--inProgress {
+	color: rgba(200, 169, 110, 0.75);
+	background: rgba(200, 169, 110, 0.1);
 }
 
 .timerDetailsRunTime {

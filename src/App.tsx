@@ -676,6 +676,16 @@ function App(): JSX.Element {
 		handleTimerAction('reset');
 	}, [handleTimerAction]);
 
+	const continueTimerRun = useCallback((runId: string): void => {
+		void invoke<TimerState>('saved_runs_continue', { runId })
+			.then((state) => {
+				setTimerState(state);
+			})
+			.catch((err: unknown) => {
+				console.error('Failed to continue run:', err);
+			});
+	}, []);
+
 	if (viewMode === 'overlay') {
 		const overlaySize = getOverlayLogicalSize(currentPage);
 		return (
@@ -705,6 +715,7 @@ function App(): JSX.Element {
 			onBack={closeTimerDetails}
 			onSaveRun={saveTimerRun}
 			onResetRun={resetTimerRun}
+			onContinueRun={continueTimerRun}
 		/>
 	) : activeSettingsTab !== null ? (
 		<SettingsPage

@@ -24,7 +24,10 @@ export type ActRun = {
 	readonly status: ActRunStatus;
 };
 
+export type SavedRunStatus = 'completed' | 'in_progress';
+
 export type SavedRun = {
+	readonly schemaVersion: number;
 	readonly id: string;
 	readonly league: string;
 	readonly hardcore: boolean;
@@ -33,6 +36,7 @@ export type SavedRun = {
 	readonly character: string;
 	readonly characterClass: string;
 	readonly runDetails: string;
+	readonly status: SavedRunStatus;
 	readonly actRuns: readonly ActRun[];
 	readonly campaignElapsedMs: number;
 	readonly savedAt: number;

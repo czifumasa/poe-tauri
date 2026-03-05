@@ -70,6 +70,7 @@ export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageP
 	const [privateLeague, setPrivateLeague] = useState<boolean>(false);
 	const [runDetails, setRunDetails] = useState<string>('');
 	const [classOptions, setClassOptions] = useState<readonly { readonly value: string; readonly label: string }[]>([]);
+	const [saving, setSaving] = useState<boolean>(false);
 
 	useEffect((): void => {
 		void invoke<AscendancyClassEntry[]>('get_ascendancy_classes')
@@ -227,9 +228,32 @@ export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageP
 			</div>
 
 			<div className="saveCampaignRunActions">
-				<button type="button" className="saveCampaignRunSaveButton" disabled={isSaveDisabled} title={saveTooltip}>
+				<button
+					type="button"
+					className="saveCampaignRunSaveButton"
+					disabled={isSaveDisabled || saving}
+					title={saveTooltip}
+					onClick={() => {
+						setSaving(true);
+						void invoke('saved_runs_save', {
+							league,
+							hardcore,
+							ssf,
+							privateLeague,
+							character: characterName.trim(),
+							characterClass: selectedClass,
+							runDetails: runDetails.trim(),
+						})
+							.then(() => {
+								onBack();
+							})
+							.catch((err: unknown) => {
+								console.error('Failed to save run:', err);
+								setSaving(false);
+							});
+					}}>
 					<SaveIcon />
-					Save Run
+					{saving ? 'Saving...' : 'Save Run'}
 				</button>
 			</div>
 		</div>

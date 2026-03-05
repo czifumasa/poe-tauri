@@ -1,6 +1,6 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use tauri::AppHandle;
 use tauri::Emitter;
@@ -9,7 +9,10 @@ use crate::error::{command_error, CommandError};
 use crate::persistence::settings::TimerSettings;
 use crate::persistence::store;
 
-use super::types::{PersistedTimerState, TimerSettingsDto, TimerStateDto, TimerStatus};
+use super::types::{
+    ActRun, ActRunStatus, PersistedTimerState, SavedRun, SavedRunDto, SavedRunStatus,
+    SavedRunsData, TimerSettingsDto, TimerStateDto, TimerStatus,
+};
 
 const AUTO_SAVE_INTERVAL: Duration = Duration::from_secs(5);
 const TIMER_STATE_UPDATED_EVENT: &str = "timer_state_updated";
@@ -210,6 +213,111 @@ impl TimerManager {
         Ok(())
     }
 
+    pub fn save_run(
+        &self,
+        app: &AppHandle,
+        league: String,
+        hardcore: bool,
+        ssf: bool,
+        private_league: bool,
+        character: String,
+        character_class: String,
+        run_details: String,
+    ) -> Result<SavedRunDto, CommandError> {
+        let mut guard = self
+            .inner
+            .lock()
+            .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
+
+        if guard.state.status == TimerStatus::Running {
+            flush_elapsed(&mut guard);
+        }
+
+        let act_runs = build_act_runs(&guard.state);
+        let all_completed = act_runs.iter().all(|a| a.status == ActRunStatus::Completed);
+        let run_status = if all_completed {
+            SavedRunStatus::Completed
+        } else {
+            SavedRunStatus::InProgress
+        };
+        let now_ms = now_epoch_ms();
+
+        let run = SavedRun {
+            schema_version: 1,
+            id: now_ms.to_string(),
+            league,
+            hardcore,
+            ssf,
+            private_league,
+            character,
+            character_class,
+            run_details,
+            status: run_status,
+            act_runs,
+            campaign_elapsed_ms: guard.state.campaign_elapsed_ms,
+            saved_at: now_ms,
+        };
+
+        let mut data = load_saved_runs_data(app)?;
+        data.runs.push(run.clone());
+        save_saved_runs_data(app, &data)?;
+
+        Ok(SavedRunDto::from(&run))
+    }
+
+    pub fn load_runs(app: &AppHandle) -> Result<Vec<SavedRunDto>, CommandError> {
+        let data = load_saved_runs_data(app)?;
+        Ok(data.runs.iter().map(SavedRunDto::from).collect())
+    }
+
+    pub fn delete_run(app: &AppHandle, run_id: String) -> Result<Vec<SavedRunDto>, CommandError> {
+        let mut data = load_saved_runs_data(app)?;
+        let before_len = data.runs.len();
+        data.runs.retain(|r| r.id != run_id);
+
+        if data.runs.len() == before_len {
+            return Err(command_error(
+                "saved_run_not_found",
+                format!("No saved run with id '{run_id}'"),
+            ));
+        }
+
+        save_saved_runs_data(app, &data)?;
+        Ok(data.runs.iter().map(SavedRunDto::from).collect())
+    }
+
+    pub fn continue_run(
+        &self,
+        app: &AppHandle,
+        run_id: String,
+    ) -> Result<TimerStateDto, CommandError> {
+        let data = load_saved_runs_data(app)?;
+        let saved = data
+            .runs
+            .iter()
+            .find(|r| r.id == run_id)
+            .ok_or_else(|| {
+                command_error(
+                    "saved_run_not_found",
+                    format!("No saved run with id '{run_id}'"),
+                )
+            })?;
+
+        let restored = restore_timer_state(saved);
+
+        let mut guard = self
+            .inner
+            .lock()
+            .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
+
+        guard.state = restored;
+        guard.last_tick = None;
+
+        let dto = TimerStateDto::from(&guard.state);
+        save_state_inner(app, &guard.state);
+        Ok(dto)
+    }
+
     pub fn start_auto_save(self: &Arc<Self>, app: &AppHandle) {
         if self.auto_save_running.swap(true, Ordering::SeqCst) {
             return;
@@ -263,4 +371,83 @@ fn save_state_inner(app: &AppHandle, state: &PersistedTimerState) {
     if let Err(err) = store::set_value(app, PersistedTimerState::STORE_KEY, state) {
         eprintln!("Failed to persist timer state: {:?}", err);
     }
+}
+
+fn build_act_runs(state: &PersistedTimerState) -> Vec<ActRun> {
+    (0..ACT_COUNT)
+        .map(|i| {
+            let status = if i < state.current_act_index {
+                ActRunStatus::Completed
+            } else if i == state.current_act_index && state.status != TimerStatus::Idle {
+                ActRunStatus::InProgress
+            } else {
+                ActRunStatus::Pending
+            };
+
+            let elapsed_ms = if i == state.current_act_index && state.status != TimerStatus::Idle {
+                state.current_act_elapsed_ms
+            } else {
+                state.act_elapsed_ms.get(i).copied().unwrap_or(0)
+            };
+
+            ActRun {
+                act_name: format!("Act {}", i + 1),
+                elapsed_ms,
+                status,
+            }
+        })
+        .collect()
+}
+
+fn load_saved_runs_data(app: &AppHandle) -> Result<SavedRunsData, CommandError> {
+    let maybe = store::get_optional::<SavedRunsData>(app, SavedRunsData::STORE_KEY)?;
+    Ok(maybe.unwrap_or_default())
+}
+
+fn save_saved_runs_data(app: &AppHandle, data: &SavedRunsData) -> Result<(), CommandError> {
+    store::set_value(app, SavedRunsData::STORE_KEY, data)
+}
+
+fn restore_timer_state(saved: &SavedRun) -> PersistedTimerState {
+    let mut act_elapsed_ms = vec![0u64; ACT_COUNT];
+    let mut current_act_index = ACT_COUNT;
+    let mut current_act_elapsed_ms = 0u64;
+
+    for (i, act) in saved.act_runs.iter().enumerate().take(ACT_COUNT) {
+        match act.status {
+            ActRunStatus::Completed => {
+                act_elapsed_ms[i] = act.elapsed_ms;
+            }
+            ActRunStatus::InProgress => {
+                current_act_index = i;
+                current_act_elapsed_ms = act.elapsed_ms;
+            }
+            ActRunStatus::Pending => {}
+        }
+    }
+
+    if current_act_index == ACT_COUNT {
+        current_act_index = saved
+            .act_runs
+            .iter()
+            .take(ACT_COUNT)
+            .position(|a| a.status != ActRunStatus::Completed)
+            .unwrap_or(ACT_COUNT);
+    }
+
+    PersistedTimerState {
+        schema_version: 1,
+        status: TimerStatus::Paused,
+        current_act_index,
+        act_elapsed_ms,
+        current_act_elapsed_ms,
+        campaign_elapsed_ms: saved.campaign_elapsed_ms,
+    }
+}
+
+fn now_epoch_ms() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as u64
 }
