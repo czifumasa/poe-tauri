@@ -148,6 +148,8 @@ function App(): JSX.Element {
 	const [resetEpoch, setResetEpoch] = useState<number>(0);
 	const [timerDetailsVisible, setTimerDetailsVisible] = useState<boolean>(false);
 	const [saveRunVisible, setSaveRunVisible] = useState<boolean>(false);
+	const [editRunId, setEditRunId] = useState<string | null>(null);
+	const [timerDetailsInitialTab, setTimerDetailsInitialTab] = useState<'current' | 'best' | 'manage'>('current');
 
 	useEffect((): (() => void) => {
 		let isDisposed = false;
@@ -655,6 +657,7 @@ function App(): JSX.Element {
 	}, [openSettings]);
 
 	const openTimerDetails = useCallback((): void => {
+		setTimerDetailsInitialTab('current');
 		setTimerDetailsVisible(true);
 	}, []);
 
@@ -667,8 +670,13 @@ function App(): JSX.Element {
 	}, []);
 
 	const closeSaveRun = useCallback((): void => {
+		const wasEdit = editRunId !== null;
 		setSaveRunVisible(false);
-	}, []);
+		setEditRunId(null);
+		if (wasEdit) {
+			setTimerDetailsInitialTab('manage');
+		}
+	}, [editRunId]);
 
 	const saveTimerRun = useCallback((): void => {
 		openSaveRun();
@@ -677,6 +685,11 @@ function App(): JSX.Element {
 	const resetTimerRun = useCallback((): void => {
 		handleTimerAction('reset');
 	}, [handleTimerAction]);
+
+	const editTimerRun = useCallback((runId: string): void => {
+		setEditRunId(runId);
+		setSaveRunVisible(true);
+	}, []);
 
 	const continueTimerRun = useCallback((runId: string): void => {
 		void invoke<TimerState>('saved_runs_continue', { runId })
@@ -710,14 +723,16 @@ function App(): JSX.Element {
 	}
 
 	const settingsContent = saveRunVisible ? (
-		<SaveCampaignRunPage timerState={timerState} onBack={closeSaveRun} />
+		<SaveCampaignRunPage timerState={timerState} editRunId={editRunId} onBack={closeSaveRun} />
 	) : timerDetailsVisible ? (
 		<TimerDetailsPage
 			timerState={timerState}
+			initialTab={timerDetailsInitialTab}
 			onBack={closeTimerDetails}
 			onSaveRun={saveTimerRun}
 			onResetRun={resetTimerRun}
 			onContinueRun={continueTimerRun}
+			onEditRun={editTimerRun}
 		/>
 	) : activeSettingsTab !== null ? (
 		<SettingsPage

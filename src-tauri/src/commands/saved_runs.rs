@@ -63,3 +63,28 @@ pub fn saved_runs_get(
 ) -> Result<Option<SavedRunDto>, CommandError> {
     TimerManager::get_run(&app, run_id)
 }
+
+#[tauri::command(async)]
+pub fn saved_runs_edit(
+    app: tauri::AppHandle,
+    run_id: String,
+    league: String,
+    hardcore: bool,
+    ssf: bool,
+    private_league: bool,
+    character: String,
+    character_class: String,
+    run_details: String,
+) -> Result<SavedRunDto, CommandError> {
+    TimerManager::edit_run(
+        &app,
+        run_id,
+        league,
+        hardcore,
+        ssf,
+        private_league,
+        character,
+        character_class,
+        run_details,
+    )
+}

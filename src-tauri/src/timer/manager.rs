@@ -377,6 +377,43 @@ impl TimerManager {
         Ok(data.runs.iter().map(SavedRunDto::from).collect())
     }
 
+    pub fn edit_run(
+        app: &AppHandle,
+        run_id: String,
+        league: String,
+        hardcore: bool,
+        ssf: bool,
+        private_league: bool,
+        character: String,
+        character_class: String,
+        run_details: String,
+    ) -> Result<SavedRunDto, CommandError> {
+        let mut data = load_saved_runs_data(app)?;
+        let run = data
+            .runs
+            .iter_mut()
+            .find(|r| r.id == run_id)
+            .ok_or_else(|| {
+                command_error(
+                    "saved_run_not_found",
+                    format!("No saved run with id '{run_id}'"),
+                )
+            })?;
+
+        run.league = league;
+        run.hardcore = hardcore;
+        run.ssf = ssf;
+        run.private_league = private_league;
+        run.character = character;
+        run.character_class = character_class;
+        run.run_details = run_details;
+        run.saved_at = now_epoch_ms();
+
+        let dto = SavedRunDto::from(&*run);
+        save_saved_runs_data(app, &data)?;
+        Ok(dto)
+    }
+
     pub fn get_run(app: &AppHandle, run_id: String) -> Result<Option<SavedRunDto>, CommandError> {
         let data = load_saved_runs_data(app)?;
         let found = data.runs.iter().find(|r| r.id == run_id).map(SavedRunDto::from);

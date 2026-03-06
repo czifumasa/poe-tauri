@@ -16,6 +16,7 @@ const LEAGUE_OPTIONS: readonly { readonly value: LeagueOption; readonly label: s
 
 interface SaveCampaignRunPageProps {
 	timerState: TimerState;
+	editRunId: string | null;
 	onBack: () => void;
 }
 
@@ -64,7 +65,9 @@ function buildClassOptions(
 	return options;
 }
 
-export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageProps): JSX.Element {
+export function SaveCampaignRunPage({ timerState, editRunId, onBack }: SaveCampaignRunPageProps): JSX.Element {
+	const isEditMode = editRunId !== null;
+	const [editedRun, setEditedRun] = useState<SavedRun | null>(null);
 	const [characterName, setCharacterName] = useState<string>('');
 	const [selectedClass, setSelectedClass] = useState<string>('');
 	const [league, setLeague] = useState<LeagueOption>('Mirage');
@@ -87,13 +90,13 @@ export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageP
 	}, []);
 
 	useEffect((): void => {
-		if (timerState.runId === null) {
+		const prefillRunId = editRunId ?? timerState.runId;
+		if (prefillRunId === null) {
 			return;
 		}
-		const currentRunId = timerState.runId;
 		void invoke<SavedRun[]>('saved_runs_load')
 			.then((runs) => {
-				const savedRun = runs.find((r) => r.id === currentRunId);
+				const savedRun = runs.find((r) => r.id === prefillRunId);
 				if (savedRun === undefined) {
 					return;
 				}
@@ -104,11 +107,14 @@ export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageP
 				setSsf(savedRun.ssf);
 				setPrivateLeague(savedRun.privateLeague);
 				setRunDetails(savedRun.runDetails);
+				if (isEditMode) {
+					setEditedRun(savedRun);
+				}
 			})
 			.catch((err: unknown) => {
 				console.error('Failed to load existing saved run:', err);
 			});
-	}, [timerState.runId]);
+	}, [editRunId, timerState.runId, isEditMode]);
 
 	const missingFields: string[] = [];
 	if (characterName.trim() === '') missingFields.push('character name');
@@ -119,7 +125,7 @@ export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageP
 
 	return (
 		<div className="saveCampaignRunPage">
-			<SectionDivider label="SAVE RUN" onBack={onBack} />
+			<SectionDivider label={isEditMode ? 'EDIT RUN' : 'SAVE RUN'} onBack={onBack} />
 
 			<div className="saveCampaignRunSection">
 				<div className="saveCampaignRunSectionTitle">Character</div>
@@ -199,60 +205,114 @@ export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageP
 				</div>
 			</div>
 
-			<div className="saveCampaignRunSection">
-				<div className="saveCampaignRunSectionTitle">Run</div>
-				<div className="saveCampaignRunSplitColumns">
-					<div className="saveCampaignRunSplitColumn">
-						{timerState.actElapsedMs.slice(0, Math.ceil(timerState.actElapsedMs.length / 2)).map((ms, i) => {
-							const isActive = i === timerState.currentActIndex && timerState.status !== 'idle';
-							const isCompleted = !isActive && i < timerState.currentActIndex && timerState.status !== 'idle';
-							const displayMs = isActive ? timerState.currentActElapsedMs : ms;
-							const rowClass = isActive
-								? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--active'
-								: isCompleted
-									? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--completed'
-									: 'saveCampaignRunSplitRow';
-
-							return (
-								<div key={i} className={rowClass}>
-									<span className="saveCampaignRunSplitLabel">Act {i + 1}</span>
-									<span className="saveCampaignRunSplitValue">
-										{isActive || isCompleted ? formatElapsedMs(displayMs) : '--:--:--'}
-									</span>
-								</div>
-							);
-						})}
+			{isEditMode ? (
+				editedRun !== null && (
+					<div className="saveCampaignRunSection">
+						<div className="saveCampaignRunSectionTitle">Run</div>
+						<div className="saveCampaignRunSplitColumns">
+							<div className="saveCampaignRunSplitColumn">
+								{editedRun.actRuns.slice(0, Math.ceil(editedRun.actRuns.length / 2)).map((act, i) => {
+									const rowClass =
+										act.status === 'in_progress'
+											? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--active'
+											: act.status === 'completed'
+												? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--completed'
+												: 'saveCampaignRunSplitRow';
+									return (
+										<div key={i} className={rowClass}>
+											<span className="saveCampaignRunSplitLabel">{act.actName}</span>
+											<span className="saveCampaignRunSplitValue">
+												{act.status === 'pending' ? '--:--:--' : formatElapsedMs(act.elapsedMs)}
+											</span>
+										</div>
+									);
+								})}
+							</div>
+							<div className="saveCampaignRunSplitColumnDivider" />
+							<div className="saveCampaignRunSplitColumn">
+								{editedRun.actRuns.slice(Math.ceil(editedRun.actRuns.length / 2)).map((act, i) => {
+									const half = Math.ceil(editedRun.actRuns.length / 2);
+									const actIndex = half + i;
+									const rowClass =
+										act.status === 'in_progress'
+											? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--active'
+											: act.status === 'completed'
+												? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--completed'
+												: 'saveCampaignRunSplitRow';
+									return (
+										<div key={actIndex} className={rowClass}>
+											<span className="saveCampaignRunSplitLabel">{act.actName}</span>
+											<span className="saveCampaignRunSplitValue">
+												{act.status === 'pending' ? '--:--:--' : formatElapsedMs(act.elapsedMs)}
+											</span>
+										</div>
+									);
+								})}
+							</div>
+						</div>
+						<div className="saveCampaignRunTotalRow">
+							<span className="saveCampaignRunTotalLabel">Total</span>
+							<span className="saveCampaignRunTotalValue">{formatElapsedMs(editedRun.campaignElapsedMs)}</span>
+						</div>
 					</div>
-					<div className="saveCampaignRunSplitColumnDivider" />
-					<div className="saveCampaignRunSplitColumn">
-						{timerState.actElapsedMs.slice(Math.ceil(timerState.actElapsedMs.length / 2)).map((ms, i) => {
-							const half = Math.ceil(timerState.actElapsedMs.length / 2);
-							const actIndex = half + i;
-							const isActive = actIndex === timerState.currentActIndex && timerState.status !== 'idle';
-							const isCompleted = !isActive && actIndex < timerState.currentActIndex && timerState.status !== 'idle';
-							const displayMs = isActive ? timerState.currentActElapsedMs : ms;
-							const rowClass = isActive
-								? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--active'
-								: isCompleted
-									? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--completed'
-									: 'saveCampaignRunSplitRow';
+				)
+			) : (
+				<div className="saveCampaignRunSection">
+					<div className="saveCampaignRunSectionTitle">Run</div>
+					<div className="saveCampaignRunSplitColumns">
+						<div className="saveCampaignRunSplitColumn">
+							{timerState.actElapsedMs.slice(0, Math.ceil(timerState.actElapsedMs.length / 2)).map((ms, i) => {
+								const isActive = i === timerState.currentActIndex && timerState.status !== 'idle';
+								const isCompleted = !isActive && i < timerState.currentActIndex && timerState.status !== 'idle';
+								const displayMs = isActive ? timerState.currentActElapsedMs : ms;
+								const rowClass = isActive
+									? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--active'
+									: isCompleted
+										? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--completed'
+										: 'saveCampaignRunSplitRow';
 
-							return (
-								<div key={actIndex} className={rowClass}>
-									<span className="saveCampaignRunSplitLabel">Act {actIndex + 1}</span>
-									<span className="saveCampaignRunSplitValue">
-										{isActive || isCompleted ? formatElapsedMs(displayMs) : '--:--:--'}
-									</span>
-								</div>
-							);
-						})}
+								return (
+									<div key={i} className={rowClass}>
+										<span className="saveCampaignRunSplitLabel">Act {i + 1}</span>
+										<span className="saveCampaignRunSplitValue">
+											{isActive || isCompleted ? formatElapsedMs(displayMs) : '--:--:--'}
+										</span>
+									</div>
+								);
+							})}
+						</div>
+						<div className="saveCampaignRunSplitColumnDivider" />
+						<div className="saveCampaignRunSplitColumn">
+							{timerState.actElapsedMs.slice(Math.ceil(timerState.actElapsedMs.length / 2)).map((ms, i) => {
+								const half = Math.ceil(timerState.actElapsedMs.length / 2);
+								const actIndex = half + i;
+								const isActive = actIndex === timerState.currentActIndex && timerState.status !== 'idle';
+								const isCompleted =
+									!isActive && actIndex < timerState.currentActIndex && timerState.status !== 'idle';
+								const displayMs = isActive ? timerState.currentActElapsedMs : ms;
+								const rowClass = isActive
+									? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--active'
+									: isCompleted
+										? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--completed'
+										: 'saveCampaignRunSplitRow';
+
+								return (
+									<div key={actIndex} className={rowClass}>
+										<span className="saveCampaignRunSplitLabel">Act {actIndex + 1}</span>
+										<span className="saveCampaignRunSplitValue">
+											{isActive || isCompleted ? formatElapsedMs(displayMs) : '--:--:--'}
+										</span>
+									</div>
+								);
+							})}
+						</div>
+					</div>
+					<div className="saveCampaignRunTotalRow">
+						<span className="saveCampaignRunTotalLabel">Total</span>
+						<span className="saveCampaignRunTotalValue">{formatElapsedMs(timerState.campaignElapsedMs)}</span>
 					</div>
 				</div>
-				<div className="saveCampaignRunTotalRow">
-					<span className="saveCampaignRunTotalLabel">Total</span>
-					<span className="saveCampaignRunTotalValue">{formatElapsedMs(timerState.campaignElapsedMs)}</span>
-				</div>
-			</div>
+			)}
 
 			<div className="saveCampaignRunActions">
 				<button
@@ -262,15 +322,27 @@ export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageP
 					title={saveTooltip}
 					onClick={() => {
 						setSaving(true);
-						void invoke('saved_runs_save', {
-							league,
-							hardcore,
-							ssf,
-							privateLeague,
-							character: characterName.trim(),
-							characterClass: selectedClass,
-							runDetails: runDetails.trim(),
-						})
+						const invokePromise = isEditMode
+							? invoke('saved_runs_edit', {
+									runId: editRunId,
+									league,
+									hardcore,
+									ssf,
+									privateLeague,
+									character: characterName.trim(),
+									characterClass: selectedClass,
+									runDetails: runDetails.trim(),
+								})
+							: invoke('saved_runs_save', {
+									league,
+									hardcore,
+									ssf,
+									privateLeague,
+									character: characterName.trim(),
+									characterClass: selectedClass,
+									runDetails: runDetails.trim(),
+								});
+						void invokePromise
 							.then(() => {
 								onBack();
 							})

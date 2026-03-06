@@ -25,10 +25,12 @@ const FILTER_OPTIONS: readonly { readonly value: BestRunsFilter; readonly label:
 
 interface TimerDetailsPageProps {
 	timerState: TimerState;
+	initialTab?: DetailsTab;
 	onBack: () => void;
 	onSaveRun: () => void;
 	onResetRun: () => void;
 	onContinueRun: (runId: string) => void;
+	onEditRun: (runId: string) => void;
 }
 
 function SaveIcon(): JSX.Element {
@@ -100,6 +102,23 @@ function ExportIcon(): JSX.Element {
 			<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
 			<polyline points="7 10 12 15 17 10" />
 			<line x1="12" y1="15" x2="12" y2="3" />
+		</svg>
+	);
+}
+
+function EditIcon(): JSX.Element {
+	return (
+		<svg
+			width="14"
+			height="14"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round">
+			<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+			<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
 		</svg>
 	);
 }
@@ -364,6 +383,7 @@ function ManageRunExpandedPanel(props: {
 	onRequestContinue: () => void;
 	onConfirmContinue: () => void;
 	onCancelContinue: () => void;
+	onEditRun: () => void;
 	onRequestDelete: () => void;
 	onConfirmDelete: () => void;
 	onCancelDelete: () => void;
@@ -385,6 +405,14 @@ function ManageRunExpandedPanel(props: {
 						Continue Run
 					</button>
 				)}
+				<button
+					type="button"
+					className="timerDetailsActionButton timerDetailsActionButton--save"
+					disabled={hasActiveConfirmation}
+					onClick={props.onEditRun}>
+					<EditIcon />
+					Edit Run
+				</button>
 				<button
 					type="button"
 					className="timerDetailsActionButton timerDetailsActionButton--delete"
@@ -422,6 +450,7 @@ function ManageRunItem(props: {
 	onRequestContinue: () => void;
 	onConfirmContinue: () => void;
 	onCancelContinue: () => void;
+	onEditRun: () => void;
 	onRequestDelete: () => void;
 	onConfirmDelete: () => void;
 	onCancelDelete: () => void;
@@ -452,6 +481,7 @@ function ManageRunItem(props: {
 					onRequestContinue={props.onRequestContinue}
 					onConfirmContinue={props.onConfirmContinue}
 					onCancelContinue={props.onCancelContinue}
+					onEditRun={props.onEditRun}
 					onRequestDelete={props.onRequestDelete}
 					onConfirmDelete={props.onConfirmDelete}
 					onCancelDelete={props.onCancelDelete}
@@ -465,8 +495,9 @@ function ManageRunsContent(props: {
 	runs: readonly SavedRun[];
 	onDeleteRun: (runId: string) => void;
 	onContinueRun: (runId: string) => void;
+	onEditRun: (runId: string) => void;
 }): JSX.Element {
-	const { runs, onDeleteRun, onContinueRun } = props;
+	const { runs, onDeleteRun, onContinueRun, onEditRun } = props;
 	const [expandedRunId, setExpandedRunId] = useState<string | null>(null);
 	const [confirmContinueRunId, setConfirmContinueRunId] = useState<string | null>(null);
 	const [confirmDeleteRunId, setConfirmDeleteRunId] = useState<string | null>(null);
@@ -517,6 +548,7 @@ function ManageRunsContent(props: {
 							onContinueRun(run.id);
 						}}
 						onCancelContinue={() => setConfirmContinueRunId(null)}
+						onEditRun={() => onEditRun(run.id)}
 						onRequestDelete={() => {
 							clearConfirmations();
 							setConfirmDeleteRunId(run.id);
@@ -537,12 +569,14 @@ function ManageRunsContent(props: {
 
 export function TimerDetailsPage({
 	timerState,
+	initialTab = 'current',
 	onBack,
 	onSaveRun,
 	onResetRun,
 	onContinueRun,
+	onEditRun,
 }: TimerDetailsPageProps): JSX.Element {
-	const [activeTab, setActiveTab] = useState<DetailsTab>('current');
+	const [activeTab, setActiveTab] = useState<DetailsTab>(initialTab);
 	const [savedRuns, setSavedRuns] = useState<readonly SavedRun[]>([]);
 
 	useEffect((): void => {
@@ -579,7 +613,12 @@ export function TimerDetailsPage({
 				)}
 				{activeTab === 'best' && <BestRunsContent runs={savedRuns} />}
 				{activeTab === 'manage' && (
-					<ManageRunsContent runs={savedRuns} onDeleteRun={handleDeleteRun} onContinueRun={onContinueRun} />
+					<ManageRunsContent
+						runs={savedRuns}
+						onDeleteRun={handleDeleteRun}
+						onContinueRun={onContinueRun}
+						onEditRun={onEditRun}
+					/>
 				)}
 			</div>
 		</div>
