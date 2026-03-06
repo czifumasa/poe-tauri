@@ -110,6 +110,8 @@ pub struct TimerSettings {
     pub display_act_timer: bool,
     #[serde(default = "default_true")]
     pub display_campaign_timer: bool,
+    #[serde(default = "default_true")]
+    pub warn_when_paused: bool,
 }
 
 impl Default for TimerSettings {
@@ -119,6 +121,7 @@ impl Default for TimerSettings {
             enabled: false,
             display_act_timer: true,
             display_campaign_timer: true,
+            warn_when_paused: true,
         }
     }
 }

@@ -131,6 +131,7 @@ function App(): JSX.Element {
 		enabled: false,
 		displayActTimer: true,
 		displayCampaignTimer: true,
+		warnWhenPaused: true,
 	});
 	const [timerState, setTimerState] = useState<TimerState>({
 		schemaVersion: 1,
@@ -418,6 +419,7 @@ function App(): JSX.Element {
 			enabled: updated.enabled,
 			displayActTimer: updated.displayActTimer,
 			displayCampaignTimer: updated.displayCampaignTimer,
+			warnWhenPaused: updated.warnWhenPaused,
 		}).catch((err: unknown) => {
 			console.error('Failed to persist timer settings:', err);
 		});
@@ -440,6 +442,13 @@ function App(): JSX.Element {
 	const updateDisplayCampaignTimer = useCallback(
 		(nextValue: boolean): void => {
 			persistTimerSettings({ ...timerSettings, displayCampaignTimer: nextValue });
+		},
+		[timerSettings, persistTimerSettings],
+	);
+
+	const updateWarnWhenPaused = useCallback(
+		(nextValue: boolean): void => {
+			persistTimerSettings({ ...timerSettings, warnWhenPaused: nextValue });
 		},
 		[timerSettings, persistTimerSettings],
 	);
@@ -620,7 +629,7 @@ function App(): JSX.Element {
 				overlayShown: false,
 			});
 			setPobSettings({ schemaVersion: 1, slots: [], currentSlotIndex: null });
-			setTimerSettings({ schemaVersion: 1, enabled: false, displayActTimer: true, displayCampaignTimer: true });
+			setTimerSettings({ schemaVersion: 1, enabled: false, displayActTimer: true, displayCampaignTimer: true, warnWhenPaused: true });
 			setTimerState({
 				schemaVersion: 1,
 				status: 'idle',
@@ -772,9 +781,11 @@ function App(): JSX.Element {
 					enabled={timerSettings.enabled}
 					displayActTimer={timerSettings.displayActTimer}
 					displayCampaignTimer={timerSettings.displayCampaignTimer}
+					warnWhenPaused={timerSettings.warnWhenPaused}
 					onEnabledChange={updateTimerEnabled}
 					onDisplayActTimerChange={updateDisplayActTimer}
 					onDisplayCampaignTimerChange={updateDisplayCampaignTimer}
+					onWarnWhenPausedChange={updateWarnWhenPaused}
 					settingsLoading={settingsLoading}
 				/>
 			}

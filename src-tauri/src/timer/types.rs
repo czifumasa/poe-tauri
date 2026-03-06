@@ -67,6 +67,7 @@ pub struct TimerSettingsDto {
     pub enabled: bool,
     pub display_act_timer: bool,
     pub display_campaign_timer: bool,
+    pub warn_when_paused: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]

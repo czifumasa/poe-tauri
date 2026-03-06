@@ -56,6 +56,7 @@ impl TimerManager {
             enabled: settings.enabled,
             display_act_timer: settings.display_act_timer,
             display_campaign_timer: settings.display_campaign_timer,
+            warn_when_paused: settings.warn_when_paused,
         })
     }
 
@@ -64,12 +65,14 @@ impl TimerManager {
         enabled: bool,
         display_act_timer: bool,
         display_campaign_timer: bool,
+        warn_when_paused: bool,
     ) -> Result<TimerSettingsDto, CommandError> {
         let settings = TimerSettings {
             schema_version: 1,
             enabled,
             display_act_timer,
             display_campaign_timer,
+            warn_when_paused,
         };
         store::set_value(app, TimerSettings::STORE_KEY, &settings)?;
         Ok(TimerSettingsDto {
@@ -77,6 +80,7 @@ impl TimerManager {
             enabled: settings.enabled,
             display_act_timer: settings.display_act_timer,
             display_campaign_timer: settings.display_campaign_timer,
+            warn_when_paused: settings.warn_when_paused,
         })
     }
 

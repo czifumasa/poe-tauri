@@ -24,8 +24,9 @@ pub fn timer_set_settings(
     enabled: bool,
     display_act_timer: bool,
     display_campaign_timer: bool,
+    warn_when_paused: bool,
 ) -> Result<TimerSettingsDto, CommandError> {
-    let dto = TimerManager::set_settings(&app, enabled, display_act_timer, display_campaign_timer)?;
+    let dto = TimerManager::set_settings(&app, enabled, display_act_timer, display_campaign_timer, warn_when_paused)?;
     app.emit(TIMER_SETTINGS_UPDATED_EVENT, &dto)
         .map_err(|e| command_error("timer_settings_emit_failed", e.to_string()))?;
     Ok(dto)

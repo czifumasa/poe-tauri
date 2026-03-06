@@ -5,6 +5,7 @@ export type TimerSettings = {
 	enabled: boolean;
 	displayActTimer: boolean;
 	displayCampaignTimer: boolean;
+	warnWhenPaused: boolean;
 };
 
 export type TimerState = {

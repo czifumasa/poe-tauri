@@ -341,7 +341,13 @@ export function LevelingGuideOverlay(props: LevelingGuideOverlayProps): JSX.Elem
 					<div className="guideHeaderRight">{getCampaignCounterLabel(page)}</div>
 				</div>
 			</div>
-			<div className="guideSteps">{page.lines.map((line, lineIndex) => renderLine(line, lineIndex))}</div>
+			{timerEnabled && timerSettings.warnWhenPaused && timerState.status === 'paused' ? (
+				<div className="guideSteps">
+					<div className="overlayMessage">Timer is paused.</div>
+				</div>
+			) : (
+				<div className="guideSteps">{page.lines.map((line, lineIndex) => renderLine(line, lineIndex))}</div>
+			)}
 			<div className="guideNavigation">
 				<button
 					type="button"
