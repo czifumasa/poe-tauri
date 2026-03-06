@@ -51,6 +51,10 @@ impl NativeWindow for X11NativeWindow {
         })
     }
 
+    fn requires_resizable_for_minimize(&self) -> bool {
+        true
+    }
+
     fn set_size_with_gtk_refresh(
         &self,
         window: &tauri::WebviewWindow,

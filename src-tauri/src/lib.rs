@@ -18,8 +18,8 @@ use commands::hint_tooltip::*;
 use commands::leveling_guide::*;
 use commands::overlay::*;
 use commands::pob_settings::*;
-use commands::settings::*;
 use commands::saved_runs::*;
+use commands::settings::*;
 use commands::timer::*;
 use leveling_guide::LevelingGuideManager;
 use timer::TimerManager;
@@ -55,9 +55,12 @@ fn lock_webview_window_inner_size(
         "window_debug",
         &format!(
             "inner={}x{} outer={}x{} target_inner={}x{}",
-            current_inner.width, current_inner.height,
-            current_outer.width, current_outer.height,
-            target_inner_size.width, target_inner_size.height
+            current_inner.width,
+            current_inner.height,
+            current_outer.width,
+            current_outer.height,
+            target_inner_size.width,
+            target_inner_size.height
         ),
     );
 
@@ -99,7 +102,10 @@ fn lock_webview_window_inner_size(
     });
     let _ = window.set_min_size(Some(locked));
     let _ = window.set_max_size(Some(locked));
-    let _ = window.set_resizable(false);
+
+    if window::native_window().requires_resizable_for_minimize() {
+        let _ = window.set_resizable(true);
+    }
 
     logging::info("window_debug", "lock_webview_window_inner_size succeeded");
     true

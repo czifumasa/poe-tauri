@@ -93,4 +93,8 @@ pub trait NativeWindow: Send + Sync {
     fn uses_layer_shell_margins(&self) -> bool {
         false
     }
+
+    fn requires_resizable_for_minimize(&self) -> bool {
+        false
+    }
 }
