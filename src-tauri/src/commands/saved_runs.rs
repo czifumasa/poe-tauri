@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use tauri::{Emitter, State};
+use tauri_plugin_dialog::DialogExt;
 
 use crate::error::{command_error, CommandError};
 use crate::timer::{SavedRunDto, TimerManager, TimerStateDto};
@@ -87,4 +88,32 @@ pub fn saved_runs_edit(
         character_class,
         run_details,
     )
+}
+
+#[tauri::command(async)]
+pub fn saved_runs_export(app: tauri::AppHandle) -> Result<bool, CommandError> {
+    let runs = TimerManager::load_runs(&app)?;
+    let json = serde_json::to_string_pretty(&runs)
+        .map_err(|e| command_error("export_serialize_failed", e.to_string()))?;
+
+    let mut builder = app
+        .dialog()
+        .file()
+        .set_file_name("poe-tauri-runs.json")
+        .add_filter("JSON", &["json"]);
+
+    if let Some(downloads) = dirs::download_dir() {
+        builder = builder.set_directory(downloads);
+    }
+
+    let path = builder.blocking_save_file();
+
+    let Some(file_path) = path else {
+        return Ok(false);
+    };
+
+    std::fs::write(file_path.as_path().unwrap(), &json)
+        .map_err(|e| command_error("export_write_failed", e.to_string()))?;
+
+    Ok(true)
 }

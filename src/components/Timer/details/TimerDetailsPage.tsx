@@ -516,8 +516,7 @@ function ManageRunsContent(props: {
 	};
 
 	const exportAllRuns = (): void => {
-		// Backend not wired yet
-		console.info('Export all runs requested (not implemented).');
+		void invoke<boolean>('saved_runs_export').catch((err: unknown) => console.error('Failed to export runs:', err));
 	};
 
 	return (
