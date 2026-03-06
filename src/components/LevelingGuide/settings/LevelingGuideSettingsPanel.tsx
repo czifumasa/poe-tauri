@@ -132,9 +132,7 @@ export function LevelingGuideSettingsPanel(props: LevelingGuideSettingsPanelProp
 					)}
 				</div>
 				{props.clientLogPath === null && (
-					<span className="settingsClientLogHint">
-						Select the Client.txt file from Path of Exile logs directory.
-					</span>
+					<span className="settingsClientLogHint">Select the Client.txt file from Path of Exile logs directory.</span>
 				)}
 			</div>
 		</div>
