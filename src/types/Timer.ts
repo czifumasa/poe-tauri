@@ -10,6 +10,7 @@ export type TimerSettings = {
 export type TimerState = {
 	schemaVersion: number;
 	status: TimerStatus;
+	runId: string | null;
 	currentActIndex: number;
 	actElapsedMs: number[];
 	currentActElapsedMs: number;

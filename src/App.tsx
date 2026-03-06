@@ -135,6 +135,7 @@ function App(): JSX.Element {
 	const [timerState, setTimerState] = useState<TimerState>({
 		schemaVersion: 1,
 		status: 'idle',
+		runId: null,
 		currentActIndex: 0,
 		actElapsedMs: Array.from({ length: 10 }, () => 0),
 		currentActElapsedMs: 0,
@@ -621,6 +622,7 @@ function App(): JSX.Element {
 			setTimerState({
 				schemaVersion: 1,
 				status: 'idle',
+				runId: null,
 				currentActIndex: 0,
 				actElapsedMs: Array.from({ length: 10 }, () => 0),
 				currentActElapsedMs: 0,

@@ -2,6 +2,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+use uuid::Uuid;
+
 use tauri::AppHandle;
 use tauri::Emitter;
 
@@ -128,9 +130,13 @@ impl TimerManager {
         }
 
         guard.state.status = TimerStatus::Running;
+        guard.state.run_id = Some(Uuid::new_v4().to_string());
         guard.last_tick = Some(Instant::now());
 
-        logging::info("timer", "start: timer started from idle");
+        logging::info(
+            "timer",
+            &format!("start: timer started from idle, run_id={:?}", guard.state.run_id),
+        );
         let dto = TimerStateDto::from(&guard.state);
         save_state_inner(app, &guard.state);
         Ok(dto)
@@ -328,9 +334,15 @@ impl TimerManager {
         };
         let now_ms = now_epoch_ms();
 
+        let run_id = guard
+            .state
+            .run_id
+            .clone()
+            .unwrap_or_else(|| Uuid::new_v4().to_string());
+
         let run = SavedRun {
             schema_version: 1,
-            id: now_ms.to_string(),
+            id: run_id.clone(),
             league,
             hardcore,
             ssf,
@@ -344,8 +356,17 @@ impl TimerManager {
             saved_at: now_ms,
         };
 
+        if guard.state.run_id.is_none() {
+            guard.state.run_id = Some(run_id);
+            save_state_inner(app, &guard.state);
+        }
+
         let mut data = load_saved_runs_data(app)?;
-        data.runs.push(run.clone());
+        if let Some(existing) = data.runs.iter_mut().find(|r| r.id == run.id) {
+            *existing = run.clone();
+        } else {
+            data.runs.push(run.clone());
+        }
         save_saved_runs_data(app, &data)?;
 
         Ok(SavedRunDto::from(&run))
@@ -354,6 +375,12 @@ impl TimerManager {
     pub fn load_runs(app: &AppHandle) -> Result<Vec<SavedRunDto>, CommandError> {
         let data = load_saved_runs_data(app)?;
         Ok(data.runs.iter().map(SavedRunDto::from).collect())
+    }
+
+    pub fn get_run(app: &AppHandle, run_id: String) -> Result<Option<SavedRunDto>, CommandError> {
+        let data = load_saved_runs_data(app)?;
+        let found = data.runs.iter().find(|r| r.id == run_id).map(SavedRunDto::from);
+        Ok(found)
     }
 
     pub fn delete_run(app: &AppHandle, run_id: String) -> Result<Vec<SavedRunDto>, CommandError> {
@@ -390,6 +417,7 @@ impl TimerManager {
             })?;
 
         let restored = restore_timer_state(saved);
+        let preserved_run_id = saved.id.clone();
 
         let mut guard = self
             .inner
@@ -397,6 +425,7 @@ impl TimerManager {
             .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
 
         guard.state = restored;
+        guard.state.run_id = Some(preserved_run_id);
         guard.last_tick = None;
 
         let dto = TimerStateDto::from(&guard.state);
@@ -539,6 +568,7 @@ fn restore_timer_state(saved: &SavedRun) -> PersistedTimerState {
     PersistedTimerState {
         schema_version: 1,
         status: TimerStatus::Paused,
+        run_id: None,
         current_act_index,
         act_elapsed_ms,
         current_act_elapsed_ms,

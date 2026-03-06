@@ -1,7 +1,7 @@
 import { JSX, useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import type { AscendancyClassEntry } from '../../../types/Guide.ts';
-import type { TimerState } from '../../../types/Timer.ts';
+import type { TimerState, SavedRun } from '../../../types/Timer.ts';
 import { formatElapsedMs } from '../../../utils/formatTime.ts';
 import { SectionDivider } from '../../SectionDivider/SectionDivider.tsx';
 
@@ -85,6 +85,30 @@ export function SaveCampaignRunPage({ timerState, onBack }: SaveCampaignRunPageP
 				console.error('Failed to load ascendancy classes:', err);
 			});
 	}, []);
+
+	useEffect((): void => {
+		if (timerState.runId === null) {
+			return;
+		}
+		const currentRunId = timerState.runId;
+		void invoke<SavedRun[]>('saved_runs_load')
+			.then((runs) => {
+				const savedRun = runs.find((r) => r.id === currentRunId);
+				if (savedRun === undefined) {
+					return;
+				}
+				setCharacterName(savedRun.character);
+				setSelectedClass(savedRun.characterClass);
+				setLeague(savedRun.league as LeagueOption);
+				setHardcore(savedRun.hardcore);
+				setSsf(savedRun.ssf);
+				setPrivateLeague(savedRun.privateLeague);
+				setRunDetails(savedRun.runDetails);
+			})
+			.catch((err: unknown) => {
+				console.error('Failed to load existing saved run:', err);
+			});
+	}, [timerState.runId]);
 
 	const missingFields: string[] = [];
 	if (characterName.trim() === '') missingFields.push('character name');

@@ -55,3 +55,11 @@ pub fn saved_runs_continue(
         .map_err(|e| command_error("timer_emit_failed", e.to_string()))?;
     Ok(dto)
 }
+
+#[tauri::command(async)]
+pub fn saved_runs_get(
+    app: tauri::AppHandle,
+    run_id: String,
+) -> Result<Option<SavedRunDto>, CommandError> {
+    TimerManager::get_run(&app, run_id)
+}

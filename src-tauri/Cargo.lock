@@ -2648,6 +2648,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-opener",
  "tauri-plugin-store",
+ "uuid",
  "windows-sys 0.59.0",
 ]
 

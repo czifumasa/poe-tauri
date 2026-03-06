@@ -163,7 +163,8 @@ pub fn run() {
             saved_runs_save,
             saved_runs_load,
             saved_runs_delete,
-            saved_runs_continue
+            saved_runs_continue,
+            saved_runs_get
         ])
         .setup(move |app| {
             logging::init(app.handle());

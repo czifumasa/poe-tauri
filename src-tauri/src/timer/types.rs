@@ -27,6 +27,8 @@ pub struct PersistedTimerState {
     #[serde(default)]
     pub status: TimerStatus,
     #[serde(default)]
+    pub run_id: Option<String>,
+    #[serde(default)]
     pub current_act_index: usize,
     #[serde(default = "default_act_splits")]
     pub act_elapsed_ms: Vec<u64>,
@@ -45,6 +47,7 @@ impl Default for PersistedTimerState {
         Self {
             schema_version: 1,
             status: TimerStatus::Idle,
+            run_id: None,
             current_act_index: 0,
             act_elapsed_ms: vec![0; ACT_COUNT],
             current_act_elapsed_ms: 0,
@@ -71,6 +74,7 @@ pub struct TimerSettingsDto {
 pub struct TimerStateDto {
     pub schema_version: u32,
     pub status: TimerStatus,
+    pub run_id: Option<String>,
     pub current_act_index: usize,
     pub act_elapsed_ms: Vec<u64>,
     pub current_act_elapsed_ms: u64,
@@ -82,6 +86,7 @@ impl From<&PersistedTimerState> for TimerStateDto {
         Self {
             schema_version: state.schema_version,
             status: state.status,
+            run_id: state.run_id.clone(),
             current_act_index: state.current_act_index,
             act_elapsed_ms: state.act_elapsed_ms.clone(),
             current_act_elapsed_ms: state.current_act_elapsed_ms,
