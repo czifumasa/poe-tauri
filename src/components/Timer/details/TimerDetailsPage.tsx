@@ -344,8 +344,11 @@ function runStatusClass(status: SavedRun['status']): string {
 	return 'timerDetailsRunStatus timerDetailsRunStatus--inProgress';
 }
 
-function runStatusLabel(status: SavedRun['status']): string {
-	return status === 'completed' ? 'Completed' : 'In progress';
+function runStatusLabel(run: SavedRun): string {
+	if (run.status === 'completed') return 'Completed';
+	const currentAct = run.actRuns.find((a) => a.status === 'in_progress');
+	if (currentAct !== undefined) return `In progress · ${currentAct.actName}`;
+	return 'In progress';
 }
 
 type ConfirmationVariant = 'default' | 'delete';
@@ -469,7 +472,7 @@ function ManageRunItem(props: {
 						{formatLeagueDisplay(run)} · {run.character} · {run.characterClass}
 					</span>
 				</div>
-				<span className={runStatusClass(run.status)}>{runStatusLabel(run.status)}</span>
+				<span className={runStatusClass(run.status)}>{runStatusLabel(run)}</span>
 				<span className="timerDetailsRunTime">{formatElapsedMs(run.campaignElapsedMs)}</span>
 				<ChevronIcon expanded={isExpanded} />
 			</button>
