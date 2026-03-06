@@ -287,8 +287,7 @@ export function SaveCampaignRunPage({ timerState, editRunId, onBack }: SaveCampa
 								const half = Math.ceil(timerState.actElapsedMs.length / 2);
 								const actIndex = half + i;
 								const isActive = actIndex === timerState.currentActIndex && timerState.status !== 'idle';
-								const isCompleted =
-									!isActive && actIndex < timerState.currentActIndex && timerState.status !== 'idle';
+								const isCompleted = !isActive && actIndex < timerState.currentActIndex && timerState.status !== 'idle';
 								const displayMs = isActive ? timerState.currentActElapsedMs : ms;
 								const rowClass = isActive
 									? 'saveCampaignRunSplitRow saveCampaignRunSplitRow--active'
