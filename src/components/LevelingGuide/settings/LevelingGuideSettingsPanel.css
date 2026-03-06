@@ -134,9 +134,14 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	max-width: 280px;
 	flex: 1;
 	min-width: 0;
+}
+
+.settingsClientLogHint {
+	font-size: 11px;
+	color: rgba(200, 169, 110, 0.35);
+	font-style: italic;
 }
 
 .settingsClientLogButton {

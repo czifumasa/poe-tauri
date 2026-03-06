@@ -33,11 +33,7 @@ function formatLogPathDisplay(path: string | null): string {
 	if (path === null) {
 		return 'Not configured';
 	}
-	const maxLength = 40;
-	if (path.length <= maxLength) {
-		return path;
-	}
-	return `…${path.slice(-maxLength)}`;
+	return path;
 }
 
 export function LevelingGuideSettingsPanel(props: LevelingGuideSettingsPanelProps): JSX.Element {
@@ -135,6 +131,11 @@ export function LevelingGuideSettingsPanel(props: LevelingGuideSettingsPanelProp
 						</button>
 					)}
 				</div>
+				{props.clientLogPath === null && (
+					<span className="settingsClientLogHint">
+						Select the Client.txt file from Path of Exile logs directory.
+					</span>
+				)}
 			</div>
 		</div>
 	);
