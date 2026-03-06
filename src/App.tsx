@@ -412,28 +412,31 @@ function App(): JSX.Element {
 			});
 	}, []);
 
-	const handleTimerAction = useCallback((action: 'start' | 'pause' | 'resume' | 'reset'): void => {
-		if (timerActionInFlightRef.current) {
-			return;
-		}
-		timerActionInFlightRef.current = true;
+	const handleTimerAction = useCallback(
+		(action: 'start' | 'pause' | 'resume' | 'reset'): void => {
+			if (timerActionInFlightRef.current) {
+				return;
+			}
+			timerActionInFlightRef.current = true;
 
-		const commandMap = {
-			start: 'timer_start',
-			pause: 'timer_pause',
-			resume: 'timer_resume',
-			reset: 'timer_reset',
-		} as const;
-		void invoke<TimerState>(commandMap[action])
-			.then((state) => {
-				setTimerState(state);
-				timerActionInFlightRef.current = false;
-			})
-			.catch((err: unknown) => {
-				console.error(`Failed to ${action} timer:`, err);
-				syncTimerStateFromBackend();
-			});
-	}, [syncTimerStateFromBackend]);
+			const commandMap = {
+				start: 'timer_start',
+				pause: 'timer_pause',
+				resume: 'timer_resume',
+				reset: 'timer_reset',
+			} as const;
+			void invoke<TimerState>(commandMap[action])
+				.then((state) => {
+					setTimerState(state);
+					timerActionInFlightRef.current = false;
+				})
+				.catch((err: unknown) => {
+					console.error(`Failed to ${action} timer:`, err);
+					syncTimerStateFromBackend();
+				});
+		},
+		[syncTimerStateFromBackend],
+	);
 
 	const persistTimerSettings = useCallback((updated: TimerSettings): void => {
 		setTimerSettings(updated);
@@ -651,7 +654,13 @@ function App(): JSX.Element {
 				overlayShown: false,
 			});
 			setPobSettings({ schemaVersion: 1, slots: [], currentSlotIndex: null });
-			setTimerSettings({ schemaVersion: 1, enabled: false, displayActTimer: true, displayCampaignTimer: true, warnWhenPaused: true });
+			setTimerSettings({
+				schemaVersion: 1,
+				enabled: false,
+				displayActTimer: true,
+				displayCampaignTimer: true,
+				warnWhenPaused: true,
+			});
 			setTimerState({
 				schemaVersion: 1,
 				status: 'idle',
