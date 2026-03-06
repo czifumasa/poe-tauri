@@ -146,6 +146,7 @@ function App(): JSX.Element {
 	const timerStateRef = useRef<TimerState>(timerState);
 	timerStateRef.current = timerState;
 	const [timerSyncEpoch, setTimerSyncEpoch] = useState<number>(0);
+	const timerActionInFlightRef = useRef<boolean>(false);
 	const [resetEpoch, setResetEpoch] = useState<number>(0);
 	const [timerDetailsVisible, setTimerDetailsVisible] = useState<boolean>(false);
 	const [saveRunVisible, setSaveRunVisible] = useState<boolean>(false);
@@ -397,7 +398,26 @@ function App(): JSX.Element {
 		};
 	}, [timerState.status, timerSyncEpoch]);
 
+	const syncTimerStateFromBackend = useCallback((): void => {
+		void invoke<TimerState>('timer_get_state')
+			.then((backendState) => {
+				setTimerState(backendState);
+				setTimerSyncEpoch((prev) => prev + 1);
+			})
+			.catch((syncErr: unknown) => {
+				console.error('Failed to re-sync timer state from backend:', syncErr);
+			})
+			.finally(() => {
+				timerActionInFlightRef.current = false;
+			});
+	}, []);
+
 	const handleTimerAction = useCallback((action: 'start' | 'pause' | 'resume' | 'reset'): void => {
+		if (timerActionInFlightRef.current) {
+			return;
+		}
+		timerActionInFlightRef.current = true;
+
 		const commandMap = {
 			start: 'timer_start',
 			pause: 'timer_pause',
@@ -407,11 +427,13 @@ function App(): JSX.Element {
 		void invoke<TimerState>(commandMap[action])
 			.then((state) => {
 				setTimerState(state);
+				timerActionInFlightRef.current = false;
 			})
 			.catch((err: unknown) => {
 				console.error(`Failed to ${action} timer:`, err);
+				syncTimerStateFromBackend();
 			});
-	}, []);
+	}, [syncTimerStateFromBackend]);
 
 	const persistTimerSettings = useCallback((updated: TimerSettings): void => {
 		setTimerSettings(updated);

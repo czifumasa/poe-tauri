@@ -154,6 +154,7 @@ pub fn run() {
             pob_settings_set_current_slot,
             timer_get_settings,
             timer_set_settings,
+            timer_get_state,
             timer_load_state,
             timer_start,
             timer_pause,
