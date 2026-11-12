@@ -1,15 +1,17 @@
 import { JSX, useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import type { AscendancyClassEntry } from '../../../types/Guide.ts';
-import type { TimerState, SavedRun } from '../../../types/Timer.ts';
+import type { SavedRun, TimerState } from '../../../types/Timer.ts';
 import { formatElapsedMs } from '../../../utils/formatTime.ts';
 import { SectionDivider } from '../../SectionDivider/SectionDivider.tsx';
 
 import './SaveCampaignRunPage.css';
 
-type LeagueOption = 'Mirage' | 'Standard';
+type LeagueOption = 'Covens' | 'Allflame' | 'Mirage' | 'Standard';
 
 const LEAGUE_OPTIONS: readonly { readonly value: LeagueOption; readonly label: string }[] = [
+	{ value: 'Covens', label: 'Covens of Umbra' },
+	{ value: 'Allflame', label: 'Curse of the Allflame' },
 	{ value: 'Mirage', label: 'Mirage' },
 	{ value: 'Standard', label: 'Standard' },
 ];
@@ -70,7 +72,7 @@ export function SaveCampaignRunPage({ timerState, editRunId, onBack }: SaveCampa
 	const [editedRun, setEditedRun] = useState<SavedRun | null>(null);
 	const [characterName, setCharacterName] = useState<string>('');
 	const [selectedClass, setSelectedClass] = useState<string>('');
-	const [league, setLeague] = useState<LeagueOption>('Mirage');
+	const [league, setLeague] = useState<LeagueOption>('Covens');
 	const [hardcore, setHardcore] = useState<boolean>(false);
 	const [ssf, setSsf] = useState<boolean>(false);
 	const [privateLeague, setPrivateLeague] = useState<boolean>(false);
