@@ -25,6 +25,8 @@ import { SettingsPage, type SettingsTab } from './components/SettingsPage/Settin
 
 type ViewMode = 'main' | 'overlay' | 'hintTooltip';
 
+const TIMER_STATE_POLL_INTERVAL_MS = 5000;
+
 function formatInvokeError(error: unknown): string {
 	if (error instanceof Error) {
 		return error.message;
@@ -185,7 +187,7 @@ function App(): JSX.Element {
 						invoke<LevelingGuideSettings>('settings_get_leveling_guide'),
 						invoke<PobSettings>('pob_settings_get'),
 						invoke<TimerSettings>('timer_get_settings'),
-						invoke<TimerState>('timer_load_state'),
+						invoke<TimerState>('timer_get_state'),
 					]);
 				if (isDisposed) {
 					return;
@@ -378,6 +380,7 @@ function App(): JSX.Element {
 			return (): void => {};
 		}
 
+		let disposed = false;
 		const startedAt = Date.now();
 		const baseActMs = timerStateRef.current.currentActElapsedMs;
 		const baseCampaignMs = timerStateRef.current.campaignElapsedMs;
@@ -391,11 +394,29 @@ function App(): JSX.Element {
 			}));
 		}, 1000);
 
+		// Re-sync from the backend so a missed/silent transition cannot leave the
+		// UI ticking while the real timer is stopped.
+		const pollId = window.setInterval((): void => {
+			void invoke<TimerState>('timer_get_state')
+				.then((backendState) => {
+					if (disposed) {
+						return;
+					}
+					setTimerState(backendState);
+					setTimerSyncEpoch((prev) => prev + 1);
+				})
+				.catch((pollErr: unknown) => {
+					console.error('Failed to poll timer state from backend:', pollErr);
+				});
+		}, TIMER_STATE_POLL_INTERVAL_MS);
+
 		return (): void => {
+			disposed = true;
 			if (timerTickRef.current !== null) {
 				window.clearInterval(timerTickRef.current);
 				timerTickRef.current = null;
 			}
+			window.clearInterval(pollId);
 		};
 	}, [timerState.status, timerSyncEpoch]);
 

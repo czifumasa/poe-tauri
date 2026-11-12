@@ -40,14 +40,6 @@ pub fn timer_get_state(
 }
 
 #[tauri::command(async)]
-pub fn timer_load_state(
-    app: tauri::AppHandle,
-    manager: State<'_, Arc<TimerManager>>,
-) -> Result<TimerStateDto, CommandError> {
-    manager.load_state(&app)
-}
-
-#[tauri::command(async)]
 pub fn timer_start(
     app: tauri::AppHandle,
     manager: State<'_, Arc<TimerManager>>,

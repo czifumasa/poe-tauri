@@ -10,6 +10,7 @@ use crate::timer::TimerManager;
 use crate::window::identifiers::{HINT_TOOLTIP_WINDOW_LABEL, OVERLAY_WINDOW_LABEL};
 
 const LEVELING_GUIDE_CLEARED_EVENT: &str = "leveling_guide_cleared";
+const TIMER_STATE_UPDATED_EVENT: &str = "timer_state_updated";
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -91,8 +92,13 @@ pub fn settings_set_leveling_guide(
 pub fn settings_wipe(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
+    timer_manager: State<'_, Arc<TimerManager>>,
 ) -> Result<(), CommandError> {
     manager.unload()?;
+
+    let timer_state = timer_manager.reset(&app)?;
+    app.emit(TIMER_STATE_UPDATED_EVENT, &timer_state)
+        .map_err(|e| command_error("timer_emit_failed", e.to_string()))?;
 
     if let Some(window) = app.get_webview_window(HINT_TOOLTIP_WINDOW_LABEL) {
         let _ = window.destroy();

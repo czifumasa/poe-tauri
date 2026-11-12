@@ -155,7 +155,6 @@ pub fn run() {
             timer_get_settings,
             timer_set_settings,
             timer_get_state,
-            timer_load_state,
             timer_start,
             timer_pause,
             timer_resume,
@@ -246,6 +245,10 @@ pub fn run() {
             if let Err(err) = manager.restart_log_watcher_if_configured(&app_handle, &timer_manager)
             {
                 eprintln!("Failed to start log watcher on startup: {:?}", err);
+            }
+
+            if let Err(err) = timer_manager.init_from_store(&app_handle) {
+                eprintln!("Failed to initialize timer state from store: {:?}", err);
             }
 
             timer_manager.start_auto_save(&app_handle);

@@ -49,6 +49,12 @@ impl TimerManager {
         Ok(maybe.unwrap_or_default())
     }
 
+    fn lock_inner(&self) -> std::sync::MutexGuard<'_, TimerInner> {
+        self.inner
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
     pub fn get_settings(app: &AppHandle) -> Result<TimerSettingsDto, CommandError> {
         let settings = Self::load_settings(app)?;
         Ok(TimerSettingsDto {
@@ -85,20 +91,18 @@ impl TimerManager {
     }
 
     pub fn get_state(&self) -> Result<TimerStateDto, CommandError> {
-        let mut guard = self
-            .inner
-            .lock()
-            .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
+        let mut guard = self.lock_inner();
 
         flush_elapsed(&mut guard);
         Ok(TimerStateDto::from(&guard.state))
     }
 
-    pub fn load_state(&self, app: &AppHandle) -> Result<TimerStateDto, CommandError> {
-        let mut guard = self
-            .inner
-            .lock()
-            .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
+    /// One-time startup recovery: load the persisted state into memory and pause a
+    /// timer that was still running when the app last exited. Must be called once
+    /// from app setup only — webviews read the live state via `get_state` instead,
+    /// so a lazily created window can never silently stop a running timer.
+    pub fn init_from_store(&self, app: &AppHandle) -> Result<TimerStateDto, CommandError> {
+        let mut guard = self.lock_inner();
 
         let persisted =
             store::get_optional::<PersistedTimerState>(app, PersistedTimerState::STORE_KEY)?
@@ -107,7 +111,7 @@ impl TimerManager {
         logging::info(
             "timer",
             &format!(
-                "load_state: persisted status={:?} act_index={} act_ms={} campaign_ms={}",
+                "init_from_store: persisted status={:?} act_index={} act_ms={} campaign_ms={}",
                 persisted.status,
                 persisted.current_act_index,
                 persisted.current_act_elapsed_ms,
@@ -117,20 +121,21 @@ impl TimerManager {
 
         guard.state = persisted;
         if guard.state.status == TimerStatus::Running {
-            logging::info("timer", "load_state: was running, transitioning to paused");
+            logging::info("timer", "init_from_store: was running, transitioning to paused");
             guard.state.status = TimerStatus::Paused;
             save_state_inner(app, &guard.state);
         }
         guard.last_tick = None;
 
-        Ok(TimerStateDto::from(&guard.state))
+        let dto = TimerStateDto::from(&guard.state);
+        if let Err(err) = app.emit(TIMER_STATE_UPDATED_EVENT, &dto) {
+            logging::error("timer", &format!("init_from_store: failed to emit update: {err}"));
+        }
+        Ok(dto)
     }
 
     pub fn start(&self, app: &AppHandle) -> Result<TimerStateDto, CommandError> {
-        let mut guard = self
-            .inner
-            .lock()
-            .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
+        let mut guard = self.lock_inner();
 
         if guard.state.status != TimerStatus::Idle {
             logging::warn(
@@ -157,10 +162,7 @@ impl TimerManager {
     }
 
     pub fn pause(&self, app: &AppHandle) -> Result<TimerStateDto, CommandError> {
-        let mut guard = self
-            .inner
-            .lock()
-            .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
+        let mut guard = self.lock_inner();
 
         if guard.state.status != TimerStatus::Running {
             logging::warn(
@@ -192,10 +194,7 @@ impl TimerManager {
     }
 
     pub fn resume(&self, app: &AppHandle) -> Result<TimerStateDto, CommandError> {
-        let mut guard = self
-            .inner
-            .lock()
-            .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
+        let mut guard = self.lock_inner();
 
         if guard.state.status != TimerStatus::Paused {
             logging::warn(
@@ -226,10 +225,7 @@ impl TimerManager {
     }
 
     pub fn reset(&self, app: &AppHandle) -> Result<TimerStateDto, CommandError> {
-        let mut guard = self
-            .inner
-            .lock()
-            .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
+        let mut guard = self.lock_inner();
 
         logging::info(
             "timer",
@@ -254,10 +250,7 @@ impl TimerManager {
         app: &AppHandle,
         completed_act_index: usize,
     ) -> Result<(), CommandError> {
-        let mut guard = self
-            .inner
-            .lock()
-            .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
+        let mut guard = self.lock_inner();
 
         logging::info(
             "timer",
@@ -330,10 +323,7 @@ impl TimerManager {
         character_class: String,
         run_details: String,
     ) -> Result<SavedRunDto, CommandError> {
-        let mut guard = self
-            .inner
-            .lock()
-            .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
+        let mut guard = self.lock_inner();
 
         if guard.state.status == TimerStatus::Running {
             flush_elapsed(&mut guard);
@@ -470,10 +460,7 @@ impl TimerManager {
         let restored = restore_timer_state(saved);
         let preserved_run_id = saved.id.clone();
 
-        let mut guard = self
-            .inner
-            .lock()
-            .map_err(|_| command_error("timer_state_poisoned", "Timer state poisoned"))?;
+        let mut guard = self.lock_inner();
 
         guard.state = restored;
         guard.state.run_id = Some(preserved_run_id);
@@ -499,13 +486,7 @@ impl TimerManager {
                 std::thread::sleep(AUTO_SAVE_INTERVAL);
 
                 let state_snapshot = {
-                    let mut guard = match manager.inner.lock() {
-                        Ok(g) => g,
-                        Err(_) => {
-                            logging::error("timer", "auto_save: mutex poisoned, stopping thread");
-                            break;
-                        }
-                    };
+                    let mut guard = manager.lock_inner();
 
                     if guard.state.status != TimerStatus::Running {
                         continue;
