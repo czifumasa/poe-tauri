@@ -16,6 +16,8 @@ type LevelingGuideSettingsPanelProps = {
 	settingsLoading: boolean;
 	leagueStart: boolean;
 	onLeagueStartChange: (value: boolean) => Promise<void>;
+	twinkRun: boolean;
+	onTwinkRunChange: (value: boolean) => Promise<void>;
 	optionalQuests: boolean;
 	onOptionalQuestsChange: (value: boolean) => Promise<void>;
 	levelRecommendations: boolean;
@@ -54,6 +56,16 @@ export function LevelingGuideSettingsPanel(props: LevelingGuideSettingsPanelProp
 						disabled={settingsLoading}
 					/>
 					<span className="settingsToggleLabel">League start</span>
+				</label>
+
+				<label className="settingsToggle">
+					<input
+						type="checkbox"
+						checked={props.twinkRun}
+						onChange={(event) => void props.onTwinkRunChange(event.currentTarget.checked)}
+						disabled={settingsLoading}
+					/>
+					<span className="settingsToggleLabel">Twink run (show twinkrun steps)</span>
 				</label>
 
 				<label className="settingsToggle">

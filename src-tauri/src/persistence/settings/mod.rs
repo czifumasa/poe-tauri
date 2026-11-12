@@ -35,6 +35,8 @@ pub struct LevelingGuideSettings {
     #[serde(default = "default_true")]
     pub league_start: bool,
     #[serde(default)]
+    pub twink_run: bool,
+    #[serde(default)]
     pub overlay_position: Option<OverlayPosition>,
     #[serde(default = "default_true")]
     pub optional_quests: bool,
@@ -55,6 +57,7 @@ impl Default for LevelingGuideSettings {
         Self {
             schema_version: 1,
             league_start: true,
+            twink_run: false,
             overlay_position: None,
             optional_quests: true,
             level_recommendations: true,

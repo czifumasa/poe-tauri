@@ -115,6 +115,7 @@ function App(): JSX.Element {
 	const [settings, setSettings] = useState<LevelingGuideSettings>({
 		schemaVersion: 1,
 		leagueStart: true,
+		twinkRun: false,
 		overlayPosition: null,
 		optionalQuests: true,
 		levelRecommendations: true,
@@ -491,6 +492,21 @@ function App(): JSX.Element {
 		[settings],
 	);
 
+	const updateTwinkRun = useCallback(
+		async (nextValue: boolean): Promise<void> => {
+			const updatedSettings: LevelingGuideSettings = { ...settings, twinkRun: nextValue };
+			setSettings(updatedSettings);
+			try {
+				await invoke('settings_set_leveling_guide', { settings: updatedSettings });
+				const page = await invoke<LevelingGuidePageDto>('leveling_guide_reapply');
+				setCurrentPage(page);
+			} catch (err) {
+				console.error('Failed to toggle twink run setting:', err);
+			}
+		},
+		[settings],
+	);
+
 	const updateOptionalQuests = useCallback(
 		async (nextValue: boolean): Promise<void> => {
 			const updatedSettings: LevelingGuideSettings = { ...settings, optionalQuests: nextValue };
@@ -565,7 +581,7 @@ function App(): JSX.Element {
 			setSettings(updatedSettings);
 			try {
 				await invoke('settings_set_leveling_guide', { settings: updatedSettings });
-				const page = await invoke<LevelingGuidePageDto>('leveling_guide_reapply_gems');
+				const page = await invoke<LevelingGuidePageDto>('leveling_guide_reapply');
 				setCurrentPage(page);
 			} catch (err) {
 				console.error('Failed to toggle gems setting:', err);
@@ -645,6 +661,7 @@ function App(): JSX.Element {
 			setSettings({
 				schemaVersion: 1,
 				leagueStart: true,
+				twinkRun: false,
 				overlayPosition: null,
 				optionalQuests: true,
 				levelRecommendations: true,
@@ -785,6 +802,8 @@ function App(): JSX.Element {
 					settingsLoading={settingsLoading}
 					leagueStart={settings.leagueStart}
 					onLeagueStartChange={updateLeagueStart}
+					twinkRun={settings.twinkRun}
+					onTwinkRunChange={updateTwinkRun}
 					optionalQuests={settings.optionalQuests}
 					onOptionalQuestsChange={updateOptionalQuests}
 					levelRecommendations={settings.levelRecommendations}

@@ -8,6 +8,7 @@ export type BanditsChoice = 'KillAll' | 'HelpAlira' | 'HelpOak' | 'HelpKraityn';
 export type LevelingGuideSettings = {
 	schemaVersion: number;
 	leagueStart: boolean;
+	twinkRun: boolean;
 	overlayPosition: OverlayPosition | null;
 	optionalQuests: boolean;
 	levelRecommendations: boolean;

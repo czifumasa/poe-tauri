@@ -717,9 +717,9 @@ fn render_text_segment_with_boss_highlight(
             text = text.replace('_', " ");
         }
 
-        let has_arena_prefix = text.contains("arena:");
+        let has_arena_prefix = text.contains("arena:") || text.contains("boat:");
         if has_arena_prefix {
-            text = text.replace("arena:", "");
+            text = text.replace("arena:", "").replace("boat:", "");
         }
 
         if text.is_empty() {
@@ -903,6 +903,39 @@ fn render_line(
     }
 
     Ok(Some(LevelingGuideLineDto { is_hint, spans }))
+}
+
+const TWINK_RUN_LINE_PREFIX: &str = "twinkrun:";
+
+pub(crate) fn apply_twink_run_setting(guide: &mut GuideData, twink_run: bool) {
+    for act in guide.iter_mut() {
+        let mut pages_to_remove: Vec<usize> = Vec::new();
+
+        for (page_idx, page) in act.iter_mut().enumerate() {
+            let mut lines = std::mem::take(&mut page.lines);
+            lines.retain_mut(|line| {
+                let Some(rest) = line.trim_start().strip_prefix(TWINK_RUN_LINE_PREFIX) else {
+                    return true;
+                };
+                if twink_run {
+                    *line = rest.trim_start().to_string();
+                    true
+                } else {
+                    false
+                }
+            });
+
+            if lines.is_empty() {
+                pages_to_remove.push(page_idx);
+            } else {
+                page.lines = lines;
+            }
+        }
+
+        for idx in pages_to_remove.into_iter().rev() {
+            act.remove(idx);
+        }
+    }
 }
 
 pub(crate) fn parse_guide_json(value: serde_json::Value) -> Result<GuideData, CommandError> {
@@ -1220,4 +1253,50 @@ pub(crate) fn current_page_dto(
         target_area,
         target_area_id,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn guide_with_twink_lines() -> GuideData {
+        vec![vec![
+            GuidePage {
+                lines: vec![
+                    "kill hillock".to_string(),
+                    "twinkrun: (img:quest) tarkleigh: (quest:book)".to_string(),
+                ],
+                condition: None,
+            },
+            GuidePage {
+                lines: vec!["twinkrun: reach areaid1_3_7 ;; the battlefront".to_string()],
+                condition: None,
+            },
+        ]]
+    }
+
+    #[test]
+    fn twink_run_disabled_removes_lines_and_empty_pages() {
+        let mut guide = guide_with_twink_lines();
+        apply_twink_run_setting(&mut guide, false);
+
+        assert_eq!(guide[0].len(), 1);
+        assert_eq!(guide[0][0].lines, vec!["kill hillock".to_string()]);
+    }
+
+    #[test]
+    fn twink_run_enabled_strips_prefix_and_keeps_lines() {
+        let mut guide = guide_with_twink_lines();
+        apply_twink_run_setting(&mut guide, true);
+
+        assert_eq!(guide[0].len(), 2);
+        assert_eq!(
+            guide[0][0].lines[1],
+            "(img:quest) tarkleigh: (quest:book)".to_string()
+        );
+        assert_eq!(
+            guide[0][1].lines[0],
+            "reach areaid1_3_7 ;; the battlefront".to_string()
+        );
+    }
 }

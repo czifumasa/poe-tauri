@@ -132,13 +132,13 @@ pub fn leveling_guide_reset_progress(
 }
 
 #[tauri::command(async)]
-pub fn leveling_guide_reapply_gems(
+pub fn leveling_guide_reapply(
     app: tauri::AppHandle,
     manager: State<'_, Arc<LevelingGuideManager>>,
     timer_manager: State<'_, Arc<TimerManager>>,
 ) -> Result<LevelingGuidePageDto, CommandError> {
     ensure_loaded(&app, &manager, &timer_manager)?;
-    let page = manager.reapply_gems(&app)?;
+    let page = manager.reapply(&app)?;
     persist_current_progress(&app, &manager)?;
     emit_page_updated(&app, &page)?;
     Ok(page)

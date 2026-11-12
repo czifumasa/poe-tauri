@@ -16,6 +16,7 @@ const LEVELING_GUIDE_CLEARED_EVENT: &str = "leveling_guide_cleared";
 pub struct LevelingGuideSettingsDto {
     pub schema_version: u32,
     pub league_start: bool,
+    pub twink_run: bool,
     pub overlay_position: Option<crate::persistence::settings::OverlayPosition>,
     pub optional_quests: bool,
     pub level_recommendations: bool,
@@ -29,6 +30,7 @@ fn leveling_guide_settings_to_dto(settings: LevelingGuideSettings) -> LevelingGu
     LevelingGuideSettingsDto {
         schema_version: settings.schema_version,
         league_start: settings.league_start,
+        twink_run: settings.twink_run,
         overlay_position: settings.overlay_position,
         optional_quests: settings.optional_quests,
         level_recommendations: settings.level_recommendations,
@@ -43,6 +45,7 @@ fn leveling_guide_settings_from_dto(dto: LevelingGuideSettingsDto) -> LevelingGu
     LevelingGuideSettings {
         schema_version: dto.schema_version,
         league_start: dto.league_start,
+        twink_run: dto.twink_run,
         overlay_position: dto.overlay_position,
         optional_quests: dto.optional_quests,
         level_recommendations: dto.level_recommendations,

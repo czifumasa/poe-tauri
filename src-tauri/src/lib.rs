@@ -135,7 +135,7 @@ pub fn run() {
             leveling_guide_next_page,
             leveling_guide_previous_page,
             leveling_guide_reset_progress,
-            leveling_guide_reapply_gems,
+            leveling_guide_reapply,
             settings_get_leveling_guide,
             settings_set_leveling_guide,
             settings_wipe,

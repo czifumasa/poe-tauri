@@ -650,6 +650,16 @@
 			}
 		}
 	},
+	"blessed call support": {
+		"attribute": 1,
+		"level": 31,
+		"quests": {
+			"a fixture of fate": {
+				"quest": ["templar"],
+				"vendor": []
+			}
+		}
+	},
 	"blight": {
 		"attribute": 3,
 		"level": 1,
@@ -1366,6 +1376,18 @@
 			}
 		}
 	},
+	"dark bargain": {
+		"attribute": 3,
+		"level": 28,
+		"quests": {
+			"a fixture of fate": {
+				"vendor": []
+			},
+			"sever the right hand": {
+				"vendor": ["scion", "shadow", "witch"]
+			}
+		}
+	},
 	"dark pact": {
 		"attribute": 3,
 		"level": 28,
@@ -1560,6 +1582,19 @@
 			}
 		}
 	},
+	"divine blast": {
+		"attribute": 1,
+		"level": 28,
+		"quests": {
+			"a fixture of fate": {
+				"vendor": []
+			},
+			"sever the right hand": {
+				"quest": ["templar"],
+				"vendor": ["marauder", "scion", "templar"]
+			}
+		}
+	},
 	"divine blessing support": {
 		"attribute": 1,
 		"level": 31,
@@ -1746,12 +1781,9 @@
 			"a fixture of fate": {
 				"vendor": []
 			},
-			"enemy at the gate": {
-				"vendor": ["templar"]
-			},
 			"mercy mission": {
-				"quest": ["witch", "shadow", "scion"],
-				"vendor": ["scion", "shadow", "witch"]
+				"quest": ["witch", "shadow", "scion", "templar"],
+				"vendor": ["scion", "shadow", "witch", "templar"]
 			}
 		}
 	},
@@ -1905,6 +1937,29 @@
 			}
 		}
 	},
+	"excommunicate support": {
+		"attribute": 1,
+		"level": 31,
+		"quests": {
+			"a fixture of fate": {
+				"quest": ["templar"],
+				"vendor": []
+			}
+		}
+	},
+	"exemplar support": {
+		"attribute": 3,
+		"level": 18,
+		"quests": {
+			"a fixture of fate": {
+				"vendor": []
+			},
+			"sharp and cruel": {
+				"quest": ["templar"],
+				"vendor": ["scion", "templar", "witch"]
+			}
+		}
+	},
 	"expert retaliation support": {
 		"attribute": 1,
 		"level": 31,
@@ -1988,7 +2043,7 @@
 			},
 			"the caged brute1": {
 				"quest": ["marauder", "duelist", "ranger", "shadow", "scion"],
-				"vendor": ["duelist", "marauder", "ranger", "shadow", "scion"]
+				"vendor": []
 			}
 		}
 	},
@@ -2001,7 +2056,7 @@
 			},
 			"sharp and cruel": {
 				"quest": ["witch", "templar", "shadow", "scion"],
-				"vendor": ["scion", "shadow", "templar", "witch"]
+				"vendor": []
 			}
 		}
 	},
@@ -2231,7 +2286,7 @@
 			}
 		}
 	},
-	"focused chanelling support": {
+	"focused channelling support": {
 		"attribute": 3,
 		"level": 31,
 		"quests": {
@@ -2558,6 +2613,21 @@
 			}
 		}
 	},
+	"hallow support": {
+		"attribute": 1,
+		"level": 1,
+		"quests": {
+			"a fixture of fate": {
+				"vendor": []
+			},
+			"enemy at the gate": {
+				"vendor": ["templar"]
+			},
+			"mercy mission": {
+				"vendor": ["marauder", "scion", "witch"]
+			}
+		}
+	},
 	"haste": {
 		"attribute": 2,
 		"level": 24,
@@ -2712,6 +2782,43 @@
 			"breaking some eggs1": {
 				"quest": ["templar"],
 				"vendor": ["marauder", "templar", "witch"]
+			}
+		}
+	},
+	"holy hammers": {
+		"attribute": 1,
+		"level": 28,
+		"quests": {
+			"a fixture of fate": {
+				"vendor": []
+			},
+			"sever the right hand": {
+				"quest": ["templar"]
+			}
+		}
+	},
+	"holy strike": {
+		"attribute": 1,
+		"level": 1,
+		"quests": {
+			"a fixture of fate": {
+				"vendor": []
+			},
+			"enemy at the gate": {
+				"vendor": ["scion", "templar"]
+			}
+		}
+	},
+	"holy sweep": {
+		"attribute": 1,
+		"level": 12,
+		"quests": {
+			"a fixture of fate": {
+				"vendor": []
+			},
+			"the siren's cadence": {
+				"quest": ["marauder", "duelist"],
+				"vendor": ["duelist", "marauder", "templar"]
 			}
 		}
 	},
@@ -3177,19 +3284,6 @@
 			}
 		}
 	},
-	"lesser multiple projectiles support": {
-		"attribute": 2,
-		"level": 8,
-		"quests": {
-			"a fixture of fate": {
-				"vendor": []
-			},
-			"the caged brute1": {
-				"quest": ["duelist", "ranger", "shadow", "scion"],
-				"vendor": ["duelist", "ranger", "scion", "shadow", "witch"]
-			}
-		}
-	},
 	"life gain on hit support": {
 		"attribute": 1,
 		"level": 8,
@@ -3412,6 +3506,19 @@
 			}
 		}
 	},
+	"mana-infused staff": {
+		"attribute": 3,
+		"level": 16,
+		"quests": {
+			"a fixture of fate": {
+				"vendor": []
+			},
+			"intruders in black": {
+				"quest": ["templar"],
+				"vendor": ["shadow", "templar", "witch"]
+			}
+		}
+	},
 	"mark on hit support": {
 		"attribute": 2,
 		"level": 38,
@@ -3585,6 +3692,19 @@
 			"a fixture of fate": {
 				"quest": ["marauder"],
 				"vendor": []
+			}
+		}
+	},
+	"multiple projectiles support": {
+		"attribute": 2,
+		"level": 8,
+		"quests": {
+			"a fixture of fate": {
+				"vendor": []
+			},
+			"the caged brute1": {
+				"quest": ["duelist", "ranger", "shadow", "scion"],
+				"vendor": ["duelist", "ranger", "scion", "shadow", "witch"]
 			}
 		}
 	},
@@ -4356,6 +4476,19 @@
 			}
 		}
 	},
+	"shield of light": {
+		"attribute": 1,
+		"level": 16,
+		"quests": {
+			"a fixture of fate": {
+				"vendor": []
+			},
+			"intruders in black": {
+				"quest": ["templar"],
+				"vendor": ["scion", "templar"]
+			}
+		}
+	},
 	"shock nova": {
 		"attribute": 3,
 		"level": 28,
@@ -4953,19 +5086,6 @@
 			"the siren's cadence": {
 				"quest": ["marauder"],
 				"vendor": ["duelist", "marauder", "scion", "templar"]
-			}
-		}
-	},
-	"sweep": {
-		"attribute": 1,
-		"level": 12,
-		"quests": {
-			"a fixture of fate": {
-				"vendor": []
-			},
-			"the siren's cadence": {
-				"quest": ["marauder", "duelist"],
-				"vendor": ["duelist", "marauder", "templar"]
 			}
 		}
 	},

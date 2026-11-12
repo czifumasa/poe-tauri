@@ -13,7 +13,8 @@ use super::io::read_guide_content;
 use super::log_watcher::{spawn_log_watcher, LogWatcherHandle};
 use crate::timer::TimerManager;
 use super::parser::{
-    clamp_position, current_page_dto, next_position, parse_guide_json, previous_position,
+    apply_twink_run_setting, clamp_position, current_page_dto, next_position, parse_guide_json,
+    previous_position,
 };
 use super::pob_parser::{parse_pob_export, PobImportData};
 use super::types::{
@@ -137,6 +138,7 @@ fn load_area_name_by_id(
 
 fn reapply_gem_rewards_to_guide(loaded: &mut LoadedGuide, settings: &LevelingGuideSettings) {
     loaded.guide = loaded.original_guide.clone();
+    apply_twink_run_setting(&mut loaded.guide, settings.twink_run);
 
     let should_inject = settings.gems_enabled;
     let has_pob = loaded.pob_import_data.is_some();
@@ -348,7 +350,7 @@ impl LevelingGuideManager {
         current_page_dto(app, loaded, &settings)
     }
 
-    pub fn reapply_gems(&self, app: &AppHandle) -> Result<LevelingGuidePageDto, CommandError> {
+    pub fn reapply(&self, app: &AppHandle) -> Result<LevelingGuidePageDto, CommandError> {
         let mut guard = self
             .loaded
             .lock()
