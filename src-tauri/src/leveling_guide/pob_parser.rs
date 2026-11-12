@@ -32,6 +32,7 @@ pub(crate) fn ascendancy_class_list() -> Vec<AscendancyClassEntry> {
 const ASCENDANCY_TO_BASE: &[(&str, &str)] = &[
     ("reliquarian", "scion"),
     ("ascendant", "scion"),
+    ("luminary", "scion"),
     ("juggernaut", "marauder"),
     ("berserker", "marauder"),
     ("chieftain", "marauder"),
