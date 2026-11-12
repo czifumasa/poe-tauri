@@ -63,6 +63,13 @@ fn get_overlay_monitor(window: &tauri::WebviewWindow) -> Result<tauri::Monitor, 
         .current_monitor()
         .map_err(|e| command_error("overlay_panel_window_get_monitor_failed", e.to_string()))?
         .or_else(|| window.primary_monitor().ok().flatten())
+        // layer-shell windows report no current/primary monitor before they are mapped
+        .or_else(|| {
+            window
+                .available_monitors()
+                .ok()
+                .and_then(|monitors| monitors.into_iter().next())
+        })
         .ok_or_else(|| {
             command_error(
                 "overlay_panel_window_get_monitor_failed",
