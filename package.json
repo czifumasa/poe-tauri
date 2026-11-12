@@ -11,6 +11,7 @@
 		"tauri": "tauri",
 		"tauri:dev": "npm run sync:version && tauri dev",
 		"tauri:build": "npm run sync:version && tauri build",
+		"upgrade:deb": "npm run tauri:build && sudo dpkg -i src-tauri/target/release/bundle/deb/PoeTauri_${npm_package_version}_amd64.deb",
 		"lint": "eslint . --fix",
 		"format": "prettier --write \"./**/*.{js,jsx,ts,tsx,css,md,json}\" --config ./.prettierrc",
 		"quality:fix": "npm run format && npm run lint"
