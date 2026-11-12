@@ -79,20 +79,14 @@ impl NativeWindow for X11NativeWindow {
             Ok(())
         })?;
 
-        run_on_main_thread(window, |w| {
+        run_on_main_thread(window, move |w| {
             let gtk_window = w
                 .gtk_window()
                 .map_err(|e| command_error("x11_gtk_window_failed", e.to_string()))?;
 
+            gtk_window.resize(width_i32, height_i32);
+            gtk_window.queue_resize();
             gtk_window.queue_draw();
-
-            w.hide()
-                .map_err(|e| command_error("window_hide_failed", e.to_string()))?;
-
-            std::thread::sleep(std::time::Duration::from_millis(1));
-
-            w.show()
-                .map_err(|e| command_error("window_show_failed", e.to_string()))?;
 
             Ok(())
         })

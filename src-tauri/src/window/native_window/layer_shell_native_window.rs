@@ -1,4 +1,4 @@
-use gtk::prelude::WidgetExt;
+use gtk::prelude::{GtkWindowExt, WidgetExt};
 use gtk_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
 
 use crate::error::{command_error, CommandError};
@@ -163,27 +163,18 @@ impl NativeWindow for LayerShellNativeWindow {
             Ok(())
         })?;
 
-        logging::info("layer_shell_debug", "set_size_with_gtk_refresh: starting hide/show cycle (sleeping on main thread!)");
+        logging::info("layer_shell_debug", "set_size_with_gtk_refresh: requesting resize");
 
-        run_on_main_thread(window, |w| {
+        run_on_main_thread(window, move |w| {
             let gtk_window = w
                 .gtk_window()
                 .map_err(|e| command_error("layer_shell_gtk_window_failed", e.to_string()))?;
 
+            gtk_window.resize(width_i32, height_i32);
+            gtk_window.queue_resize();
             gtk_window.queue_draw();
-            logging::info("layer_shell_debug", "queue_draw done, hiding window");
 
-            w.hide()
-                .map_err(|e| command_error("window_hide_failed", e.to_string()))?;
-
-            logging::warn("layer_shell_debug", "sleeping 1ms on GTK main thread");
-            std::thread::sleep(std::time::Duration::from_millis(1));
-
-            logging::info("layer_shell_debug", "showing window after sleep");
-            w.show()
-                .map_err(|e| command_error("window_show_failed", e.to_string()))?;
-
-            logging::info("layer_shell_debug", "set_size_with_gtk_refresh hide/show cycle complete");
+            logging::info("layer_shell_debug", "set_size_with_gtk_refresh resize complete");
             Ok(())
         })
     }
